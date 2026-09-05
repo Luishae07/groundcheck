@@ -75,13 +75,26 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
     <div class="desc">The same readings as a plain-text line list, one reading per line.</div>
   </div>
 
+  <h2>Finding the current host</h2>
+  <p>
+    The API isn't served from a fixed domain — it runs behind a Cloudflare quick tunnel, whose address
+    changes each time the tunnel restarts. The current one is always published as a plain text file at
+    <a href="../tunnel-url.txt">tunnel-url.txt</a>, right in this same repo. Read that first, then use
+    whatever host it returns for every endpoint below.
+  </p>
+  <pre># 1. Discover the current host
+HOST=$(curl -s https://luishae07.github.io/groundcheck/tunnel-url.txt)
+
+# 2. Use it
+curl "$HOST/api/data"</pre>
+
   <h2>Using an API key</h2>
   <p>Get one:</p>
-  <pre>curl -X POST https://designers-conversations-understand-therapy.trycloudflare.com/api/keys/new</pre>
+  <pre>curl -X POST https://senate-armed-detector-farmers.trycloudflare.com/api/keys/new</pre>
   <p>Then pass it on every request, either as a header or a query parameter:</p>
-  <pre>curl https://designers-conversations-understand-therapy.trycloudflare.com/api/data -H "X-API-Key: &lt;your key&gt;"
+  <pre>curl https://senate-armed-detector-farmers.trycloudflare.com/api/data -H "X-API-Key: &lt;your key&gt;"
 
-curl "https://designers-conversations-understand-therapy.trycloudflare.com/api/data?key=&lt;your key&gt;"</pre>
+curl "https://senate-armed-detector-farmers.trycloudflare.com/api/data?key=&lt;your key&gt;"</pre>
 
   <h2>Response shape (/api/data)</h2>
   <p>An array of reading objects:</p>
