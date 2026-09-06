@@ -136,6 +136,16 @@ main{
 }
 .panel h2{font-family:"Sora",sans-serif; font-size:.95rem; margin:0 0 .9rem; display:flex; align-items:baseline; gap:.5rem}
 .panel h2 .n{font-size:.72rem; font-weight:400; color:var(--ink-faint)}
+.rangepicker{
+  margin-left:auto;
+  padding:.35rem .6rem;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:.78rem;
+}
 
 #mapbox{ height:420px; border-radius:12px; overflow:hidden; border:1px solid var(--line) }
 
@@ -181,6 +191,17 @@ main{
 
 footer{margin-top:2rem; font-size:.78rem; color:var(--ink-faint); text-align:center}
 footer a{color:inherit}
+.clearcachebtn{
+  padding:.25rem .65rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-faint);
+  font-family:inherit;
+  font-size:.75rem;
+  cursor:pointer;
+}
+.clearcachebtn:active{ transform:scale(.97); }
 </style>
 
 <div class="topbar">
@@ -211,7 +232,14 @@ footer a{color:inherit}
     <div id="view-today">
       <div class="grid3">
         <div class="panel">
-          <h2>Station map <span class="n" id="mapCount"></span></h2>
+          <h2>Station map <span class="n" id="mapCount"></span>
+            <select id="mapRange" class="rangepicker">
+              <option value="7" selected>Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="0">All time</option>
+            </select>
+          </h2>
           <div id="mapbox"></div>
         </div>
         <div class="panel">
@@ -235,7 +263,10 @@ footer a{color:inherit}
       </div>
     </div>
 
-    <footer>Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs/">API docs</a></footer>
+    <footer>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs/">API docs</a>
+      &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
+    </footer>
   </div>
 </main>
 
@@ -472,8 +503,19 @@ function render(){
   // The map lives directly on the default-visible Today panel, so it has
   // to render right away — only the Stations grid (a separate tab that
   // isn't shown until clicked) benefits from being deferred.
-  renderMap(points);
+  applyMapRange();
   freshStationsGrid = false;
+}
+
+function pointsWithinDays(days){
+  if (!days) return points; // 0 = "All time"
+  const cutoff = Date.now() - days * 86400 * 1000;
+  return points.filter(p => new Date(p.time).getTime() >= cutoff);
+}
+
+function applyMapRange(){
+  const days = parseInt(document.getElementById('mapRange').value, 10);
+  renderMap(pointsWithinDays(days));
 }
 
 let freshStationsGrid = false;
@@ -508,4 +550,21 @@ function loadData(){
 
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
+document.getElementById('mapRange').addEventListener('change', applyMapRange);
+
+document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+  try {
+    if ('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) await r.unregister();
+    }
+    if (window.caches){
+      const names = await caches.keys();
+      for (const n of names) await caches.delete(n);
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (e) { /* best effort — reload regardless */ }
+  location.href = location.pathname + '?_=' + Date.now();
+});
 </script>

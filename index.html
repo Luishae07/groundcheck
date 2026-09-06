@@ -378,9 +378,20 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
 }
+.rangepicker{
+  display:block;
+  margin:0 0 .6rem;
+  padding:.45rem .7rem;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:.82rem;
+}
 #mapbox{
-  height:calc(100dvh - 300px);
-  min-height:280px;
+  height:calc(100dvh - 340px);
+  min-height:260px;
   border-radius:16px;
   overflow:hidden;
   border:1px solid var(--line);
@@ -527,6 +538,18 @@ footer{
   color:var(--ink-faint);
   padding:.7rem 1.2rem .2rem;
 }
+.clearcachebtn{
+  margin-top:.5rem;
+  padding:.3rem .7rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-faint);
+  font-family:inherit;
+  font-size:.68rem;
+  cursor:pointer;
+}
+.clearcachebtn:active{ transform:scale(.97); }
 </style>
 
 <div class="frame">
@@ -568,6 +591,12 @@ footer{
 
     <div id="view-map" hidden>
       <div class="listhead">Station map<span class="n" id="mapCount"></span></div>
+      <select id="mapRange" class="rangepicker">
+        <option value="7" selected>Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="0">All time</option>
+      </select>
       <div id="mapbox"></div>
       <div class="maplegend">
         <span><i style="background:#3b82c4"></i>&lt;3&deg;</span>
@@ -611,7 +640,10 @@ footer{
       </div>
     </div>
 
-    <footer>Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="./apidocs/" style="color:inherit">API docs</a> &middot; <a href="./desktop/" style="color:inherit">Desktop view</a></footer>
+    <footer>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="./apidocs/" style="color:inherit">API docs</a> &middot; <a href="./desktop/" style="color:inherit">Desktop view</a>
+      <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
+    </footer>
   </div>
 
   <div class="tabbar">
@@ -866,8 +898,19 @@ function renderHeavyViewsIfNeeded(view){
     document.getElementById('historyCount').textContent = points.length + ' readings';
     renderFeed(document.getElementById('historyList'), points);
   } else if (view === 'map'){
-    renderMap(points);
+    applyMapRange();
   }
+}
+
+function pointsWithinDays(days){
+  if (!days) return points; // 0 = "All time"
+  const cutoff = Date.now() - days * 86400 * 1000;
+  return points.filter(p => new Date(p.time).getTime() >= cutoff);
+}
+
+function applyMapRange(){
+  const days = parseInt(document.getElementById('mapRange').value, 10);
+  renderMap(pointsWithinDays(days));
 }
 
 function tempColor(t){
@@ -1003,6 +1046,23 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 document.getElementById('refreshBtn').addEventListener('click', () => { selected = null; locate(); });
+document.getElementById('mapRange').addEventListener('change', applyMapRange);
+
+document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+  try {
+    if ('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) await r.unregister();
+    }
+    if (window.caches){
+      const names = await caches.keys();
+      for (const n of names) await caches.delete(n);
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (e) { /* best effort — reload regardless */ }
+  location.href = location.pathname + '?_=' + Date.now();
+});
 
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
