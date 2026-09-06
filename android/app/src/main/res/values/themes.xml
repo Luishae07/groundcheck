@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.Groundcheck" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.Groundcheck" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">#4a7fb5</item>
         <item name="android:windowBackground">#f2f6f9</item>
     </style>
