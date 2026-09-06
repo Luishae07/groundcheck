@@ -795,8 +795,22 @@ function renderPrediction(anchor){
     // so the projection is continuous with what's actually happening now
     // instead of showing raw historical averages disconnected from today.
     const byHour = new Map(data.hourly_avg.map(b => [b.hour, b]));
+
+    // Sparse data means many hour-of-day buckets have zero samples so far —
+    // rather than skip those hours (and show fewer than asked for), fall
+    // back to whichever populated hour is closest on the 24h clock.
+    const nearestBucket = (h) => {
+      if (byHour.has(h)) return byHour.get(h);
+      let best = null, bestDist = Infinity;
+      for (const b of data.hourly_avg){
+        const d = Math.min(Math.abs(b.hour - h), 24 - Math.abs(b.hour - h));
+        if (d < bestDist){ bestDist = d; best = b; }
+      }
+      return best;
+    };
+
     const anchorHour = new Date(anchor.time).getUTCHours();
-    const anchorBucket = byHour.get(anchorHour);
+    const anchorBucket = nearestBucket(anchorHour);
     const tempOffset = (anchorBucket) ? anchor.temp - anchorBucket.avg_temp : 0;
     const humOffset = (anchorBucket && anchorBucket.avg_humidity != null && anchor.humidity != null)
       ? anchor.humidity - anchorBucket.avg_humidity : 0;
@@ -806,7 +820,7 @@ function renderPrediction(anchor){
     const chips = [];
     for (let i = 1; i <= 5; i++){
       const h = (anchorHour + i) % 24;
-      const b = byHour.get(h);
+      const b = nearestBucket(h);
       if (!b) continue;
       const temp = b.avg_temp + tempOffset;
       const humidity = b.avg_humidity != null ? b.avg_humidity + humOffset : null;
