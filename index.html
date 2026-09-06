@@ -368,6 +368,44 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
 }
+.acctcard{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:1.1rem;
+}
+.acctlead{
+  font-size:.85rem;
+  color:var(--ink-dim);
+  margin:0 0 .8rem;
+  line-height:1.5;
+}
+.nicknameinput{
+  width:100%;
+  padding:.7rem .9rem;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:.9rem;
+}
+.acctname{
+  font-family:"Sora",sans-serif;
+  font-weight:800;
+  font-size:1.5rem;
+  margin-bottom:.9rem;
+}
+.acctrow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:.6rem 0;
+  border-top:1px solid var(--line);
+  font-size:.82rem;
+}
+.acctrow .k{color:var(--ink-faint)}
+.acctrow .v{font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:600; color:var(--ink)}
 .qa{
   background:var(--panel);
   border:1px solid var(--line);
@@ -694,6 +732,30 @@ footer{
       </div>
     </div>
 
+    <div id="view-account" hidden>
+      <div class="listhead">Account</div>
+
+      <div id="accountLoggedOut" class="acctcard">
+        <p class="acctlead">Save a nickname on this device — no password, no server account, just a locally-saved identity.</p>
+        <input id="nicknameInput" class="nicknameinput" type="text" placeholder="Your nickname" maxlength="24">
+        <button id="createAccountBtn" class="refresh" style="margin:.9rem 0 0">Save on this device</button>
+      </div>
+
+      <div id="accountLoggedIn" class="acctcard" hidden>
+        <p class="acctlead">Welcome back,</p>
+        <div class="acctname" id="acctNameDisplay"></div>
+        <div class="acctrow">
+          <span class="k">Local token</span>
+          <span class="v" id="acctTokenDisplay"></span>
+        </div>
+        <div class="acctrow">
+          <span class="k">Saved</span>
+          <span class="v" id="acctSinceDisplay"></span>
+        </div>
+        <button id="signOutBtn" class="refresh" style="margin:.9rem 0 0">Forget this device</button>
+      </div>
+    </div>
+
     <footer>
       Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="./apidocs/" style="color:inherit">API docs</a> &middot; <a href="./desktop/" style="color:inherit">Desktop view</a>
       <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
@@ -720,6 +782,10 @@ footer{
     <button class="tab" data-view="faq">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
       FAQ
+    </button>
+    <button class="tab" data-view="account">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Account
     </button>
   </div>
 </div>
@@ -1215,6 +1281,55 @@ document.getElementById('clearCacheBtn').addEventListener('click', async () => {
   } catch (e) { /* best effort — reload regardless */ }
   location.href = location.pathname + '?_=' + Date.now();
 });
+
+// --- Account: a per-device saved nickname + local token, no server-side
+// accounts involved. Purely for personalizing this browser/device. ---
+const ACCOUNT_KEY = 'groundcheck_account';
+
+function genLocalToken(){
+  const bytes = new Uint8Array(16);
+  (window.crypto || window.msCrypto).getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function loadAccount(){
+  try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY)); }
+  catch (e) { return null; }
+}
+
+function renderAccountView(){
+  const acct = loadAccount();
+  const out = document.getElementById('accountLoggedOut');
+  const inView = document.getElementById('accountLoggedIn');
+  if (acct){
+    out.hidden = true;
+    inView.hidden = false;
+    document.getElementById('acctNameDisplay').textContent = acct.name;
+    document.getElementById('acctTokenDisplay').textContent = acct.token;
+    document.getElementById('acctSinceDisplay').textContent =
+      new Date(acct.created).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+  } else {
+    out.hidden = false;
+    inView.hidden = true;
+  }
+}
+
+document.getElementById('createAccountBtn').addEventListener('click', () => {
+  const input = document.getElementById('nicknameInput');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  const acct = { name, token: genLocalToken(), created: Date.now() };
+  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(acct));
+  renderAccountView();
+});
+
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  localStorage.removeItem(ACCOUNT_KEY);
+  document.getElementById('nicknameInput').value = '';
+  renderAccountView();
+});
+
+renderAccountView();
 
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
