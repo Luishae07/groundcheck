@@ -62,10 +62,13 @@ class MainActivity : AppCompatActivity() {
         webView = WebView(this)
 
         // --- Fix: SwipeRefreshLayout was eating scroll gestures meant for
-        // the page itself, making in-page scrolling feel broken. Only allow
-        // pull-to-refresh to trigger when the WebView is scrolled to the
-        // very top — otherwise let the WebView handle the gesture.
-        swipeRefresh.setOnChildScrollUpCallback { _, _ -> webView.scrollY > 0 }
+        // the page itself. A scrollY-based heuristic doesn't work here: the
+        // embedded map is a canvas widget with its own panning that never
+        // touches webView.scrollY, so pull-to-refresh kept hijacking map
+        // drags. Rather than fight that, disable pull-to-refresh entirely —
+        // the page already auto-refreshes data every 5 min and has its own
+        // in-page "Clear cache & reload" button.
+        swipeRefresh.isEnabled = false
 
         swipeRefresh.addView(
             webView,
