@@ -329,6 +329,7 @@ footer a{color:inherit}
           <button id="searchBtn" class="locbtn" style="color:var(--ink);background:var(--panel-2);border-color:var(--line)">Search</button>
         </div>
         <div id="searchStatus" style="font-size:.8rem;color:var(--ink-faint);margin-bottom:.8rem"></div>
+        <div id="searchMapBox" style="height:320px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:1rem"></div>
         <div class="cardgrid" id="searchResults"></div>
       </div>
     </div>
@@ -652,6 +653,7 @@ document.querySelectorAll('.navbtn').forEach(btn => {
     document.getElementById('view-' + btn.dataset.view).hidden = false;
     renderHeavyViewsIfNeeded(btn.dataset.view);
     if (btn.dataset.view === 'today' && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 50);
+    if (btn.dataset.view === 'search' && searchMap) setTimeout(() => searchMap.invalidateSize(), 50);
   });
 });
 
@@ -733,6 +735,50 @@ renderAccountView();
 
 // --- Universal search: station ID, a temperature value, or a place name
 // (geocoded via OpenStreetMap Nominatim, then matched to nearest station).
+let searchMap = null;
+let searchMapMarkers = [];
+let searchPlaceMarker = null;
+
+function ensureSearchMap(){
+  if (searchMap) return searchMap;
+  searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, noWrap: true,
+    attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+  }).addTo(searchMap);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, noWrap: true, opacity: 0.85
+  }).addTo(searchMap);
+  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(searchMap);
+  return searchMap;
+}
+
+function renderSearchMap(list, placeLatLon){
+  const map = ensureSearchMap();
+  searchMapMarkers.forEach(m => map.removeLayer(m));
+  searchMapMarkers = [];
+  if (searchPlaceMarker){ map.removeLayer(searchPlaceMarker); searchPlaceMarker = null; }
+
+  list.forEach(p => {
+    const color = tempColor(p.temp);
+    const marker = L.circleMarker([p.lat, p.lon], { radius: 8, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.95 }).addTo(map);
+    marker.bindPopup(`<b>${p.temp.toFixed(1)}&deg;C</b><br>${p.id}`);
+    searchMapMarkers.push(marker);
+  });
+
+  if (placeLatLon){
+    searchPlaceMarker = L.marker(placeLatLon, {
+      icon: L.divIcon({ className: '', html: '<div class="youarehere"><span class="pulse"></span><span class="dot"></span></div>', iconSize: [18, 18], iconAnchor: [9, 9] })
+    }).addTo(map);
+  }
+
+  const boundsPoints = list.map(p => [p.lat, p.lon]).concat(placeLatLon ? [placeLatLon] : []);
+  if (boundsPoints.length){
+    map.invalidateSize();
+    map.fitBounds(L.latLngBounds(boundsPoints), { padding: [30, 30] });
+  }
+}
+
 function runSearch(query){
   const status = document.getElementById('searchStatus');
   const results = document.getElementById('searchResults');
@@ -745,6 +791,7 @@ function runSearch(query){
     status.textContent = `${idMatches.length} station${idMatches.length === 1 ? '' : 's'} matching ID "${query}"`;
     results.innerHTML = idMatches.map(stationCard).join('');
     wireCardClicks(results);
+    renderSearchMap(idMatches, null);
     return;
   }
 
@@ -756,6 +803,7 @@ function runSearch(query){
     status.textContent = `Closest readings to ${target}°C`;
     results.innerHTML = ranked.map(stationCard).join('');
     wireCardClicks(results);
+    renderSearchMap(ranked, null);
     return;
   }
 
@@ -779,6 +827,7 @@ function runSearch(query){
       status.textContent = `Nearest stations to "${place.display_name}"`;
       results.innerHTML = ranked.map(r => stationCard(r.p)).join('');
       wireCardClicks(results);
+      renderSearchMap(ranked.map(r => r.p), [lat, lon]);
     })
     .catch(() => { status.textContent = 'Search failed — try again.'; });
 }
