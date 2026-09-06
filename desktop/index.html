@@ -328,6 +328,12 @@ footer a{color:inherit}
           <input id="searchInput" class="nicknameinput" type="text" placeholder="e.g. Berlin, or 18°C, or a station ID" style="flex:1">
           <button id="searchBtn" class="locbtn" style="color:var(--ink);background:var(--panel-2);border-color:var(--line)">Search</button>
         </div>
+        <select id="searchRange" class="rangepicker" style="margin-bottom:.8rem">
+          <option value="7" selected>Only last 7 days</option>
+          <option value="30">Only last 30 days</option>
+          <option value="90">Only last 90 days</option>
+          <option value="0">All time (full archive)</option>
+        </select>
         <div id="searchStatus" style="font-size:.8rem;color:var(--ink-faint);margin-bottom:.8rem"></div>
         <div id="searchMapBox" style="height:320px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:1rem"></div>
         <div class="cardgrid" id="searchResults"></div>
@@ -779,16 +785,24 @@ function renderSearchMap(list, placeLatLon){
   }
 }
 
+function searchPool(){
+  const days = parseInt(document.getElementById('searchRange').value, 10);
+  return pointsWithinDays(days); // 0 = "All time", reuses the same helper as the main map's range picker
+}
+
 function runSearch(query){
   const status = document.getElementById('searchStatus');
   const results = document.getElementById('searchResults');
   query = query.trim();
   if (!query){ status.textContent = ''; results.innerHTML = ''; return; }
 
+  const pool = searchPool();
+  const rangeLabel = document.getElementById('searchRange').selectedOptions[0].textContent.toLowerCase();
+
   // 1. Station ID — exact or partial match.
-  const idMatches = points.filter(p => p.id.toLowerCase().includes(query.toLowerCase()));
+  const idMatches = pool.filter(p => p.id.toLowerCase().includes(query.toLowerCase()));
   if (idMatches.length){
-    status.textContent = `${idMatches.length} station${idMatches.length === 1 ? '' : 's'} matching ID "${query}"`;
+    status.textContent = `${idMatches.length} station${idMatches.length === 1 ? '' : 's'} matching ID "${query}" (${rangeLabel})`;
     results.innerHTML = idMatches.map(stationCard).join('');
     wireCardClicks(results);
     renderSearchMap(idMatches, null);
@@ -799,11 +813,18 @@ function runSearch(query){
   const tempMatch = query.match(/^-?\d+(\.\d+)?\s*°?\s*c?$/i);
   if (tempMatch){
     const target = parseFloat(query);
-    const ranked = [...points].sort((a, b) => Math.abs(a.temp - target) - Math.abs(b.temp - target)).slice(0, 12);
-    status.textContent = `Closest readings to ${target}°C`;
+    const ranked = [...pool].sort((a, b) => Math.abs(a.temp - target) - Math.abs(b.temp - target)).slice(0, 12);
+    status.textContent = `Closest readings to ${target}°C (${rangeLabel})`;
     results.innerHTML = ranked.map(stationCard).join('');
     wireCardClicks(results);
     renderSearchMap(ranked, null);
+    return;
+  }
+
+  if (!pool.length){
+    status.textContent = `No readings in the selected range (${rangeLabel}) — try widening it or "All time".`;
+    results.innerHTML = '';
+    renderSearchMap([], null);
     return;
   }
 
@@ -819,12 +840,11 @@ function runSearch(query){
       }
       const place = hits[0];
       const lat = parseFloat(place.lat), lon = parseFloat(place.lon);
-      if (!points.length){ status.textContent = 'No station data loaded yet.'; return; }
-      const ranked = [...points]
+      const ranked = [...pool]
         .map(p => ({ p, d: haversine(lat, lon, p.lat, p.lon) }))
         .sort((a, b) => a.d - b.d)
         .slice(0, 12);
-      status.textContent = `Nearest stations to "${place.display_name}"`;
+      status.textContent = `Nearest stations to "${place.display_name}" (${rangeLabel})`;
       results.innerHTML = ranked.map(r => stationCard(r.p)).join('');
       wireCardClicks(results);
       renderSearchMap(ranked.map(r => r.p), [lat, lon]);
@@ -837,5 +857,8 @@ document.getElementById('searchBtn').addEventListener('click', () => {
 });
 document.getElementById('searchInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') runSearch(e.target.value);
+});
+document.getElementById('searchRange').addEventListener('change', () => {
+  runSearch(document.getElementById('searchInput').value);
 });
 </script>
