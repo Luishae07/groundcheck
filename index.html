@@ -290,6 +290,7 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   gap:.25rem;
 }
 .predictchip .h{font-size:.68rem; color:var(--ink-faint)}
+.predictchip svg{width:28px; height:28px}
 .predictchip .t{font-family:"Sora",sans-serif; font-weight:700; font-size:1rem; font-variant-numeric:tabular-nums}
 .detailrow .k{color:var(--ink-dim)}
 .detailrow .v{font-weight:600;font-variant-numeric:tabular-nums}
@@ -793,17 +794,24 @@ function renderPrediction(anchor){
     // Anchor the 7-day diurnal average pattern to the current real reading,
     // so the projection is continuous with what's actually happening now
     // instead of showing raw historical averages disconnected from today.
-    const byHour = new Map(data.hourly_avg.map(b => [b.hour, b.avg_temp]));
+    const byHour = new Map(data.hourly_avg.map(b => [b.hour, b]));
     const anchorHour = new Date(anchor.time).getUTCHours();
-    const anchorAvg = byHour.get(anchorHour);
-    const offset = (anchorAvg != null) ? anchor.temp - anchorAvg : 0;
+    const anchorBucket = byHour.get(anchorHour);
+    const tempOffset = (anchorBucket) ? anchor.temp - anchorBucket.avg_temp : 0;
+    const humOffset = (anchorBucket && anchorBucket.avg_humidity != null && anchor.humidity != null)
+      ? anchor.humidity - anchorBucket.avg_humidity : 0;
+    const presOffset = (anchorBucket && anchorBucket.avg_pressure != null && anchor.pressure != null)
+      ? anchor.pressure - anchorBucket.avg_pressure : 0;
 
     const chips = [];
-    for (let i = 1; i <= 6; i++){
+    for (let i = 1; i <= 5; i++){
       const h = (anchorHour + i) % 24;
-      const avg = byHour.get(h);
-      if (avg == null) continue;
-      chips.push({ hour: h, temp: avg + offset });
+      const b = byHour.get(h);
+      if (!b) continue;
+      const temp = b.avg_temp + tempOffset;
+      const humidity = b.avg_humidity != null ? b.avg_humidity + humOffset : null;
+      const pressure = b.avg_pressure != null ? b.avg_pressure + presOffset : null;
+      chips.push({ hour: h, temp, humidity, pressure });
     }
 
     const head = document.getElementById('predictHead');
@@ -818,6 +826,7 @@ function renderPrediction(anchor){
     strip.innerHTML = chips.map(c => `
       <div class="predictchip">
         <span class="h">${String(c.hour).padStart(2,'0')}:00</span>
+        ${iconFor(c.temp, c.humidity, c.pressure)}
         <span class="t">${c.temp.toFixed(0)}&deg;</span>
       </div>
     `).join('');
