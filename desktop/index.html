@@ -265,6 +265,10 @@ footer a{color:inherit}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
     Stations
   </button>
+  <button class="navbtn" data-view="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    Search
+  </button>
   <button class="navbtn" data-view="faq">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
     FAQ
@@ -310,6 +314,22 @@ footer a{color:inherit}
       <div class="panel">
         <h2>FAQ</h2>
         <p style="color:var(--ink-dim);line-height:1.6">See the full FAQ on the <a href="../">mobile view</a> — same content, same data.</p>
+      </div>
+    </div>
+
+    <div id="view-search" hidden>
+      <div class="panel">
+        <h2>Search</h2>
+        <p style="color:var(--ink-dim);font-size:.85rem;margin:0 0 .9rem">
+          Search by station ID, a temperature (e.g. <code>18</code> or <code>18°C</code>), or a place —
+          city, street, country. Place names are geocoded, then matched to the nearest station.
+        </p>
+        <div style="display:flex;gap:.6rem;margin-bottom:.5rem">
+          <input id="searchInput" class="nicknameinput" type="text" placeholder="e.g. Berlin, or 18°C, or a station ID" style="flex:1">
+          <button id="searchBtn" class="locbtn" style="color:var(--ink);background:var(--panel-2);border-color:var(--line)">Search</button>
+        </div>
+        <div id="searchStatus" style="font-size:.8rem;color:var(--ink-faint);margin-bottom:.8rem"></div>
+        <div class="cardgrid" id="searchResults"></div>
       </div>
     </div>
 
@@ -710,4 +730,63 @@ document.getElementById('signOutBtn').addEventListener('click', () => {
 });
 
 renderAccountView();
+
+// --- Universal search: station ID, a temperature value, or a place name
+// (geocoded via OpenStreetMap Nominatim, then matched to nearest station).
+function runSearch(query){
+  const status = document.getElementById('searchStatus');
+  const results = document.getElementById('searchResults');
+  query = query.trim();
+  if (!query){ status.textContent = ''; results.innerHTML = ''; return; }
+
+  // 1. Station ID — exact or partial match.
+  const idMatches = points.filter(p => p.id.toLowerCase().includes(query.toLowerCase()));
+  if (idMatches.length){
+    status.textContent = `${idMatches.length} station${idMatches.length === 1 ? '' : 's'} matching ID "${query}"`;
+    results.innerHTML = idMatches.map(stationCard).join('');
+    wireCardClicks(results);
+    return;
+  }
+
+  // 2. Temperature — a bare number or "18°C" / "18C".
+  const tempMatch = query.match(/^-?\d+(\.\d+)?\s*°?\s*c?$/i);
+  if (tempMatch){
+    const target = parseFloat(query);
+    const ranked = [...points].sort((a, b) => Math.abs(a.temp - target) - Math.abs(b.temp - target)).slice(0, 12);
+    status.textContent = `Closest readings to ${target}°C`;
+    results.innerHTML = ranked.map(stationCard).join('');
+    wireCardClicks(results);
+    return;
+  }
+
+  // 3. Place name — geocode via Nominatim, then nearest station to that point.
+  status.textContent = 'Looking up "' + query + '"…';
+  results.innerHTML = '';
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query))
+    .then(r => r.json())
+    .then(hits => {
+      if (!hits.length){
+        status.textContent = `No place found for "${query}", and no station ID or temperature matched either.`;
+        return;
+      }
+      const place = hits[0];
+      const lat = parseFloat(place.lat), lon = parseFloat(place.lon);
+      if (!points.length){ status.textContent = 'No station data loaded yet.'; return; }
+      const ranked = [...points]
+        .map(p => ({ p, d: haversine(lat, lon, p.lat, p.lon) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 12);
+      status.textContent = `Nearest stations to "${place.display_name}"`;
+      results.innerHTML = ranked.map(r => stationCard(r.p)).join('');
+      wireCardClicks(results);
+    })
+    .catch(() => { status.textContent = 'Search failed — try again.'; });
+}
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  runSearch(document.getElementById('searchInput').value);
+});
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runSearch(e.target.value);
+});
 </script>
