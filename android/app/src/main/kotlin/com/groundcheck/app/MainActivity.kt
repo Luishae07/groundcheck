@@ -32,10 +32,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var errorView: LinearLayout
 
-    // Desktop page — full feature parity (map, predictor, stations grid),
-    // and its layout already adapts down to phone width, so one URL covers
-    // both phones and tablets instead of maintaining a separate mobile path.
-    private val appUrl = "https://senate-armed-detector-farmers.trycloudflare.com/desktop/"
+    // GitHub Pages instead of the raw Cloudflare tunnel URL — the tunnel is
+    // ephemeral (gets a new random address whenever it restarts), so the app
+    // shell itself would break every time. GitHub Pages has a permanent URL;
+    // the page's own JS still talks to the tunnel for live data underneath.
+    private val appUrl = "https://luishae07.github.io/groundcheck/desktop/"
 
     private var pendingGeoOrigin: String? = null
     private var pendingGeoCallback: GeolocationPermissions.Callback? = null
