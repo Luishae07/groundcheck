@@ -292,7 +292,9 @@ footer a{color:inherit}
               <option value="30">Last 30 days</option>
               <option value="90">Last 90 days</option>
               <option value="0">All time</option>
+              <option value="day">This day</option>
             </select>
+            <input type="date" id="mapDay" class="rangepicker" hidden>
           </h2>
           <div id="mapbox"></div>
         </div>
@@ -367,7 +369,7 @@ footer a{color:inherit}
     </div>
 
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs/">API docs</a>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs">API docs</a>
       &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
@@ -634,9 +636,29 @@ function pointsWithinDays(days){
   return points.filter(p => new Date(p.time).getTime() >= cutoff);
 }
 
+function pointsOnDay(dateStr){
+  if (!dateStr) return [];
+  return points.filter(p => {
+    const d = new Date(p.time);
+    const y = d.getUTCFullYear(), m = String(d.getUTCMonth()+1).padStart(2,'0'), day = String(d.getUTCDate()).padStart(2,'0');
+    return `${y}-${m}-${day}` === dateStr;
+  });
+}
+
 function applyMapRange(){
-  const days = parseInt(document.getElementById('mapRange').value, 10);
-  renderMap(pointsWithinDays(days));
+  const val = document.getElementById('mapRange').value;
+  const dayInput = document.getElementById('mapDay');
+  if (val === 'day'){
+    dayInput.hidden = false;
+    if (!dayInput.value){
+      const now = new Date();
+      dayInput.value = now.toISOString().slice(0,10);
+    }
+    renderMap(pointsOnDay(dayInput.value));
+  } else {
+    dayInput.hidden = true;
+    renderMap(pointsWithinDays(parseInt(val, 10)));
+  }
 }
 
 let freshStationsGrid = false;
@@ -664,7 +686,7 @@ document.querySelectorAll('.navbtn').forEach(btn => {
 });
 
 function loadData(){
-  fetch('https://senate-armed-detector-farmers.trycloudflare.com/api/data')
+  fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
     .then(r => r.json())
     .then(data => { points = data; render(); })
     .catch(() => { document.getElementById('feedstatus').textContent = 'feed unreachable'; });
@@ -673,6 +695,7 @@ function loadData(){
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
 document.getElementById('mapRange').addEventListener('change', applyMapRange);
+document.getElementById('mapDay').addEventListener('change', applyMapRange);
 
 document.getElementById('clearCacheBtn').addEventListener('click', async () => {
   try {

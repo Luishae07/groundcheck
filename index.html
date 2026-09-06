@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Groundcheck</title>
-<link rel="icon" href="./favicon.ico" sizes="any">
+<link rel="icon" href="favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -688,7 +688,9 @@ footer{
         <option value="30">Last 30 days</option>
         <option value="90">Last 90 days</option>
         <option value="0">All time</option>
+        <option value="day">This day</option>
       </select>
+      <input type="date" id="mapDay" class="rangepicker" hidden>
       <div id="mapbox"></div>
       <div class="maplegend">
         <span><i style="background:#3b82c4"></i>&lt;3&deg;</span>
@@ -757,7 +759,7 @@ footer{
     </div>
 
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="./apidocs/" style="color:inherit">API docs</a> &middot; <a href="./desktop/" style="color:inherit">Desktop view</a>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="apidocs" style="color:inherit">API docs</a> &middot; <a href="desktop" style="color:inherit">Desktop view</a>
       <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
@@ -1109,9 +1111,29 @@ function pointsWithinDays(days){
   return points.filter(p => new Date(p.time).getTime() >= cutoff);
 }
 
+function pointsOnDay(dateStr){
+  if (!dateStr) return [];
+  return points.filter(p => {
+    const d = new Date(p.time);
+    const y = d.getUTCFullYear(), m = String(d.getUTCMonth()+1).padStart(2,'0'), day = String(d.getUTCDate()).padStart(2,'0');
+    return `${y}-${m}-${day}` === dateStr;
+  });
+}
+
 function applyMapRange(){
-  const days = parseInt(document.getElementById('mapRange').value, 10);
-  renderMap(pointsWithinDays(days));
+  const val = document.getElementById('mapRange').value;
+  const dayInput = document.getElementById('mapDay');
+  if (val === 'day'){
+    dayInput.hidden = false;
+    if (!dayInput.value){
+      const now = new Date();
+      dayInput.value = now.toISOString().slice(0,10);
+    }
+    renderMap(pointsOnDay(dayInput.value));
+  } else {
+    dayInput.hidden = true;
+    renderMap(pointsWithinDays(parseInt(val, 10)));
+  }
 }
 
 function tempColor(t){
@@ -1228,7 +1250,7 @@ function showError(msg){
 }
 
 function loadData(){
-  return fetch('https://senate-armed-detector-farmers.trycloudflare.com/api/data')
+  return fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
     .then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -1265,6 +1287,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 
 document.getElementById('refreshBtn').addEventListener('click', () => { selected = null; locate(); });
 document.getElementById('mapRange').addEventListener('change', applyMapRange);
+document.getElementById('mapDay').addEventListener('change', applyMapRange);
 
 document.getElementById('clearCacheBtn').addEventListener('click', async () => {
   try {
