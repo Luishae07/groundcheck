@@ -2,180 +2,205 @@ package com.groundcheck.app
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.LocationManager
+import android.graphics.Color
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.GeolocationPermissions
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.osmdroid.config.Configuration
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
-    private val viewModel: WeatherViewModel by viewModels()
+    private lateinit var webView: WebView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
+    private lateinit var errorView: LinearLayout
+
+    // Desktop page — full feature parity (map, predictor, stations grid),
+    // and its layout already adapts down to phone width, so one URL covers
+    // both phones and tablets instead of maintaining a separate mobile path.
+    private val appUrl = "https://senate-armed-detector-farmers.trycloudflare.com/desktop/"
+
+    private var pendingGeoOrigin: String? = null
+    private var pendingGeoCallback: GeolocationPermissions.Callback? = null
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) requestLocationOnce()
+        pendingGeoCallback?.invoke(pendingGeoOrigin, granted, false)
+        pendingGeoOrigin = null
+        pendingGeoCallback = null
+        if (granted) scheduleWeatherAlerts()
     }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* granted or not — worker checks itself before posting */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Must run before any MapView is created, or osmdroid throws/crashes
-        // trying to resolve its tile cache directory. Pointing it at our own
-        // cache dir directly avoids needing a SharedPreferences round-trip.
-        val osmConf = Configuration.getInstance()
-        osmConf.userAgentValue = packageName
-        osmConf.osmdroidBasePath = java.io.File(cacheDir, "osmdroid").apply { mkdirs() }
-        osmConf.osmdroidTileCache = java.io.File(osmConf.osmdroidBasePath, "tiles").apply { mkdirs() }
+        val root = FrameLayout(this)
+        swipeRefresh = SwipeRefreshLayout(this)
+        webView = WebView(this)
 
-        viewModel.loadData()
+        // --- Fix: SwipeRefreshLayout was eating scroll gestures meant for
+        // the page itself, making in-page scrolling feel broken. Only allow
+        // pull-to-refresh to trigger when the WebView is scrolled to the
+        // very top — otherwise let the WebView handle the gesture.
+        swipeRefresh.setOnChildScrollUpCallback { _, _ -> webView.scrollY > 0 }
 
-        setContent {
-            MaterialTheme(colorScheme = GroundcheckColorScheme) {
-                Surface(color = Panel2) {
-                    AppRoot(
-                        viewModel = viewModel,
-                        onRequestLocation = { ensureLocationPermissionThenLocate() }
-                    )
+        swipeRefresh.addView(
+            webView,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        root.addView(swipeRefresh, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+
+        errorView = buildErrorView()
+        errorView.visibility = View.GONE
+        root.addView(errorView, FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT)
+
+        setContentView(root)
+
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            setGeolocationEnabled(true)
+            mediaPlaybackRequiresUserGesture = false
+            useWideViewPort = true
+            loadWithOverviewMode = true
+        }
+
+        webView.setBackgroundColor(Color.parseColor("#0A121A")) // desktop's --panel-2 dark bg — avoids a white flash before CSS loads
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                errorView.visibility = View.GONE
+                swipeRefresh.visibility = View.VISIBLE
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                swipeRefresh.isRefreshing = false
+                // Force dark mode to match the desktop page's own explicit
+                // dark palette, regardless of system light/dark setting —
+                // the page's CSS already supports this via [data-theme].
+                view?.evaluateJavascript(
+                    "document.documentElement.setAttribute('data-theme','dark');", null
+                )
+            }
+
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                super.onReceivedError(view, request, error)
+                if (request?.isForMainFrame == true) {
+                    swipeRefresh.isRefreshing = false
+                    swipeRefresh.visibility = View.GONE
+                    errorView.visibility = View.VISIBLE
                 }
             }
         }
-    }
 
-    private fun ensureLocationPermissionThenLocate() {
-        val granted = ContextCompat.checkSelfPermission(
-            this, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        if (granted) requestLocationOnce()
-        else locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
-
-    private fun requestLocationOnce() {
-        val lm = getSystemService(LOCATION_SERVICE) as LocationManager
-        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-        for (provider in providers) {
-            try {
-                val last = lm.getLastKnownLocation(provider)
-                if (last != null) {
-                    viewModel.locateNearest(last.latitude, last.longitude)
-                    return
-                }
-            } catch (_: SecurityException) { }
-        }
-        try {
-            lm.requestSingleUpdate(LocationManager.GPS_PROVIDER, { loc ->
-                viewModel.locateNearest(loc.latitude, loc.longitude)
-            }, mainLooper)
-        } catch (_: Exception) { }
-    }
-}
-
-private data class NavDest(val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
-
-private val destinations = listOf(
-    NavDest("Today", Icons.Filled.WbSunny),
-    NavDest("Map", Icons.Filled.Map),
-    NavDest("Stations", Icons.Filled.Place),
-    NavDest("FAQ", Icons.Filled.HelpOutline),
-)
-
-@Composable
-fun AppRoot(viewModel: WeatherViewModel, onRequestLocation: () -> Unit) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    var tab by remember { mutableIntStateOf(0) }
-
-    fun selectAndShowToday(r: Reading) {
-        viewModel.selectReading(r)
-        tab = 0
-    }
-
-    Column(Modifier.fillMaxSize()) {
-        // --- Top bar: brand + live dot, matching desktop's .topbar ---
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .background(Panel)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Groundcheck", fontWeight = FontWeight.Black, fontSize = 17.sp, color = Ink)
-            Spacer(Modifier.weight(1f))
-            Box(Modifier.size(7.dp).clip(CircleShape).background(Color(0xFF3EA86B)))
-            Spacer(Modifier.width(6.dp))
-            Text("live feed", fontSize = 12.sp, color = InkDim)
-        }
-
-        Row(Modifier.fillMaxSize()) {
-            // --- Left icon sidebar, matching desktop's .sidebar ---
-            Column(
-                Modifier
-                    .fillMaxHeight()
-                    .width(72.dp)
-                    .background(Panel)
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String?,
+                callback: GeolocationPermissions.Callback?
             ) {
-                destinations.forEachIndexed { i, d ->
-                    val selected = tab == i
-                    Column(
-                        Modifier
-                            .padding(vertical = 4.dp, horizontal = 8.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (selected) Accent.copy(alpha = 0.15f) else Color.Transparent)
-                            .clickable { tab = i }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            d.icon, contentDescription = d.label,
-                            tint = if (selected) Accent else InkFaint,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Text(
-                            d.label, fontSize = 10.sp,
-                            color = if (selected) Accent else InkFaint
-                        )
-                    }
-                }
-            }
+                val hasFine = ContextCompat.checkSelfPermission(
+                    this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
 
-            // --- Main content area ---
-            Box(Modifier.fillMaxSize().background(Panel2)) {
-                when (tab) {
-                    0 -> TodayScreen(
-                        state = state,
-                        onRefreshLocation = onRequestLocation,
-                        onOpenMap = { tab = 1 }
-                    )
-                    1 -> MapScreenView(readings = state.readings, onMarkerClick = ::selectAndShowToday)
-                    2 -> StationsScreen(readings = state.readings, onSelect = ::selectAndShowToday)
-                    3 -> FaqScreen()
+                if (hasFine) {
+                    callback?.invoke(origin, true, false)
+                    scheduleWeatherAlerts()
+                } else {
+                    pendingGeoOrigin = origin
+                    pendingGeoCallback = callback
+                    locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
             }
         }
+
+        swipeRefresh.setOnRefreshListener { webView.reload() }
+
+        webView.loadUrl(appUrl)
+
+        // Non-deprecated back handling: go back through WebView history first.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) webView.goBack() else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+
+        requestNotificationPermissionIfNeeded()
+    }
+
+    private fun buildErrorView(): LinearLayout {
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER
+            setBackgroundColor(Color.parseColor("#0A121A"))
+        }
+        val messageView = TextView(this).apply {
+            text = "Can't reach Groundcheck right now.\nCheck your connection and try again."
+            setTextColor(Color.parseColor("#E8EEF4"))
+            gravity = android.view.Gravity.CENTER
+            textSize = 15f
+            setPadding(48, 0, 48, 32)
+        }
+        val retryBtn = Button(this).apply {
+            text = "Retry"
+            setOnClickListener {
+                errorView.visibility = View.GONE
+                swipeRefresh.visibility = View.VISIBLE
+                webView.reload()
+            }
+        }
+        layout.addView(messageView)
+        layout.addView(retryBtn)
+        return layout
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                this, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun scheduleWeatherAlerts() {
+        // Checks every 30 minutes (WorkManager's practical minimum for
+        // periodic work is 15 min) whether rain/thunderstorms are
+        // happening or predicted soon near your last known location.
+        val request = PeriodicWorkRequestBuilder<WeatherCheckWorker>(30, TimeUnit.MINUTES).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "weather_alerts", ExistingPeriodicWorkPolicy.KEEP, request
+        )
+    }
+
+    override fun onDestroy() {
+        (webView.parent as? ViewGroup)?.removeView(webView)
+        webView.destroy()
+        super.onDestroy()
     }
 }

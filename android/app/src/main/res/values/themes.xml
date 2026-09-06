@@ -1,6 +1,6 @@
 <resources>
-    <style name="Theme.Groundcheck" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">#4a7fb5</item>
-        <item name="android:windowBackground">#f2f6f9</item>
+    <style name="Theme.Groundcheck" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#0c1a2b</item>
+        <item name="android:windowBackground">#0a121a</item>
     </style>
 </resources>
