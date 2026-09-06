@@ -269,6 +269,28 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   font-size:.85rem;
 }
 .detailrow + .detailrow{border-top:1px solid var(--line)}
+
+.strip{
+  display:flex;
+  gap:.6rem;
+  overflow-x:auto;
+  padding:.9rem 0 .3rem;
+  -webkit-overflow-scrolling:touch;
+}
+.predictchip{
+  flex:0 0 auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:.6rem .8rem;
+  min-width:64px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.25rem;
+}
+.predictchip .h{font-size:.68rem; color:var(--ink-faint)}
+.predictchip .t{font-family:"Sora",sans-serif; font-weight:700; font-size:1rem; font-variant-numeric:tabular-nums}
 .detailrow .k{color:var(--ink-dim)}
 .detailrow .v{font-weight:600;font-variant-numeric:tabular-nums}
 
@@ -570,6 +592,10 @@ footer{
       <div class="livecard" id="liveCard" hidden></div>
       <div class="grid2" id="stats"></div>
       <div class="detailcard" id="details"></div>
+
+      <div class="listhead" id="predictHead" hidden>Next hours<span class="n">from 7-day pattern</span></div>
+      <div class="strip" id="predictStrip" hidden></div>
+
       <button class="refresh" id="refreshBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
         Refresh location
@@ -750,6 +776,64 @@ function render(p, distanceKm){
     <div class="detailrow"><span class="k">${svgPin} Coordinates</span><span class="v">${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</span></div>
     <div class="detailrow"><span class="k">Station ID</span><span class="v">${p.id}</span></div>
   `;
+
+  renderPrediction(p);
+}
+
+const PREDICTOR_URL = 'https://michael-oclc-remind-animals.trycloudflare.com/predict';
+let predictorCache = null;
+
+function renderPrediction(anchor){
+  const fetchAndRender = (data) => {
+    if (!data || !data.hourly_avg || !data.hourly_avg.length) {
+      document.getElementById('predictHead').hidden = true;
+      document.getElementById('predictStrip').hidden = true;
+      return;
+    }
+    // Anchor the 7-day diurnal average pattern to the current real reading,
+    // so the projection is continuous with what's actually happening now
+    // instead of showing raw historical averages disconnected from today.
+    const byHour = new Map(data.hourly_avg.map(b => [b.hour, b.avg_temp]));
+    const anchorHour = new Date(anchor.time).getUTCHours();
+    const anchorAvg = byHour.get(anchorHour);
+    const offset = (anchorAvg != null) ? anchor.temp - anchorAvg : 0;
+
+    const chips = [];
+    for (let i = 1; i <= 6; i++){
+      const h = (anchorHour + i) % 24;
+      const avg = byHour.get(h);
+      if (avg == null) continue;
+      chips.push({ hour: h, temp: avg + offset });
+    }
+
+    const head = document.getElementById('predictHead');
+    const strip = document.getElementById('predictStrip');
+    if (!chips.length){
+      head.hidden = true;
+      strip.hidden = true;
+      return;
+    }
+    head.hidden = false;
+    strip.hidden = false;
+    strip.innerHTML = chips.map(c => `
+      <div class="predictchip">
+        <span class="h">${String(c.hour).padStart(2,'0')}:00</span>
+        <span class="t">${c.temp.toFixed(0)}&deg;</span>
+      </div>
+    `).join('');
+  };
+
+  if (predictorCache){
+    fetchAndRender(predictorCache);
+    return;
+  }
+  fetch(PREDICTOR_URL)
+    .then(r => r.json())
+    .then(data => { predictorCache = data; fetchAndRender(data); })
+    .catch(() => {
+      document.getElementById('predictHead').hidden = true;
+      document.getElementById('predictStrip').hidden = true;
+    });
 }
 
 let points = [];
