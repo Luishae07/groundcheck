@@ -53,6 +53,11 @@ class WeatherViewModel : ViewModel() {
         }
     }
 
+    fun selectReading(r: Reading) {
+        _state.value = _state.value.copy(selected = r, distanceKm = null)
+        buildPrediction(r)
+    }
+
     fun locateNearest(lat: Double, lon: Double) {
         val readings = _state.value.readings
         if (readings.isEmpty()) return

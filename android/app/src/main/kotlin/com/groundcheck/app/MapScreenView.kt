@@ -8,11 +8,10 @@ import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -32,12 +31,6 @@ private fun circleBitmap(argb: Int, sizePx: Int = 36): Bitmap {
 
 @Composable
 fun MapScreenView(readings: List<Reading>, onMarkerClick: (Reading) -> Unit) {
-    val ctx = androidx.compose.ui.platform.LocalContext.current
-    remember {
-        Configuration.getInstance().userAgentValue = ctx.packageName
-        true
-    }
-
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context: Context ->
@@ -50,7 +43,7 @@ fun MapScreenView(readings: List<Reading>, onMarkerClick: (Reading) -> Unit) {
         },
         update = { mapView ->
             mapView.overlays.clear()
-            val points = readings.map { GeoPoint(it.lat, it.lon) }
+
             for (r in readings) {
                 val marker = Marker(mapView)
                 marker.position = GeoPoint(r.lat, r.lon)
@@ -58,16 +51,27 @@ fun MapScreenView(readings: List<Reading>, onMarkerClick: (Reading) -> Unit) {
                 marker.snippet = "Alt ${r.alt.toInt()} m"
                 val c = tempColor(r.temp)
                 val argb = Color.argb(255, (c.red * 255).toInt(), (c.green * 255).toInt(), (c.blue * 255).toInt())
-                marker.icon = BitmapDrawable(mapView.context.resources, circleBitmap(argb))
+                try {
+                    marker.icon = BitmapDrawable(mapView.context.resources, circleBitmap(argb))
+                } catch (_: Exception) { /* fall back to default pin if bitmap creation fails */ }
                 marker.setOnMarkerClickListener { _, _ -> onMarkerClick(r); true }
                 mapView.overlays.add(marker)
             }
-            if (points.isNotEmpty()) {
-                mapView.zoomToBoundingBox(
-                    org.osmdroid.util.BoundingBox.fromGeoPoints(points), false, 50
-                )
-            }
             mapView.invalidate()
+
+            // zoomToBoundingBox throws if called before the view has been
+            // measured (width/height still 0) — that's the classic osmdroid
+            // crash. Deferring with post{} guarantees a real layout pass has
+            // happened, and we skip degenerate single-point bounding boxes.
+            val distinct = readings.map { it.lat to it.lon }.distinct()
+            if (distinct.size >= 2) {
+                mapView.post {
+                    try {
+                        val points = readings.map { GeoPoint(it.lat, it.lon) }
+                        mapView.zoomToBoundingBox(BoundingBox.fromGeoPoints(points), false, 50)
+                    } catch (_: Exception) { /* best effort — keep default view if this fails */ }
+                }
+            }
         }
     )
 }
