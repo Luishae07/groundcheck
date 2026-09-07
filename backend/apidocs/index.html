@@ -1,0 +1,127 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Groundcheck API Docs</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2f6f9; --panel:#ffffff; --ink:#132433; --ink-dim:#5b7185;
+  --line:#dbe4ec; --accent:#1f6f4a; --code-bg:#0d1b2e; --code-ink:#d8e6f2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1620; --panel:#111c28; --ink:#e8eef4; --ink-dim:#8fa3b8;
+    --line:#22323f; --accent:#5fcf95; --code-bg:#080f18; --code-ink:#c9dcec;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1620; --panel:#111c28; --ink:#e8eef4; --ink-dim:#8fa3b8;
+  --line:#22323f; --accent:#5fcf95; --code-bg:#080f18; --code-ink:#c9dcec;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Inter",system-ui,sans-serif;
+  padding:2.5rem 1.5rem 4rem;
+}
+main{max-width:720px; margin:0 auto}
+h1{font-family:"Sora",sans-serif; font-weight:800; font-size:1.9rem; margin:0 0 .3rem; text-wrap:balance}
+.sub{color:var(--ink-dim); font-size:.95rem; margin:0 0 2.2rem}
+h2{font-family:"Sora",sans-serif; font-weight:700; font-size:1.2rem; margin:2.2rem 0 .7rem}
+p{line-height:1.6; color:var(--ink-dim)}
+a{color:var(--accent)}
+.endpoint{
+  background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  padding:.9rem 1.1rem; margin-bottom:1rem; display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap;
+}
+.method{
+  font-family:"Sora",sans-serif; font-weight:700; font-size:.72rem;
+  color:var(--accent); border:1px solid var(--accent); border-radius:6px; padding:.1rem .5rem;
+}
+.path{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.9rem}
+.desc{color:var(--ink-dim); font-size:.85rem; width:100%}
+table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.85rem}
+th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--line)}
+th{color:var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.04em}
+td code{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.82rem}
+pre{
+  background:var(--code-bg); color:var(--code-ink); border-radius:12px;
+  padding:1rem 1.1rem; overflow-x:auto; font-size:.82rem; line-height:1.55;
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+}
+footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
+</style>
+
+<main>
+  <h1>Groundcheck API</h1>
+  <p class="sub">Read-only endpoints backing the <a href="/">Groundcheck</a> weather app — real radiosonde ground-temperature readings, with a free optional API key for a much higher rate limit.</p>
+
+  <h2>Endpoints</h2>
+
+  <div class="endpoint">
+    <span class="method">GET</span><span class="path">/api/data</span>
+    <div class="desc">All current non-negative-temperature radiosonde readings, sorted newest first. Without an API key, limited to 30 requests per 60 seconds per IP. With a key, 9000 requests per 10 seconds. Exceeding your limit returns <code>429</code> with a <code>Retry-After</code> header.</div>
+  </div>
+
+  <div class="endpoint">
+    <span class="method">POST</span><span class="path">/api/keys/new</span>
+    <div class="desc">Generates a free API key on the spot &mdash; no signup. Returns <code>{"api_key": "...", "limit": "9000 requests / 10s"}</code>.</div>
+  </div>
+
+  <div class="endpoint">
+    <span class="method">GET</span><span class="path">/weather_data_nonneg.txt</span>
+    <div class="desc">The same readings as a plain-text line list, one reading per line.</div>
+  </div>
+
+  <h2>Using an API key</h2>
+  <p>Get one:</p>
+  <pre>curl -X POST http://localhost:8765/api/keys/new</pre>
+  <p>Then pass it on every request, either as a header or a query parameter:</p>
+  <pre>curl http://localhost:8765/api/data -H "X-API-Key: &lt;your key&gt;"
+
+curl "http://localhost:8765/api/data?key=&lt;your key&gt;"</pre>
+
+  <h2>Response shape (/api/data)</h2>
+  <p>An array of reading objects:</p>
+  <pre>[
+  {
+    "id": "Y0943402",           // radiosonde serial number
+    "time": "2026-09-05T04:57:35Z",
+    "tsunix": 1788584255,
+    "temp": 12.7,               // °C, ground-level (negatives filtered out)
+    "alt": 474.91,              // metres
+    "pressure": 959.8,          // hPa, or null if unavailable
+    "humidity": 90,             // %, or null if unavailable
+    "lat": 51.772308,
+    "lon": 9.25355,
+    "source": ["RS41"]          // sonde model / receiver tag
+  },
+  ...
+]</pre>
+
+  <h2>Fields</h2>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+    <tr><td><code>id</code></td><td>string</td><td>Unique sonde serial number</td></tr>
+    <tr><td><code>time</code></td><td>string (ISO 8601, UTC)</td><td>When the reading was taken</td></tr>
+    <tr><td><code>tsunix</code></td><td>number</td><td>Same timestamp, Unix seconds</td></tr>
+    <tr><td><code>temp</code></td><td>number</td><td>Ground temperature in &deg;C — always &ge; 0 in this feed</td></tr>
+    <tr><td><code>alt</code></td><td>number</td><td>Altitude in metres</td></tr>
+    <tr><td><code>pressure</code></td><td>number | null</td><td>Barometric pressure in hPa</td></tr>
+    <tr><td><code>humidity</code></td><td>number | null</td><td>Relative humidity, %</td></tr>
+    <tr><td><code>lat</code> / <code>lon</code></td><td>number</td><td>WGS84 coordinates</td></tr>
+    <tr><td><code>source</code></td><td>string[] | null</td><td>Receiving station / sonde model tags</td></tr>
+  </table>
+
+  <h2>Notes</h2>
+  <p>
+    Data originates from <a href="https://sonde.mine.nu">sonde.mine.nu</a>'s live radiosonde telemetry feed.
+    Readings with sub-zero temperatures (typical at flight altitude) are excluded, since they aren't representative
+    of ground weather. The underlying data refreshes on a schedule — see the app's <a href="/#faq">FAQ</a> for details.
+  </p>
+  <p>An API key is optional, not required &mdash; without one you get the default rate limit; with one, the much higher limit described above.</p>
+
+  <footer>&larr; <a href="/">Back to Groundcheck</a></footer>
+</main>
