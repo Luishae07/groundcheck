@@ -3,6 +3,27 @@ Set-Location -Path $PSScriptRoot
 
 Write-Host "Groundcheck backend"
 Write-Host "===================="
+
+if (-not (Test-Path (Join-Path $PSScriptRoot "data.json"))) {
+    $createData = Read-Host "data.json not found. Create it now? (y/n)"
+    if ($createData -match '^[Yy]') {
+        Start-Sleep -Seconds 2
+        Write-Host "How many days of history should the initial fetch cover?"
+        Write-Host "  1) 50"
+        Write-Host "  2) 200"
+        Write-Host "  3) 500"
+        Write-Host "  4) 600"
+        Write-Host "  5) 800"
+        $choice = Read-Host "#?"
+        $daysMap = @{ "1" = 50; "2" = 200; "3" = 500; "4" = 600; "5" = 800 }
+        $days = $daysMap[$choice]
+        if (-not $days) { $days = 50 }
+        Write-Host "Fetching last $days day(s) of radiosonde history — this can take a while for large ranges..."
+        python update.py --days $days
+        Write-Host "data.json created."
+    }
+}
+
 $useBackground = Read-Host "Run in background (detached, keeps running after this window closes)? (y/n)"
 $useLogs = Read-Host "Enable logs? (y/n)"
 
@@ -12,6 +33,22 @@ if ($useLogs -match '^[Yy]') {
 } else {
     $serveOut = "NUL"
     $wsOut = "NUL"
+}
+
+# --- schedule radiosonde checks: every minute + once daily, via Task Scheduler ---
+try {
+    $pythonPath = (Get-Command python -ErrorAction Stop).Source
+    $minAction = New-ScheduledTaskAction -Execute $pythonPath -Argument "update.py --window 60" -WorkingDirectory $PSScriptRoot
+    $minTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration ([TimeSpan]::MaxValue)
+    Register-ScheduledTask -TaskName "GroundcheckBackendMinuteCheck" -Action $minAction -Trigger $minTrigger -Force -ErrorAction Stop | Out-Null
+
+    $dayAction = New-ScheduledTaskAction -Execute $pythonPath -Argument "update.py --window 86400" -WorkingDirectory $PSScriptRoot
+    $dayTrigger = New-ScheduledTaskTrigger -Daily -At "3:00AM"
+    Register-ScheduledTask -TaskName "GroundcheckBackendDailyCheck" -Action $dayAction -Trigger $dayTrigger -Force -ErrorAction Stop | Out-Null
+
+    Write-Host "Scheduled radiosonde checks: every minute + once daily (Task Scheduler)."
+} catch {
+    Write-Host "Could not register scheduled tasks (may need to run as Administrator) — skipping automatic radiosonde checks."
 }
 
 if ($useBackground -match '^[Yy]') {
