@@ -25,7 +25,7 @@ if [[ ! -f "data.json" ]]; then
   if [[ "$CREATE_DATA" =~ ^[Yy] ]]; then
     sleep 2
     echo "How many days of history should the initial fetch cover?"
-    select DAYS in 50 200 500 600 800; do
+    select DAYS in 1 3 5 9 10 20 50 200 500 600 800; do
       if [[ -n "$DAYS" ]]; then
         break
       fi

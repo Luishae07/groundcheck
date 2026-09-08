@@ -36,13 +36,19 @@ if (-not (Test-Path (Join-Path $PSScriptRoot "data.json"))) {
     if ($createData -match '^[Yy]') {
         Start-Sleep -Seconds 2
         Write-Host "How many days of history should the initial fetch cover?"
-        Write-Host "  1) 50"
-        Write-Host "  2) 200"
-        Write-Host "  3) 500"
-        Write-Host "  4) 600"
-        Write-Host "  5) 800"
+        Write-Host "  1) 1"
+        Write-Host "  2) 3"
+        Write-Host "  3) 5"
+        Write-Host "  4) 9"
+        Write-Host "  5) 10"
+        Write-Host "  6) 20"
+        Write-Host "  7) 50"
+        Write-Host "  8) 200"
+        Write-Host "  9) 500"
+        Write-Host "  10) 600"
+        Write-Host "  11) 800"
         $choice = Read-Host "#?"
-        $daysMap = @{ "1" = 50; "2" = 200; "3" = 500; "4" = 600; "5" = 800 }
+        $daysMap = @{ "1"=1; "2"=3; "3"=5; "4"=9; "5"=10; "6"=20; "7"=50; "8"=200; "9"=500; "10"=600; "11"=800 }
         $days = $daysMap[$choice]
         if (-not $days) { $days = 50 }
         Write-Host "Fetching last $days day(s) of radiosonde history — this can take a while for large ranges..."
