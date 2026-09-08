@@ -6,6 +6,20 @@ cd "$(dirname "$0")"
 echo "Groundcheck backend"
 echo "===================="
 
+# --- ports ---
+read -rp "HTTP data API port [8765]: " HTTP_PORT
+HTTP_PORT="${HTTP_PORT:-8765}"
+read -rp "WebSocket live-feed port [8766]: " WS_PORT
+WS_PORT="${WS_PORT:-8766}"
+export GROUNDCHECK_HTTP_PORT="$HTTP_PORT"
+export GROUNDCHECK_WS_PORT="$WS_PORT"
+
+# --- ground-level altitude filter ---
+read -rp "Max ground-level altitude filter in meters [980]: " MAX_ALT
+MAX_ALT="${MAX_ALT:-980}"
+export GROUNDCHECK_MAX_ALT_M="$MAX_ALT"
+
+# --- data.json bootstrap ---
 if [[ ! -f "data.json" ]]; then
   read -rp "data.json not found. Create it now? (y/n): " CREATE_DATA
   if [[ "$CREATE_DATA" =~ ^[Yy] ]]; then
@@ -22,8 +36,19 @@ if [[ ! -f "data.json" ]]; then
   fi
 fi
 
+# --- cron setup ---
+read -rp "Set up automatic radiosonde checks via cron? (y/n): " USE_CRON
+if [[ "$USE_CRON" =~ ^[Yy] ]]; then
+  read -rp "Check every minute? (y/n): " CRON_MINUTE
+  read -rp "Also check once daily (deeper 24h window, catches anything missed)? (y/n): " CRON_DAILY
+  if [[ ! "$CRON_MINUTE" =~ ^[Yy] ]] && [[ ! "$CRON_DAILY" =~ ^[Yy] ]]; then
+    read -rp "Neither selected — check every N minutes instead (0 to skip cron entirely): " CRON_CUSTOM_MIN
+  fi
+fi
+
 read -rp "Run in background with nohup? (y/n): " USE_NOHUP
 read -rp "Enable logs? (y/n): " USE_LOGS
+read -rp "Open the app in your browser once it's running? (y/n): " OPEN_BROWSER
 
 if [[ "$USE_LOGS" =~ ^[Yy] ]]; then
   SERVE_OUT="serve.log"
@@ -35,22 +60,35 @@ else
   UPDATE_OUT="/dev/null"
 fi
 
-# --- install cron jobs: check radiosonde data every minute and once a day ---
-SCRIPT_DIR="$(pwd)"
-if [[ "$UPDATE_OUT" == "/dev/null" ]]; then
-  UPDATE_LOG_TARGET="/dev/null"
-else
-  UPDATE_LOG_TARGET="$SCRIPT_DIR/$UPDATE_OUT"
-fi
-CRON_MARKER="# groundcheck-backend-auto"
-CRON_MIN="* * * * * cd $SCRIPT_DIR && python3 update.py --window 60 >> $UPDATE_LOG_TARGET 2>&1 $CRON_MARKER"
-CRON_DAY="0 3 * * * cd $SCRIPT_DIR && python3 update.py --window 86400 >> $UPDATE_LOG_TARGET 2>&1 $CRON_MARKER"
+# --- install cron jobs per the choices above ---
+if [[ "$USE_CRON" =~ ^[Yy] ]]; then
+  SCRIPT_DIR="$(pwd)"
+  if [[ "$UPDATE_OUT" == "/dev/null" ]]; then
+    UPDATE_LOG_TARGET="/dev/null"
+  else
+    UPDATE_LOG_TARGET="$SCRIPT_DIR/$UPDATE_OUT"
+  fi
+  CRON_MARKER="# groundcheck-backend-auto"
+  NEW_CRON_LINES=""
 
-if command -v crontab >/dev/null 2>&1; then
-  ( crontab -l 2>/dev/null | grep -v "$CRON_MARKER" ; echo "$CRON_MIN" ; echo "$CRON_DAY" ) | crontab -
-  echo "Installed cron jobs: radiosonde check every minute + once daily."
-else
-  echo "crontab not available — skipping automatic radiosonde checks (run update.py manually or via another scheduler)."
+  if [[ "$CRON_MINUTE" =~ ^[Yy] ]]; then
+    NEW_CRON_LINES+="* * * * * cd $SCRIPT_DIR && GROUNDCHECK_MAX_ALT_M=$MAX_ALT python3 update.py --window 60 >> $UPDATE_LOG_TARGET 2>&1 $CRON_MARKER"$'\n'
+  fi
+  if [[ "$CRON_DAILY" =~ ^[Yy] ]]; then
+    NEW_CRON_LINES+="0 3 * * * cd $SCRIPT_DIR && GROUNDCHECK_MAX_ALT_M=$MAX_ALT python3 update.py --window 86400 >> $UPDATE_LOG_TARGET 2>&1 $CRON_MARKER"$'\n'
+  fi
+  if [[ -n "$CRON_CUSTOM_MIN" ]] && [[ "$CRON_CUSTOM_MIN" != "0" ]]; then
+    NEW_CRON_LINES+="*/$CRON_CUSTOM_MIN * * * * cd $SCRIPT_DIR && GROUNDCHECK_MAX_ALT_M=$MAX_ALT python3 update.py --window $((CRON_CUSTOM_MIN * 60)) >> $UPDATE_LOG_TARGET 2>&1 $CRON_MARKER"$'\n'
+  fi
+
+  if [[ -n "$NEW_CRON_LINES" ]] && command -v crontab >/dev/null 2>&1; then
+    ( crontab -l 2>/dev/null | grep -v "$CRON_MARKER" ; printf '%s' "$NEW_CRON_LINES" ) | crontab -
+    echo "Installed cron jobs."
+  elif [[ -z "$NEW_CRON_LINES" ]]; then
+    echo "No cron cadence selected — skipping."
+  else
+    echo "crontab not available — skipping automatic radiosonde checks."
+  fi
 fi
 
 if [[ "$USE_NOHUP" =~ ^[Yy] ]]; then
@@ -78,14 +116,26 @@ fi
 
 echo ""
 echo "Groundcheck backend running:"
-echo "  Data API:   http://localhost:8765/api/data"
-echo "              http://$LAN_IP:8765/api/data"
-echo "  Live feed:  ws://localhost:8766"
-echo "              ws://$LAN_IP:8766"
+echo "  Data API:   http://localhost:$HTTP_PORT/api/data"
+echo "              http://$LAN_IP:$HTTP_PORT/api/data"
+echo "  Live feed:  ws://localhost:$WS_PORT"
+echo "              ws://$LAN_IP:$WS_PORT"
+echo "  Altitude filter: <= ${MAX_ALT}m"
 
 if [[ "$USE_LOGS" =~ ^[Yy] ]]; then
   echo ""
   echo "Logs: serve.log, ws_proxy.log, update.log"
+fi
+
+if [[ "$OPEN_BROWSER" =~ ^[Yy] ]]; then
+  URL="http://localhost:$HTTP_PORT/"
+  if command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$URL" >/dev/null 2>&1 &
+  elif command -v open >/dev/null 2>&1; then
+    open "$URL"
+  else
+    echo "Could not detect a way to open a browser automatically — open $URL manually."
+  fi
 fi
 
 if [[ ! "$USE_NOHUP" =~ ^[Yy] ]]; then

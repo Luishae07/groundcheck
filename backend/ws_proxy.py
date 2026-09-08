@@ -10,10 +10,11 @@ app never talks to zeesen directly.
 """
 import asyncio
 import json
+import os
 import websockets
 
 UPSTREAM_URL = "wss://zeesen.mine.nu:7890"
-LOCAL_PORT = 8766
+LOCAL_PORT = int(os.environ.get("GROUNDCHECK_WS_PORT", 8766))
 
 clients = set()
 latest_sonde = {"data": None}  # last known live sonde message, for late-joining clients

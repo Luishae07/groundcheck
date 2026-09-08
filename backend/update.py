@@ -17,7 +17,7 @@ import os
 BASE = os.path.dirname(os.path.abspath(__file__))
 STORE_PATH = os.path.join(BASE, "station_store.json")
 DATA_PATH = os.path.join(BASE, "data.json")
-MAX_GROUND_ALT_M = 980
+MAX_GROUND_ALT_M = int(os.environ.get("GROUNDCHECK_MAX_ALT_M", 980))
 
 
 def log(msg):

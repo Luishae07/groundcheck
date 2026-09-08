@@ -7,7 +7,7 @@ import os
 import secrets
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-PORT = 8765
+PORT = int(os.environ.get("GROUNDCHECK_HTTP_PORT", 8765))
 
 INTERNAL_PATH = "/apiinternel/dont/json/microsftwindowssucks/data"
 PUBLIC_PATH = "/api/data"
