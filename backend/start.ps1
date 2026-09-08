@@ -4,6 +4,33 @@ Set-Location -Path $PSScriptRoot
 Write-Host "Groundcheck backend"
 Write-Host "===================="
 
+# --- check for WSL and a usable Linux distro ---
+$wslDistro = $null
+if (Get-Command wsl -ErrorAction SilentlyContinue) {
+    try {
+        $distros = (wsl -l -q 2>$null) | Where-Object { $_ -and $_.Trim() -ne "" }
+        if ($distros) { $wslDistro = ($distros | Select-Object -First 1).Trim() }
+    } catch { $wslDistro = $null }
+}
+
+if ($wslDistro) {
+    Write-Host "> Install with WSL"
+    Write-Host "  Found WSL distro: $wslDistro"
+    $useWsl = Read-Host "Run the backend inside WSL instead (uses start.sh, with cron support)? (y/n)"
+    if ($useWsl -match '^[Yy]') {
+        $wslPath = (wsl -d $wslDistro wslpath -a "$PSScriptRoot").Trim()
+        Write-Host "Handing off to start.sh inside WSL ($wslDistro)..."
+        wsl -d $wslDistro bash -c "cd '$wslPath' && chmod +x start.sh && ./start.sh"
+        exit
+    }
+} else {
+    Write-Host "> Install WSL"
+    Write-Host "  No WSL Linux distro detected. For the full experience (cron-based"
+    Write-Host "  scheduling instead of Task Scheduler), install WSL first:"
+    Write-Host "    wsl --install"
+    Write-Host "  Then re-run this script. Continuing with native Windows/PowerShell for now..."
+}
+
 if (-not (Test-Path (Join-Path $PSScriptRoot "data.json"))) {
     $createData = Read-Host "data.json not found. Create it now? (y/n)"
     if ($createData -match '^[Yy]') {
