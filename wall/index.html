@@ -56,6 +56,19 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
   position:fixed; bottom:2vh; right:3vw; font-size:1.8vh; color:var(--ink-faint);
   font-variant-numeric:tabular-nums; z-index:1000;
 }
+.youarehere{ position:relative; width:18px; height:18px; }
+.youarehere .pulse{
+  position:absolute; inset:-14px; border-radius:50%;
+  background:#3b82f6; opacity:.35; animation:youarehere-pulse 1.8s ease-out infinite;
+}
+.youarehere .dot{
+  position:absolute; inset:0; border-radius:50%;
+  background:#3b82f6; border:3px solid #fff; box-shadow:0 1px 6px rgba(0,0,0,.5);
+}
+@keyframes youarehere-pulse{
+  0%{ transform:scale(.5); opacity:.45; }
+  100%{ transform:scale(1); opacity:0; }
+}
 </style>
 </head>
 <body>
@@ -136,6 +149,7 @@ function renderMap(){
     const marker = L.circleMarker([p.lat, p.lon], { radius: 7, color: '#fff', weight: 2, fillColor: tempColor(p.temp), fillOpacity: 0.95 });
     markerLayer.addLayer(marker);
   });
+  updateYouAreHereMarker();
 }
 
 function renderPredict(anchor){
@@ -176,16 +190,81 @@ function renderPredict(anchor){
   }).catch(() => {});
 }
 
+let youAreHereMarker = null;
+function updateYouAreHereMarker(){
+  if (!leafletMap || !deviceLoc) return;
+  if (youAreHereMarker) leafletMap.removeLayer(youAreHereMarker);
+  youAreHereMarker = L.marker([deviceLoc.lat, deviceLoc.lon], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div class="youarehere"><span class="pulse"></span><span class="dot"></span></div>',
+      iconSize: [18, 18], iconAnchor: [9, 9]
+    }),
+    zIndexOffset: 1000, interactive: false
+  }).addTo(leafletMap);
+}
+
+function haversine(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function locateByIP(){
+  return fetch('https://ipwho.is/')
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
+      return { lat: d.latitude, lon: d.longitude };
+    });
+}
+
+let deviceLoc = null; // {lat, lon} once resolved — cached so repeated refreshes don't re-prompt/re-geolocate
+
+function nearestReading(lat, lon){
+  const cutoff = Date.now() - 24 * 3600 * 1000;
+  const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
+  const pool = fresh.length ? fresh : points;
+  let nearest = pool[0], best = Infinity;
+  for (const p of pool){
+    const d = haversine(lat, lon, p.lat, p.lon);
+    if (d < best){ best = d; nearest = p; }
+  }
+  return nearest;
+}
+
+function anchorAndRender(){
+  const anchor = deviceLoc ? nearestReading(deviceLoc.lat, deviceLoc.lon)
+    : points.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
+  renderHero(anchor);
+  renderMap();
+  renderPredict(anchor);
+}
+
+function resolveLocationOnce(){
+  if (deviceLoc) return;
+  const applyLoc = (loc) => { deviceLoc = loc; anchorAndRender(); };
+  if (!navigator.geolocation){
+    locateByIP().then(applyLoc).catch(() => {});
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => applyLoc({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+    () => { locateByIP().then(applyLoc).catch(() => {}); },
+    { timeout: 8000 }
+  );
+}
+
 function loadData(){
   fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
     .then(r => r.json())
     .then(d => {
       points = d;
       if (!points.length) return;
-      const newest = points.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
-      renderHero(newest);
-      renderMap();
-      renderPredict(newest);
+      resolveLocationOnce();
+      anchorAndRender();
     })
     .catch(() => {});
 }
