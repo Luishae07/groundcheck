@@ -1,0 +1,212 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Groundcheck Wall</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<style>
+:root{
+  --bg:#060a10; --panel:#0f1620; --panel-2:#0a1119;
+  --ink:#f2f6fa; --ink-dim:#93a6b8; --ink-faint:#5b6f82;
+  --line:#1c2733; --accent:#5fcf95;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Inter",-apple-system,sans-serif;overflow:hidden;}
+.slide{
+  position:fixed; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity 1.1s ease;
+  padding:4vh 5vw;
+}
+.slide.active{opacity:1; pointer-events:auto;}
+
+/* --- Hero slide --- */
+#slideHero .icon svg{width:22vh;height:22vh}
+#slideHero .temp{font-family:"Sora",sans-serif;font-weight:800;font-size:22vh;line-height:1;letter-spacing:-2px;}
+#slideHero .cond{font-size:3.2vh;color:var(--ink-dim);margin-top:1vh;}
+#slideHero .stamp{font-size:2vh;color:var(--ink-faint);margin-top:2vh;}
+#slideHero .metrics{display:flex;gap:5vw;margin-top:5vh;}
+#slideHero .metric{text-align:center;}
+#slideHero .metric .k{font-size:1.8vh;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1px;}
+#slideHero .metric .v{font-family:"Sora",sans-serif;font-weight:700;font-size:4vh;margin-top:.5vh;}
+
+/* --- Map slide --- */
+#slideMap{padding:0;}
+#slideMap h2{position:absolute;top:4vh;left:5vw;font-family:"Sora",sans-serif;font-size:3.5vh;font-weight:700;z-index:1000;
+  background:rgba(6,10,16,.7);padding:1vh 2vw;border-radius:12px;}
+#mapbox{width:100%;height:100%;}
+
+/* --- Predictor slide --- */
+#slidePredict h2{font-family:"Sora",sans-serif;font-size:4vh;font-weight:800;margin-bottom:5vh;}
+.wallstrip{display:flex;gap:3vw;}
+.wallchip{
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:3vh 3vw;display:flex;flex-direction:column;align-items:center;gap:1.5vh;
+  min-width:14vw;
+}
+.wallchip .h{font-size:2.2vh;color:var(--ink-faint);}
+.wallchip svg{width:9vh;height:9vh}
+.wallchip .t{font-family:"Sora",sans-serif;font-weight:700;font-size:4vh;}
+
+.clockbar{
+  position:fixed; bottom:2vh; right:3vw; font-size:1.8vh; color:var(--ink-faint);
+  font-variant-numeric:tabular-nums; z-index:1000;
+}
+</style>
+</head>
+<body>
+
+<div class="slide active" id="slideHero">
+  <div class="icon" id="heroIcon"></div>
+  <div class="temp" id="heroTemp">—</div>
+  <div class="cond" id="heroCond"></div>
+  <div class="stamp" id="heroStamp"></div>
+  <div class="metrics">
+    <div class="metric"><div class="k">Humidity</div><div class="v" id="mHum">—</div></div>
+    <div class="metric"><div class="k">Pressure</div><div class="v" id="mPres">—</div></div>
+    <div class="metric"><div class="k">Stations</div><div class="v" id="mCount">—</div></div>
+  </div>
+</div>
+
+<div class="slide" id="slideMap">
+  <h2>Station map — last 7 days</h2>
+  <div id="mapbox"></div>
+</div>
+
+<div class="slide" id="slidePredict">
+  <h2>Next days</h2>
+  <div class="wallstrip" id="wallStrip"></div>
+</div>
+
+<div class="clockbar" id="clock"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script>
+const PREDICTOR_URL = 'https://michael-oclc-remind-animals.trycloudflare.com/predict';
+let points = [];
+let leafletMap = null, markerLayer = null;
+
+function iconFor(temp, hum, pres){
+  const isStorm = pres != null && pres < 990 && hum != null && hum > 85;
+  const isRain = hum != null && hum > 90;
+  if (isStorm) return `<svg viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="1.5"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="#facc15"/></svg>`;
+  if (isRain) return `<svg viewBox="0 0 24 24" fill="none" stroke="#5fa8e0" stroke-width="1.8"><path d="M7 16a4 4 0 0 1-1-7.9A5 5 0 0 1 16 7a4 4 0 0 1 1 7.9"/><path d="M8 19v2M12 19v2M16 19v2" stroke-linecap="round"/></svg>`;
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8"><circle cx="12" cy="12" r="4.5" fill="#fbbf24" stroke="none"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8" stroke-linecap="round"/></svg>`;
+}
+function condFor(temp, hum, pres){
+  if (pres != null && pres < 990 && hum != null && hum > 85) return 'Storm risk';
+  if (hum != null && hum > 90) return 'Rain likely';
+  if (temp < 3) return 'Cold';
+  if (temp > 25) return 'Hot';
+  return 'Clear';
+}
+function tempColor(t){
+  if (t < 3) return '#3b82c4';
+  if (t < 7) return '#2f9e6f';
+  if (t < 11) return '#c99a2e';
+  return '#c05a3c';
+}
+
+function renderHero(p){
+  document.getElementById('heroIcon').innerHTML = iconFor(p.temp, p.humidity, p.pressure);
+  document.getElementById('heroTemp').textContent = p.temp.toFixed(1) + '°';
+  document.getElementById('heroCond').textContent = condFor(p.temp, p.humidity, p.pressure);
+  document.getElementById('heroStamp').textContent = p.id + ' · ' + new Date(p.time).toLocaleString();
+  document.getElementById('mHum').textContent = p.humidity != null ? p.humidity + '%' : '—';
+  document.getElementById('mPres').textContent = p.pressure != null ? p.pressure + ' hPa' : '—';
+  document.getElementById('mCount').textContent = points.length;
+}
+
+function renderMap(){
+  const cutoff = Date.now() - 7 * 86400 * 1000;
+  const recent = points.filter(p => new Date(p.time).getTime() >= cutoff);
+  if (!leafletMap){
+    leafletMap = L.map('mapbox', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, noWrap: true }).addTo(leafletMap);
+    markerLayer = L.markerClusterGroup();
+    leafletMap.addLayer(markerLayer);
+  }
+  markerLayer.clearLayers();
+  recent.forEach(p => {
+    const marker = L.circleMarker([p.lat, p.lon], { radius: 7, color: '#fff', weight: 2, fillColor: tempColor(p.temp), fillOpacity: 0.95 });
+    markerLayer.addLayer(marker);
+  });
+}
+
+function renderPredict(anchor){
+  fetch(PREDICTOR_URL).then(r => r.json()).then(data => {
+    if (!data.hourly_avg || !data.hourly_avg.length) return;
+    const byHour = new Map(data.hourly_avg.map(b => [b.hour, b]));
+    const nearestBucket = (h) => {
+      if (byHour.has(h)) return byHour.get(h);
+      let best = null, bestDist = Infinity;
+      for (const b of data.hourly_avg){
+        const d = Math.min(Math.abs(b.hour - h), 24 - Math.abs(b.hour - h));
+        if (d < bestDist){ bestDist = d; best = b; }
+      }
+      return best;
+    };
+    const anchorHour = new Date(anchor.time).getUTCHours();
+    const anchorBucket = nearestBucket(anchorHour);
+    const tempOffset = anchorBucket ? anchor.temp - anchorBucket.avg_temp : 0;
+    const dayTemps = data.hourly_avg.map(b => b.avg_temp + tempOffset);
+    const dayHigh = Math.max(...dayTemps), dayLow = Math.min(...dayTemps);
+    const middayBucket = nearestBucket(13);
+    const middayTemp = middayBucket ? middayBucket.avg_temp + tempOffset : dayHigh;
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const anchorDate = new Date(anchor.time);
+    const chips = [];
+    for (let i = 1; i <= 5; i++){
+      const d = new Date(anchorDate);
+      d.setUTCDate(d.getUTCDate() + i);
+      chips.push({ label: dayNames[d.getUTCDay()], high: dayHigh, low: dayLow, temp: middayTemp });
+    }
+    document.getElementById('wallStrip').innerHTML = chips.map(c => `
+      <div class="wallchip">
+        <span class="h">${c.label}</span>
+        ${iconFor(c.temp, null, null)}
+        <span class="t">${c.high.toFixed(0)}°<span style="opacity:.6">/${c.low.toFixed(0)}°</span></span>
+      </div>
+    `).join('');
+  }).catch(() => {});
+}
+
+function loadData(){
+  fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
+    .then(r => r.json())
+    .then(d => {
+      points = d;
+      if (!points.length) return;
+      const newest = points.reduce((a, b) => new Date(a.time) > new Date(b.time) ? a : b);
+      renderHero(newest);
+      renderMap();
+      renderPredict(newest);
+    })
+    .catch(() => {});
+}
+
+const slides = ['slideHero', 'slideMap', 'slidePredict'];
+let slideIdx = 0;
+function nextSlide(){
+  document.getElementById(slides[slideIdx]).classList.remove('active');
+  slideIdx = (slideIdx + 1) % slides.length;
+  document.getElementById(slides[slideIdx]).classList.add('active');
+  if (slides[slideIdx] === 'slideMap' && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 100);
+}
+
+function tickClock(){
+  document.getElementById('clock').textContent = new Date().toLocaleString();
+}
+
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+setInterval(nextSlide, 10 * 1000);
+setInterval(tickClock, 1000);
+tickClock();
+</script>
+</body></html>
