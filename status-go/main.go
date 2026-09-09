@@ -198,7 +198,7 @@ func main() {
 	cachedChecks = initial
 	cachedAt = time.Now()
 	cacheMu.Unlock()
-	go pollLoop(15 * time.Second)
+	go pollLoop(400 * time.Millisecond)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		checks, checkedAt := getCachedChecks()
