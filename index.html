@@ -452,12 +452,37 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   font-size:.82rem;
 }
 #mapbox{
+  position:relative;
   height:calc(100dvh - 340px);
   min-height:260px;
   border-radius:16px;
   overflow:hidden;
   border:1px solid var(--line);
   touch-action:pan-x pan-y;
+}
+.heatoverlay{
+  position:absolute;
+  top:12px; left:12px;
+  z-index:1000;
+  background:rgba(10,20,30,.68);
+  backdrop-filter:blur(6px);
+  border-radius:14px;
+  padding:.8rem .9rem;
+  color:#fff;
+  pointer-events:none;
+}
+.heatoverlay .title{font-size:.78rem;font-weight:700;margin-bottom:.5rem;}
+.heatoverlay .scale{
+  display:flex; gap:.5rem;
+}
+.heatoverlay .bar{
+  width:8px; height:120px; border-radius:4px;
+  background:linear-gradient(180deg,#c05a3c,#c99a2e,#2f9e6f,#3b82c4,#1e3a8a);
+}
+.heatoverlay .ticks{
+  display:flex; flex-direction:column; justify-content:space-between;
+  height:120px;
+  font-size:.68rem; color:rgba(255,255,255,.85);
 }
 .maplegend{
   display:flex;
@@ -749,17 +774,22 @@ footer{
         <option value="day">This day</option>
       </select>
       <input type="date" id="mapDay" class="rangepicker" hidden>
-      <div id="mapbox"></div>
+      <div id="mapbox">
+        <div class="heatoverlay" id="heatLegend" hidden>
+          <div class="title">Temperature</div>
+          <div class="scale">
+            <span class="bar"></span>
+            <span class="ticks">
+              <span>35&deg;</span><span>20&deg;</span><span>10&deg;</span><span>0&deg;</span><span>-10&deg;</span>
+            </span>
+          </div>
+        </div>
+      </div>
       <div class="maplegend" id="stationsLegend">
         <span><i style="background:#3b82c4"></i>&lt;3&deg;</span>
         <span><i style="background:#2f9e6f"></i>3&ndash;7&deg;</span>
         <span><i style="background:#c99a2e"></i>7&ndash;11&deg;</span>
         <span><i style="background:#c05a3c"></i>&gt;11&deg;</span>
-      </div>
-      <div class="maplegend heatlegend" id="heatLegend" hidden>
-        <span class="heatgradient"></span>
-        <span class="heatlabel">Cold</span>
-        <span class="heatlabel" style="margin-left:auto">Hot</span>
       </div>
     </div>
 
@@ -1299,7 +1329,7 @@ function applyMapMode(){
       return [p.lat, p.lon, t];
     });
     heatLayer = L.heatLayer(heatPoints, {
-      radius: 32, blur: 28, maxZoom: 10, max: 1.0,
+      radius: 90, blur: 75, maxZoom: 8, max: 1.0, minOpacity: 0.55,
       gradient: { 0.0: '#3b82c4', 0.35: '#2f9e6f', 0.65: '#c99a2e', 1.0: '#c05a3c' }
     });
     leafletMap.addLayer(heatLayer);
