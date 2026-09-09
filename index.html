@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Groundcheck</title>
-<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -659,7 +659,7 @@ footer{
       <div class="grid2" id="stats"></div>
       <div class="detailcard" id="details"></div>
 
-      <div class="listhead" id="predictHead" hidden>Next hours<span class="n">from 7-day pattern</span></div>
+      <div class="listhead" id="predictHead" hidden>Next days<span class="n">typical day, from 7-day pattern</span></div>
       <div class="strip" id="predictStrip" hidden></div>
 
       <button class="refresh" id="refreshBtn">
@@ -759,7 +759,7 @@ footer{
     </div>
 
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="apidocs" style="color:inherit">API docs</a> &middot; <a href="desktop" style="color:inherit">Desktop view</a>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a>
       <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
@@ -912,15 +912,25 @@ function renderPrediction(anchor){
     const presOffset = (anchorBucket && anchorBucket.avg_pressure != null && anchor.pressure != null)
       ? anchor.pressure - anchorBucket.avg_pressure : 0;
 
+    // Same diurnal shape applied to each of the next 5 days (there's no
+    // real day-to-day trend data — this is one "typical day" pattern
+    // repeated), so a day chip shows the high/low across all 24 hourly
+    // buckets rather than pretending each day is a distinct forecast.
+    const dayTemps = data.hourly_avg.map(b => b.avg_temp + tempOffset);
+    const dayHigh = Math.max(...dayTemps);
+    const dayLow = Math.min(...dayTemps);
+    const middayBucket = nearestBucket(13);
+    const middayTemp = middayBucket ? middayBucket.avg_temp + tempOffset : dayHigh;
+    const middayHumidity = middayBucket && middayBucket.avg_humidity != null ? middayBucket.avg_humidity + humOffset : null;
+    const middayPressure = middayBucket && middayBucket.avg_pressure != null ? middayBucket.avg_pressure + presOffset : null;
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const anchorDate = new Date(anchor.time);
     const chips = [];
     for (let i = 1; i <= 5; i++){
-      const h = (anchorHour + i) % 24;
-      const b = nearestBucket(h);
-      if (!b) continue;
-      const temp = b.avg_temp + tempOffset;
-      const humidity = b.avg_humidity != null ? b.avg_humidity + humOffset : null;
-      const pressure = b.avg_pressure != null ? b.avg_pressure + presOffset : null;
-      chips.push({ hour: h, temp, humidity, pressure });
+      const d = new Date(anchorDate);
+      d.setUTCDate(d.getUTCDate() + i);
+      chips.push({ label: dayNames[d.getUTCDay()], high: dayHigh, low: dayLow, temp: middayTemp, humidity: middayHumidity, pressure: middayPressure });
     }
 
     const head = document.getElementById('predictHead');
@@ -934,9 +944,9 @@ function renderPrediction(anchor){
     strip.hidden = false;
     strip.innerHTML = chips.map(c => `
       <div class="predictchip">
-        <span class="h">${String(c.hour).padStart(2,'0')}:00</span>
+        <span class="h">${c.label}</span>
         ${iconFor(c.temp, c.humidity, c.pressure)}
-        <span class="t">${c.temp.toFixed(0)}&deg;</span>
+        <span class="t">${c.high.toFixed(0)}&deg;<span style="opacity:.6">/${c.low.toFixed(0)}&deg;</span></span>
       </div>
     `).join('');
   };
