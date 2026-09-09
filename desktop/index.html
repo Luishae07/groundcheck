@@ -384,12 +384,16 @@ footer a{color:inherit}
         <div class="faqgrid">
           <div class="qa"><div class="q">What is Groundcheck?</div><div class="a">A weather app built on <b>real radiosonde (weather balloon) sensor readings</b> instead of a forecast model. Every number you see was actually measured by a sensor in the air, not predicted.</div></div>
           <div class="qa"><div class="q">Where does the data come from?</div><div class="a">Live telemetry from <b>sonde.mine.nu</b> / <b>zeesen.mine.nu</b>, a public radiosonde-tracking feed. We fetch its <code>sondes.php</code> endpoint on a schedule.</div></div>
-          <div class="qa"><div class="q">Is this a forecast app?</div><div class="a">No. The "Next hours" panel is the one exception — it's built from this app's own 7-day historical diurnal pattern, not an external forecast API. Everything else is raw sensor history.</div></div>
+          <div class="qa"><div class="q">Is this a forecast app?</div><div class="a">No. The "Next days" panel is the one exception — it's built from this app's own 7-day historical diurnal pattern applied to each upcoming day, not an external forecast API. Everything else is raw sensor history.</div></div>
           <div class="qa"><div class="q">Why only ground-level readings?</div><div class="a">Sondes spend most of a flight at altitude, where it's routinely far below freezing. Those readings aren't representative of ground weather, so we filter to a configurable altitude ceiling (currently under ~1000m) and only show near-surface readings.</div></div>
           <div class="qa"><div class="q">How often does the data refresh?</div><div class="a">A background job fetches new readings every minute, plus deeper daily/weekly sweeps to catch anything missed. The page itself polls for updates every 5 minutes.</div></div>
           <div class="qa"><div class="q">Why is a reading sometimes hours or days old?</div><div class="a">Radiosonde coverage is sparse by nature — it's wherever a balloon happened to fly, not a dense permanent sensor grid. No new nearby ground-level reading is normal, not a bug.</div></div>
           <div class="qa"><div class="q">What's a radiosonde?</div><div class="a">A small instrument package carried aloft by a weather balloon, measuring temperature, humidity, and pressure as it ascends (and sometimes descends) through the atmosphere, transmitting data back by radio.</div></div>
           <div class="qa"><div class="q">Why do Humidity or Pressure sometimes show "—"?</div><div class="a">Not every sonde model carries a working humidity or pressure sensor — some report temperature only. A dash means that sensor had no data, not an app error.</div></div>
+          <div class="qa"><div class="q">What does "ground-level" actually mean here?</div><div class="a">Any reading at or below the app's altitude ceiling (currently ~980-1000m depending on config) — usually captured near a sonde's launch site or during its final descent, not mid-flight.</div></div>
+          <div class="qa"><div class="q">Why zeesen.mine.nu instead of sonde.mine.nu?</div><div class="a">They're mirrors of the same underlying project; zeesen.mine.nu responds faster for large historical fetches, so it's preferred for bulk backfills while both serve the same live data.</div></div>
+          <div class="qa"><div class="q">Do radiosondes get reused?</div><div class="a">Rarely — most are single-use and either land somewhere unrecovered or are found and occasionally relaunched by hobbyists. Each flight gets its own serial ID in the data.</div></div>
+          <div class="qa"><div class="q">What's the difference between temperature, humidity, and pressure sensors on a sonde?</div><div class="a">They're independent physical sensors on the same instrument package — a sonde model can have a working thermometer but a failed or absent humidity/pressure sensor, which is why some readings show partial data.</div></div>
         </div>
 
         <div class="faqsection">Accuracy &amp; Coverage</div>
@@ -400,6 +404,9 @@ footer a{color:inherit}
           <div class="qa"><div class="q">Can I see live in-flight data?</div><div class="a">Yes — when the station currently shown is an actual balloon in flight, a live banner appears, fed by a WebSocket connection straight from the source telemetry.</div></div>
           <div class="qa"><div class="q">Why did a reading show an obviously wrong temperature once?</div><div class="a">Occasionally a sensor glitches or reports a bad packet. We filter out impossible values (like 0,0 coordinates) but can't catch every anomaly — treat any wildly outlying single reading with suspicion.</div></div>
           <div class="qa"><div class="q">How far back does history go?</div><div class="a">Depends on how long the instance has been running its fetch schedule — the public instance has months of accumulated history; a fresh self-hosted instance starts from whatever backfill window you choose.</div></div>
+          <div class="qa"><div class="q">Why does the same station ID show wildly different readings on different days?</div><div class="a">That's real atmospheric variation, not an error — the same launch site can see very different conditions day to day, especially across seasons.</div></div>
+          <div class="qa"><div class="q">Can two readings from the same station conflict?</div><div class="a">Each reading is keyed by station ID plus its exact receive timestamp, so multiple readings from one station over time are all kept — none overwrite each other.</div></div>
+          <div class="qa"><div class="q">Is coverage better in some countries than others?</div><div class="a">Yes — it depends entirely on where radiosonde receiver stations happen to be tracking flights; Central Europe tends to have denser coverage than sparsely-populated regions.</div></div>
         </div>
 
         <div class="faqsection">Using the App</div>
@@ -409,8 +416,12 @@ footer a{color:inherit}
           <div class="qa"><div class="q">What's the "This day" map option?</div><div class="a">Filters the map to only readings from one specific calendar date instead of a rolling window — useful for looking back at a particular day's coverage.</div></div>
           <div class="qa"><div class="q">How does Search work?</div><div class="a">Type a station ID, a temperature, or a place name. Place names are geocoded via Nominatim (OpenStreetMap) and matched to the nearest reading, with an adjustable date range from 7 days up to all-time.</div></div>
           <div class="qa"><div class="q">Why doesn't Search find my city?</div><div class="a">The geocoder needs an unambiguous, spelled-correctly place name. Try adding a country ("Springfield, USA") if a common name returns the wrong result.</div></div>
-          <div class="qa"><div class="q">What's the "Next hours" predictor based on?</div><div class="a">This app's own average hour-of-day temperature/humidity/pressure pattern computed from the last 7 days of store data, anchored to your current actual reading — not an external forecast service.</div></div>
+          <div class="qa"><div class="q">What's the "Next days" predictor based on?</div><div class="a">This app's own average hour-of-day temperature/humidity/pressure pattern computed from the last 7 days of store data, applied identically to each upcoming day and anchored to your current actual reading — not an external forecast service.</div></div>
           <div class="qa"><div class="q">Can I clear the cache?</div><div class="a">Yes — the footer has a "Clear cache &amp; reload" button. Useful if the page seems stuck showing stale data, especially after adding it to your phone's home screen as an app.</div></div>
+          <div class="qa"><div class="q">Can I switch between light and dark mode?</div><div class="a">The app follows your system's light/dark setting automatically — there's no in-app manual toggle, since it's built entirely with CSS media queries tied to your OS preference.</div></div>
+          <div class="qa"><div class="q">Does the map remember my zoom/position?</div><div class="a">No — it recenters on the current selection each time you switch to the Map tab, rather than persisting a manually-panned view.</div></div>
+          <div class="qa"><div class="q">Can I see a specific station's full history?</div><div class="a">Yes — clicking a station's reading anywhere in the app (map, stations list, search results) switches the current view to that station, showing its own readings.</div></div>
+          <div class="qa"><div class="q">Why does the desktop layout differ from mobile?</div><div class="a">Desktop uses the extra screen space for a sidebar nav and multi-panel grid layout (map + week feed side-by-side) instead of mobile's single-column tab-based flow — same data, same features, different arrangement.</div></div>
         </div>
 
         <div class="faqsection">API &amp; Developers</div>
@@ -421,6 +432,10 @@ footer a{color:inherit}
           <div class="qa"><div class="q">Is there caching on API responses?</div><div class="a">No — every response is served with <code>Cache-Control: no-store</code>, so you always get the freshest data, never a stale cached copy.</div></div>
           <div class="qa"><div class="q">Is there an MCP server?</div><div class="a">Yes — a Model Context Protocol server ships alongside the backend, exposing tools like <code>current_reading</code>, <code>nearest_station</code>, <code>station_history</code>, and <code>predictor</code> for use with Claude Code or other MCP clients.</div></div>
           <div class="qa"><div class="q">Can I build my own app on top of this data?</div><div class="a">Yes — that's exactly what the public API is for. No special permission needed, just respect the rate limits or grab a key.</div></div>
+          <div class="qa"><div class="q">What happens if I exceed the rate limit?</div><div class="a">You get an HTTP 429 response until the window resets (60 seconds for the default tier, 10 seconds for a keyed tier) — no ban, no penalty, just wait it out or grab a key for a much higher ceiling.</div></div>
+          <div class="qa"><div class="q">How does the API key expire?</div><div class="a">It doesn't — a key generated via <code>POST /api/keys/new</code> stays valid indefinitely on that server instance unless the instance operator resets its <code>api_keys.json</code> file.</div></div>
+          <div class="qa"><div class="q">Can the MCP server filter by location or recency?</div><div class="a">Yes — <code>nearest_station</code> takes lat/lon and an optional <code>max_age_days</code>, and <code>search_readings</code> supports temperature range filters.</div></div>
+          <div class="qa"><div class="q">Is there a rate limit on the MCP server?</div><div class="a">No — it reads directly from the local <code>data.json</code> file, so there's no network rate limit to worry about, just normal local file I/O.</div></div>
         </div>
 
         <div class="faqsection">Self-Hosting</div>
@@ -432,6 +447,10 @@ footer a{color:inherit}
           <div class="qa"><div class="q">Can I customize the ground-level altitude filter myself?</div><div class="a">Yes — <code>start.sh</code>/<code>start.ps1</code> ask for it directly, or set the <code>GROUNDCHECK_MAX_ALT_M</code> environment variable manually.</div></div>
           <div class="qa"><div class="q">How do I get automatic updates on my self-hosted instance?</div><div class="a">The setup script offers to install cron jobs (or Scheduled Tasks on Windows) that check for new radiosonde data every minute and/or once daily — fully configurable during setup.</div></div>
           <div class="qa"><div class="q">Can I expose my self-hosted instance to the internet?</div><div class="a">Yes, with something like a Cloudflare Tunnel or reverse proxy in front of it — the server binds to <code>0.0.0.0</code> by default so it's reachable on your LAN out of the box.</div></div>
+          <div class="qa"><div class="q">Can I pick my own ports?</div><div class="a">Yes — <code>start.sh</code>/<code>start.ps1</code> prompt for the HTTP data port and WebSocket live-feed port directly, defaulting to 8765 and 8766.</div></div>
+          <div class="qa"><div class="q">What if I don't want the automatic checks running constantly?</div><div class="a">Decline the cron/Task Scheduler setup step, or choose "0" for the custom-interval option during setup — you can always run <code>update.py</code> manually whenever you want fresh data.</div></div>
+          <div class="qa"><div class="q">How large is the initial backfill?</div><div class="a">Depends what you choose — the setup menu offers 1 to 800 days; a 1-day backfill is nearly instant, while an 800-day one can take a long time and use more disk space for <code>station_store.json</code>.</div></div>
+          <div class="qa"><div class="q">Does self-hosting include the MCP server too?</div><div class="a">Yes — <code>backend/mcp_server.py</code> ships alongside everything else and resolves its data path relative to itself, so it works out of the box against your own instance's data.</div></div>
         </div>
 
         <div class="faqsection">Android Tablet App</div>
@@ -442,6 +461,25 @@ footer a{color:inherit}
           <div class="qa"><div class="q">Does the Android app get notifications?</div><div class="a">Yes — a background job checks periodically for nearby rain/thunderstorm conditions and posts a real Android notification if one's detected.</div></div>
           <div class="qa"><div class="q">Why does the Android app load a website instead of being fully native?</div><div class="a">It's intentionally a hardened WebView wrapper loading the live GitHub Pages site — that way the app always shows the current version without needing a new APK build for every web update.</div></div>
           <div class="qa"><div class="q">Does the Android app work without internet?</div><div class="a">No — it needs a connection to reach the live data, same as the website. There's no offline data cache built in.</div></div>
+          <div class="qa"><div class="q">Is there pull-to-refresh?</div><div class="a">It was tried and removed — it kept conflicting with the embedded Leaflet map's own pan/drag gestures, so the app relies on its normal auto-refresh polling instead.</div></div>
+        </div>
+
+        <div class="faqsection">macOS App</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Is there a macOS app?</div><div class="a">Yes — a native Swift/WebKit wrapper in the <code>macos/</code> folder of the repo, targeting macOS 13.0 and up.</div></div>
+          <div class="qa"><div class="q">How do I build it?</div><div class="a">Open <code>Groundcheck.xcodeproj</code> in Xcode and hit Run, or use <code>xcodebuild</code> from the command line — see the folder's README for exact commands.</div></div>
+          <div class="qa"><div class="q">Does it work on both Intel and Apple Silicon Macs?</div><div class="a">Yes — it's a plain WKWebView-based app with no special GPU code; macOS itself handles GPU selection (Intel integrated, discrete AMD, or Apple Silicon) transparently at the OS level.</div></div>
+          <div class="qa"><div class="q">Is the macOS app sandboxed?</div><div class="a">No — App Sandbox was tried and removed after it caused the app to hang on launch with no window ever appearing (confirmed via a <code>launchservicesd</code> assertion failure in the system log) with a locally ad-hoc-signed build.</div></div>
+          <div class="qa"><div class="q">Where do I get the app icon from?</div><div class="a">It's a custom-generated icon (a weather balloon + radiosonde instrument box on a gradient sky) already bundled in the project's asset catalog — no extra download needed.</div></div>
+        </div>
+
+        <div class="faqsection">Troubleshooting</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">The page looks stuck / stale — what do I do?</div><div class="a">Try the "Clear cache &amp; reload" button in the footer first. If you added the app to your phone's home screen (iOS especially), that caching layer is more aggressive — delete and re-add the home-screen icon if the button alone doesn't fix it.</div></div>
+          <div class="qa"><div class="q">The live feed banner says "unreachable" — is something broken?</div><div class="a">Not necessarily — it means the WebSocket connection to the live telemetry feed couldn't connect right now. It retries automatically every 5 seconds; if it's a self-hosted instance, check that <code>ws_proxy.py</code> is actually running.</div></div>
+          <div class="qa"><div class="q">Why does the map show a blank area?</div><div class="a">Either the selected time range has no readings in that region, or satellite tiles are still loading — try zooming/panning slightly to trigger a tile refresh.</div></div>
+          <div class="qa"><div class="q">My self-hosted instance shows "no data available" everywhere.</div><div class="a"><code>data.json</code> is likely empty or missing — run <code>python3 update.py --days 7</code> (or answer "y" to the setup script's backfill prompt) to populate it.</div></div>
+          <div class="qa"><div class="q">Location permission was denied — now what?</div><div class="a">The app falls back to IP-based geolocation automatically (city-level accuracy) — you can still browse normally, just without precise "nearest station" matching.</div></div>
         </div>
 
         <div class="faqsection">Privacy, Account &amp; Ads</div>
@@ -451,6 +489,16 @@ footer a{color:inherit}
           <div class="qa"><div class="q">Do I need to sign up for an account?</div><div class="a">No. The optional "Account" tab just saves a nickname and a random local token to your browser's own storage — there's no server-side account system, no password, no email collected.</div></div>
           <div class="qa"><div class="q">What data does the app collect about me?</div><div class="a">Your device's location (only if you grant permission, used purely to find your nearest station) and whatever you type into Search. Nothing is sent to a third party beyond the geocoding lookup itself.</div></div>
           <div class="qa"><div class="q">Is my location shared with anyone?</div><div class="a">No — it's used client-side only, to compute distance to stations. It isn't stored server-side or sent anywhere beyond the optional geocoding request you trigger yourself in Search.</div></div>
+          <div class="qa"><div class="q">Can I delete my local account?</div><div class="a">Yes — the Account tab has a "Forget this device" button that clears the saved nickname and token from your browser's local storage instantly.</div></div>
+          <div class="qa"><div class="q">Does the nickname/token get sent to a server anywhere?</div><div class="a">No — it's purely local storage in your browser, never transmitted to the app's backend or any third party.</div></div>
+        </div>
+
+        <div class="faqsection">Development &amp; Contributing</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Is the source code open?</div><div class="a">Yes — the full repo (frontend, backend, Android, macOS) is public on GitHub, linked from the footer.</div></div>
+          <div class="qa"><div class="q">What's the tech stack?</div><div class="a">Hand-written HTML/CSS/JS for the frontend (no build step, no framework), Python for the server/data pipeline/MCP server, Go for the predictor service, Kotlin for Android, and Swift for macOS.</div></div>
+          <div class="qa"><div class="q">Why no frontend framework?</div><div class="a">Deliberately kept simple — single self-contained HTML files avoid a build pipeline entirely, making it trivial to deploy as static files via GitHub Pages.</div></div>
+          <div class="qa"><div class="q">Can I suggest a feature or report a bug?</div><div class="a">Yes — open an issue on the GitHub repo. It's actively maintained.</div></div>
         </div>
       </div>
     </div>
