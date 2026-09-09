@@ -45,6 +45,8 @@ curl https://<your-tunnel-or-host>/api/data
 
 Rate-limited (30 req/60s by default); `POST /api/keys/new` gets you a free key raising that to 9000 req/10s. Full docs in `apidocs/`.
 
+For comparison, Apple's WeatherKit REST API is $0 for the first 500,000 calls/month, then ~$50 per million after that — $9,999.99/month at the 200M-calls tier. Groundcheck's API has no billing at any volume.
+
 ### MCP server
 
 `backend/mcp_server.py` exposes the data over the Model Context Protocol (stdio JSON-RPC, no external deps) — tools include `current_reading`, `nearest_station`, `station_history`, `search_readings`, `predictor`, and `stats`. Point an `.mcp.json` config at it to query live radiosonde data from Claude Code or any other MCP client.
