@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
 <style>
 :root{
   --sky-top:#4a7fb5;
@@ -474,6 +475,39 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   margin-right:.3rem;
   vertical-align:middle;
 }
+.maptoggle{
+  display:flex;
+  gap:.4rem;
+  margin:.5rem 0 .6rem;
+}
+.maptogglebtn{
+  flex:1;
+  padding:.5rem 0;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-dim);
+  font-family:inherit;
+  font-size:.8rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.maptogglebtn.active{
+  background:var(--accent);
+  color:#fff;
+  border-color:transparent;
+}
+.heatlegend{
+  align-items:center;
+  gap:.6rem;
+}
+.heatgradient{
+  display:inline-block;
+  width:120px;height:8px;
+  border-radius:4px;
+  background:linear-gradient(90deg,#3b82c4,#2f9e6f,#c99a2e,#c05a3c);
+}
+.heatlabel{font-size:.72rem;color:var(--ink-dim);}
 .dotmarker{
   width:14px;height:14px;
   border-radius:50%;
@@ -703,6 +737,10 @@ footer{
 
     <div id="view-map" hidden>
       <div class="listhead">Station map<span class="n" id="mapCount"></span></div>
+      <div class="maptoggle">
+        <button class="maptogglebtn active" data-mapmode="stations">Stations</button>
+        <button class="maptogglebtn" data-mapmode="heat">Temperature</button>
+      </div>
       <select id="mapRange" class="rangepicker">
         <option value="7" selected>Last 7 days</option>
         <option value="30">Last 30 days</option>
@@ -712,11 +750,16 @@ footer{
       </select>
       <input type="date" id="mapDay" class="rangepicker" hidden>
       <div id="mapbox"></div>
-      <div class="maplegend">
+      <div class="maplegend" id="stationsLegend">
         <span><i style="background:#3b82c4"></i>&lt;3&deg;</span>
         <span><i style="background:#2f9e6f"></i>3&ndash;7&deg;</span>
         <span><i style="background:#c99a2e"></i>7&ndash;11&deg;</span>
         <span><i style="background:#c05a3c"></i>&gt;11&deg;</span>
+      </div>
+      <div class="maplegend heatlegend" id="heatLegend" hidden>
+        <span class="heatgradient"></span>
+        <span class="heatlabel">Cold</span>
+        <span class="heatlabel" style="margin-left:auto">Hot</span>
       </div>
     </div>
 
@@ -1179,6 +1222,9 @@ function tempColor(t){
 
 let leafletMap = null;
 let leafletMarkerLayer = null;
+let heatLayer = null;
+let mapMode = 'stations';
+let lastMapList = [];
 let youAreHereMarker = null;
 
 function updateYouAreHereMarker(){
@@ -1197,6 +1243,7 @@ function updateYouAreHereMarker(){
 }
 
 function renderMap(list){
+  lastMapList = list;
   document.getElementById('mapCount').textContent = list.length + ' stations';
 
   if (!leafletMap){
@@ -1224,7 +1271,40 @@ function renderMap(list){
       .addTo(leafletMap);
   }
 
-  if (leafletMarkerLayer) leafletMap.removeLayer(leafletMarkerLayer);
+  applyMapMode();
+
+  if (list.length){
+    leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding: [24, 24] });
+  }
+}
+
+function applyMapMode(){
+  if (!leafletMap) return;
+  const list = lastMapList;
+
+  if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
+  if (heatLayer){ leafletMap.removeLayer(heatLayer); heatLayer = null; }
+
+  document.getElementById('stationsLegend').hidden = mapMode !== 'stations';
+  document.getElementById('heatLegend').hidden = mapMode !== 'heat';
+
+  if (mapMode === 'heat'){
+    // Apple Weather-style smooth gradient instead of discrete markers —
+    // intensity normalized against a fixed, sane temp range so the
+    // gradient stays visually consistent as data changes, rather than
+    // rescaling (and looking different) every time the min/max shifts.
+    const MIN_T = -10, MAX_T = 35;
+    const heatPoints = list.map(p => {
+      const t = Math.max(0, Math.min(1, (p.temp - MIN_T) / (MAX_T - MIN_T)));
+      return [p.lat, p.lon, t];
+    });
+    heatLayer = L.heatLayer(heatPoints, {
+      radius: 32, blur: 28, maxZoom: 10, max: 1.0,
+      gradient: { 0.0: '#3b82c4', 0.35: '#2f9e6f', 0.65: '#c99a2e', 1.0: '#c05a3c' }
+    });
+    leafletMap.addLayer(heatLayer);
+    return;
+  }
 
   // Clustering keeps hundreds of stations fast: at low zoom, nearby points
   // collapse into one bubble (far cheaper to draw and hit-test than
@@ -1269,10 +1349,6 @@ function renderMap(list){
 
   leafletMap.addLayer(leafletMarkerLayer);
   updateYouAreHereMarker();
-
-  if (list.length){
-    leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding: [24, 24] });
-  }
 }
 
 function showError(msg){
@@ -1325,6 +1401,15 @@ document.querySelectorAll('.tab').forEach(tab => {
 document.getElementById('refreshBtn').addEventListener('click', () => { selected = null; locate(); });
 document.getElementById('mapRange').addEventListener('change', applyMapRange);
 document.getElementById('mapDay').addEventListener('change', applyMapRange);
+
+document.querySelectorAll('.maptogglebtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.maptogglebtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mapMode = btn.dataset.mapmode;
+    applyMapMode();
+  });
+});
 
 let searchMap = null;
 let searchMapMarkers = [];
