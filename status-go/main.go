@@ -116,7 +116,7 @@ h1{font-size:24px;margin:0 0 6px;}
 {{ROWS}}
 </div></body></html>`
 
-func renderPage(checks []Check) string {
+func renderPage(checks []Check, checkedAt time.Time) string {
 	rows := ""
 	allOK := true
 	for _, c := range checks {
@@ -135,7 +135,7 @@ func renderPage(checks []Check) string {
 		overallText = "Some systems degraded"
 	}
 	page := pageTemplate
-	page = replaceAll(page, "{{TIME}}", time.Now().UTC().Format("2006-01-02 15:04:05 UTC"))
+	page = replaceAll(page, "{{TIME}}", checkedAt.UTC().Format("2006-01-02 15:04:05 UTC"))
 	page = replaceAll(page, "{{OVERALL_CLASS}}", overallClass)
 	page = replaceAll(page, "{{OVERALL_TEXT}}", overallText)
 	page = replaceAll(page, "{{ROWS}}", rows)
@@ -161,26 +161,62 @@ func indexOf(s, sub string) int {
 	return -1
 }
 
+var (
+	cacheMu      sync.RWMutex
+	cachedChecks []Check
+	cachedAt     time.Time
+)
+
+func getCachedChecks() ([]Check, time.Time) {
+	cacheMu.RLock()
+	defer cacheMu.RUnlock()
+	return cachedChecks, cachedAt
+}
+
+func pollLoop(interval time.Duration) {
+	for {
+		checks := runAllChecks()
+		cacheMu.Lock()
+		cachedChecks = checks
+		cachedAt = time.Now()
+		cacheMu.Unlock()
+		time.Sleep(interval)
+	}
+}
+
 func main() {
 	port := os.Getenv("GROUNDCHECK_STATUS_PORT")
 	if port == "" {
 		port = "8769"
 	}
 
+	// Run one check immediately so the first request doesn't see an empty
+	// cache, then keep polling every 15s in the background regardless of
+	// whether anyone is viewing the page.
+	initial := runAllChecks()
+	cacheMu.Lock()
+	cachedChecks = initial
+	cachedAt = time.Now()
+	cacheMu.Unlock()
+	go pollLoop(15 * time.Second)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		checks := runAllChecks()
+		checks, checkedAt := getCachedChecks()
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
-		fmt.Fprint(w, renderPage(checks))
+		fmt.Fprint(w, renderPage(checks, checkedAt))
 	})
 
 	http.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
-		checks := runAllChecks()
+		checks, checkedAt := getCachedChecks()
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Cache-Control", "no-store")
-		json.NewEncoder(w).Encode(checks)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"checked_at": checkedAt.UTC().Format(time.RFC3339),
+			"checks":     checks,
+		})
 	})
 
-	fmt.Printf("Groundcheck status page on :%s\n", port)
+	fmt.Printf("Groundcheck status page on :%s (polling every 15s)\n", port)
 	http.ListenAndServe(":"+port, nil)
 }
