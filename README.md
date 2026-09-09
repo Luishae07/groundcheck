@@ -32,7 +32,6 @@ Everything needed to run your own instance lives in `backend/` — no database, 
 ```bash
 git clone https://github.com/Luishae07/groundcheck.git
 cd groundcheck/backend
-chmod +x start.sh
 ./start.sh
 ```
 
