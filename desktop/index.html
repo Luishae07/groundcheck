@@ -984,23 +984,33 @@ function drawInterpolatedHeat(list){
     return { x: cp.x, y: cp.y, temp: p.temp };
   });
 
+  const COVER_PX = 140, FADE_PX = 320;
+
   for (let gy = 0; gy < GRID_H; gy++){
     const py = (gy + 0.5) * (H / GRID_H);
     for (let gx = 0; gx < GRID_W; gx++){
       const px = (gx + 0.5) * (W / GRID_W);
-      let wSum = 0, tSum = 0;
+      let wSum = 0, tSum = 0, minD2 = Infinity;
       for (let i = 0; i < llPts.length; i++){
         const dx = llPts[i].x - px, dy = llPts[i].y - py;
         const d2 = dx * dx + dy * dy;
-        const w = 1 / (d2 + 2500);
+        if (d2 < minD2) minD2 = d2;
+        const w = 1 / Math.pow(d2 + 100, 2);
         wSum += w;
         tSum += w * llPts[i].temp;
       }
       const temp = tSum / wSum;
       const t = (temp - HEAT_MIN_T) / (HEAT_MAX_T - HEAT_MIN_T);
       const [r, g, b] = heatColorForT(t);
+
+      const dist = Math.sqrt(minD2);
+      let alpha;
+      if (dist <= COVER_PX) alpha = 200;
+      else if (dist >= FADE_PX) alpha = 0;
+      else alpha = Math.round(200 * (1 - (dist - COVER_PX) / (FADE_PX - COVER_PX)));
+
       const idx = (gy * GRID_W + gx) * 4;
-      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = 235;
+      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = alpha;
     }
   }
   octx.putImageData(img, 0, 0);
