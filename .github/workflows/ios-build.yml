@@ -9,12 +9,16 @@ on:
 
 jobs:
   build:
-    runs-on: macos-26-arm64
+    # macos-26-arm64 is real but has very limited capacity (long queue times).
+    # macos-15 is more available and still ships Xcode 26.x side-by-side with
+    # its old default (16.4) - must select it explicitly, verified via
+    # actions/runner-images' own published software manifest.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Select Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app
 
       - name: Show Xcode version
         run: xcodebuild -version
