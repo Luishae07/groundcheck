@@ -9,9 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script><style>
 :root{
   --sky-top:#4a7fb5; --sky-mid:#6ea0c8; --sky-bot:#a9cbe3;
   --panel:#ffffff; --panel-2:#f2f6f9; --ink:#132433; --ink-dim:#5b7185; --ink-faint:#8b9db0;
@@ -647,7 +645,6 @@ let points = [];
 let leafletMap = null;
 let leafletMarkerLayer = null;
 let youAreHereMarker = null;
-let heatLayer = null;
 let mapMode = 'stations';
 let lastMapList = [];
 
@@ -870,23 +867,17 @@ function applyMapMode(){
   const list = lastMapList;
 
   if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
-  if (heatLayer){ leafletMap.removeLayer(heatLayer); heatLayer = null; }
 
   const heatLegend = document.getElementById('heatLegend');
   if (heatLegend) heatLegend.hidden = mapMode !== 'heat';
 
   if (mapMode === 'heat'){
-    const MIN_T = -10, MAX_T = 35;
-    const heatPoints = list.map(p => {
-      const t = Math.max(0, Math.min(1, (p.temp - MIN_T) / (MAX_T - MIN_T)));
-      return [p.lat, p.lon, t];
-    });
-    heatLayer = L.heatLayer(heatPoints, {
-      radius: 90, blur: 75, maxZoom: 8, max: 1.0, minOpacity: 0.55,
-      gradient: { 0.0: '#3b82c4', 0.35: '#2f9e6f', 0.65: '#c99a2e', 1.0: '#c05a3c' }
-    });
-    leafletMap.addLayer(heatLayer);
+    ensureHeatCanvas();
+    heatCanvasEl.style.display = 'block';
+    drawInterpolatedHeat(list);
     return;
+  } else if (heatCanvasEl){
+    heatCanvasEl.style.display = 'none';
   }
 
   leafletMarkerLayer = L.markerClusterGroup({
@@ -920,6 +911,101 @@ function applyMapMode(){
 
   leafletMap.addLayer(leafletMarkerLayer);
   updateYouAreHereMarker();
+}
+
+// --- Interpolated temperature surface (Apple Weather-style full coverage) ---
+let heatCanvasEl = null;
+const HEAT_MIN_T = -10, HEAT_MAX_T = 35;
+
+function heatColorForT(t){
+  const stops = [
+    [0.00, 30, 41, 59],
+    [0.20, 59, 130, 196],
+    [0.45, 47, 158, 111],
+    [0.70, 201, 154, 46],
+    [0.88, 192, 90, 60],
+    [1.00, 140, 30, 30]
+  ];
+  t = Math.max(0, Math.min(1, t));
+  let a = stops[0], b = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++){
+    if (t >= stops[i][0] && t <= stops[i + 1][0]){ a = stops[i]; b = stops[i + 1]; break; }
+  }
+  const span = (b[0] - a[0]) || 1;
+  const f = (t - a[0]) / span;
+  const r = Math.round(a[1] + (b[1] - a[1]) * f);
+  const g = Math.round(a[2] + (b[2] - a[2]) * f);
+  const bl = Math.round(a[3] + (b[3] - a[3]) * f);
+  return [r, g, bl];
+}
+
+function ensureHeatCanvas(){
+  if (heatCanvasEl) return;
+  heatCanvasEl = document.createElement('canvas');
+  heatCanvasEl.style.position = 'absolute';
+  heatCanvasEl.style.inset = '0';
+  heatCanvasEl.style.zIndex = 350;
+  heatCanvasEl.style.pointerEvents = 'none';
+  document.getElementById('mapbox').insertBefore(heatCanvasEl, document.getElementById('mapbox').firstChild);
+
+  let redrawTimer = null;
+  const scheduleRedraw = () => {
+    if (mapMode !== 'heat') return;
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+  };
+  leafletMap.on('move zoom resize', scheduleRedraw);
+}
+
+function drawInterpolatedHeat(list){
+  if (!leafletMap || !heatCanvasEl) return;
+  const size = leafletMap.getSize();
+  const W = size.x, H = size.y;
+  if (!W || !H) return;
+  heatCanvasEl.width = W;
+  heatCanvasEl.height = H;
+
+  const valid = list.filter(p => p.temp != null);
+  const ctx = heatCanvasEl.getContext('2d');
+  if (!valid.length){ ctx.clearRect(0, 0, W, H); return; }
+
+  const GRID_W = 72, GRID_H = Math.max(1, Math.round(GRID_W * (H / W)));
+  const off = document.createElement('canvas');
+  off.width = GRID_W; off.height = GRID_H;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(GRID_W, GRID_H);
+
+  const pts = valid.length > 700 ? valid.filter((_, i) => i % Math.ceil(valid.length / 700) === 0) : valid;
+  const llPts = pts.map(p => {
+    const cp = leafletMap.latLngToContainerPoint([p.lat, p.lon]);
+    return { x: cp.x, y: cp.y, temp: p.temp };
+  });
+
+  for (let gy = 0; gy < GRID_H; gy++){
+    const py = (gy + 0.5) * (H / GRID_H);
+    for (let gx = 0; gx < GRID_W; gx++){
+      const px = (gx + 0.5) * (W / GRID_W);
+      let wSum = 0, tSum = 0;
+      for (let i = 0; i < llPts.length; i++){
+        const dx = llPts[i].x - px, dy = llPts[i].y - py;
+        const d2 = dx * dx + dy * dy;
+        const w = 1 / (d2 + 2500);
+        wSum += w;
+        tSum += w * llPts[i].temp;
+      }
+      const temp = tSum / wSum;
+      const t = (temp - HEAT_MIN_T) / (HEAT_MAX_T - HEAT_MIN_T);
+      const [r, g, b] = heatColorForT(t);
+      const idx = (gy * GRID_W + gx) * 4;
+      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = 235;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(off, 0, 0, GRID_W, GRID_H, 0, 0, W, H);
 }
 
 function wireCardClicks(container){

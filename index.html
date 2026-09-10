@@ -9,9 +9,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script><style>
 :root{
   --sky-top:#4a7fb5;
   --sky-mid:#6ea0c8;
@@ -1252,7 +1250,6 @@ function tempColor(t){
 
 let leafletMap = null;
 let leafletMarkerLayer = null;
-let heatLayer = null;
 let mapMode = 'stations';
 let lastMapList = [];
 let youAreHereMarker = null;
@@ -1313,27 +1310,17 @@ function applyMapMode(){
   const list = lastMapList;
 
   if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
-  if (heatLayer){ leafletMap.removeLayer(heatLayer); heatLayer = null; }
 
   document.getElementById('stationsLegend').hidden = mapMode !== 'stations';
   document.getElementById('heatLegend').hidden = mapMode !== 'heat';
 
   if (mapMode === 'heat'){
-    // Apple Weather-style smooth gradient instead of discrete markers —
-    // intensity normalized against a fixed, sane temp range so the
-    // gradient stays visually consistent as data changes, rather than
-    // rescaling (and looking different) every time the min/max shifts.
-    const MIN_T = -10, MAX_T = 35;
-    const heatPoints = list.map(p => {
-      const t = Math.max(0, Math.min(1, (p.temp - MIN_T) / (MAX_T - MIN_T)));
-      return [p.lat, p.lon, t];
-    });
-    heatLayer = L.heatLayer(heatPoints, {
-      radius: 90, blur: 75, maxZoom: 8, max: 1.0, minOpacity: 0.55,
-      gradient: { 0.0: '#3b82c4', 0.35: '#2f9e6f', 0.65: '#c99a2e', 1.0: '#c05a3c' }
-    });
-    leafletMap.addLayer(heatLayer);
+    ensureHeatCanvas();
+    heatCanvasEl.style.display = 'block';
+    drawInterpolatedHeat(list);
     return;
+  } else if (heatCanvasEl){
+    heatCanvasEl.style.display = 'none';
   }
 
   // Clustering keeps hundreds of stations fast: at low zoom, nearby points
@@ -1379,6 +1366,110 @@ function applyMapMode(){
 
   leafletMap.addLayer(leafletMarkerLayer);
   updateYouAreHereMarker();
+}
+
+// --- Interpolated temperature surface (Apple Weather-style full coverage) ---
+// leaflet.heat only draws blurred blobs around each point, leaving visible
+// gaps between sparse stations. This instead computes a smooth inverse-
+// distance-weighted color field across the whole visible map — every pixel
+// gets an estimated temperature, not just areas near a real reading.
+let heatCanvasEl = null;
+const HEAT_MIN_T = -10, HEAT_MAX_T = 35;
+
+function heatColorForT(t){
+  const stops = [
+    [0.00, 30, 41, 59],    // deep cold — slate/navy
+    [0.20, 59, 130, 196],  // cold blue
+    [0.45, 47, 158, 111],  // green
+    [0.70, 201, 154, 46],  // orange
+    [0.88, 192, 90, 60],   // hot red
+    [1.00, 140, 30, 30]    // deep hot
+  ];
+  t = Math.max(0, Math.min(1, t));
+  let a = stops[0], b = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++){
+    if (t >= stops[i][0] && t <= stops[i + 1][0]){ a = stops[i]; b = stops[i + 1]; break; }
+  }
+  const span = (b[0] - a[0]) || 1;
+  const f = (t - a[0]) / span;
+  const r = Math.round(a[1] + (b[1] - a[1]) * f);
+  const g = Math.round(a[2] + (b[2] - a[2]) * f);
+  const bl = Math.round(a[3] + (b[3] - a[3]) * f);
+  return [r, g, bl];
+}
+
+function ensureHeatCanvas(){
+  if (heatCanvasEl) return;
+  heatCanvasEl = document.createElement('canvas');
+  heatCanvasEl.style.position = 'absolute';
+  heatCanvasEl.style.inset = '0';
+  heatCanvasEl.style.zIndex = 350; // above tiles, below markers/controls/legend
+  heatCanvasEl.style.pointerEvents = 'none';
+  document.getElementById('mapbox').insertBefore(heatCanvasEl, document.getElementById('mapbox').firstChild);
+
+  let redrawTimer = null;
+  const scheduleRedraw = () => {
+    if (mapMode !== 'heat') return;
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+  };
+  leafletMap.on('move zoom resize', scheduleRedraw);
+}
+
+function drawInterpolatedHeat(list){
+  if (!leafletMap || !heatCanvasEl) return;
+  const size = leafletMap.getSize();
+  const W = size.x, H = size.y;
+  if (!W || !H) return;
+  heatCanvasEl.width = W;
+  heatCanvasEl.height = H;
+
+  const valid = list.filter(p => p.temp != null);
+  const ctx = heatCanvasEl.getContext('2d');
+  if (!valid.length){ ctx.clearRect(0, 0, W, H); return; }
+
+  // Interpolate on a coarse low-res grid, then upscale with smoothing —
+  // this is what actually produces the soft, blended, full-bleed look
+  // instead of hard-edged blobs, and keeps IDW cheap (a few thousand
+  // cell computations instead of one per screen pixel).
+  const GRID_W = 72, GRID_H = Math.max(1, Math.round(GRID_W * (H / W)));
+  const off = document.createElement('canvas');
+  off.width = GRID_W; off.height = GRID_H;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(GRID_W, GRID_H);
+
+  // Cap the number of stations used per cell for performance on dense views.
+  const pts = valid.length > 700 ? valid.filter((_, i) => i % Math.ceil(valid.length / 700) === 0) : valid;
+  const llPts = pts.map(p => {
+    const cp = leafletMap.latLngToContainerPoint([p.lat, p.lon]);
+    return { x: cp.x, y: cp.y, temp: p.temp };
+  });
+
+  for (let gy = 0; gy < GRID_H; gy++){
+    const py = (gy + 0.5) * (H / GRID_H);
+    for (let gx = 0; gx < GRID_W; gx++){
+      const px = (gx + 0.5) * (W / GRID_W);
+      let wSum = 0, tSum = 0;
+      for (let i = 0; i < llPts.length; i++){
+        const dx = llPts[i].x - px, dy = llPts[i].y - py;
+        const d2 = dx * dx + dy * dy;
+        const w = 1 / (d2 + 2500); // +2500 (~50px) softens singularity at the point itself
+        wSum += w;
+        tSum += w * llPts[i].temp;
+      }
+      const temp = tSum / wSum;
+      const t = (temp - HEAT_MIN_T) / (HEAT_MAX_T - HEAT_MIN_T);
+      const [r, g, b] = heatColorForT(t);
+      const idx = (gy * GRID_W + gx) * 4;
+      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = 235;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(off, 0, 0, GRID_W, GRID_H, 0, 0, W, H);
 }
 
 function showError(msg){
