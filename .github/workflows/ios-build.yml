@@ -1,0 +1,30 @@
+name: Build iOS App
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build (Debug, simulator, no code signing)
+        working-directory: ios
+        run: |
+          xcodebuild build \
+            -project Groundcheck.xcodeproj \
+            -scheme Groundcheck \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
