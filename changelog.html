@@ -1,0 +1,91 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Groundcheck Changelog</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2f6f9; --panel:#ffffff; --ink:#132433; --ink-dim:#5b7185;
+  --line:#dbe4ec; --accent:#1f6f4a; --code-bg:#0d1b2e; --code-ink:#d8e6f2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1620; --panel:#111c28; --ink:#e8eef4; --ink-dim:#8fa3b8;
+    --line:#22323f; --accent:#5fcf95; --code-bg:#080f18; --code-ink:#c9dcec;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1620; --panel:#111c28; --ink:#e8eef4; --ink-dim:#8fa3b8;
+  --line:#22323f; --accent:#5fcf95; --code-bg:#080f18; --code-ink:#c9dcec;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Inter",system-ui,sans-serif;
+  padding:2.5rem 1.5rem 4rem;
+}
+main{max-width:720px; margin:0 auto}
+h1{font-family:"Sora",sans-serif; font-weight:800; font-size:1.9rem; margin:0 0 .3rem; text-wrap:balance}
+.sub{color:var(--ink-dim); font-size:.95rem; margin:0 0 2.4rem}
+a{color:var(--accent)}
+.day{margin-bottom:2.2rem}
+.day h2{
+  font-family:"Sora",sans-serif; font-weight:700; font-size:1rem;
+  color:var(--ink-dim); margin:0 0 .8rem; letter-spacing:.02em;
+}
+.entry{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:.7rem .95rem; margin-bottom:.5rem; font-size:.9rem; line-height:1.5;
+}
+footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
+</style>
+
+<main>
+  <h1>Changelog</h1>
+  <p class="sub">What's changed in <a href="/">Groundcheck</a>, most recent first.</p>
+
+  <div id="log">
+    <div class="day">
+      <h2>September 10, 2026</h2>
+      <div class="entry">Native SwiftUI iOS app, built via GitHub Actions</div>
+      <div class="entry">Fixed temperature heatmap: was rendering invisibly under the map, and extrapolating full color into areas with no real station coverage</div>
+      <div class="entry">Replaced blob-style heatmap with a true full-coverage interpolated surface, matching the Apple Weather map style</div>
+    </div>
+    <div class="day">
+      <h2>September 9, 2026</h2>
+      <div class="entry">Added temperature heatmap map mode</div>
+      <div class="entry">Added Go-based status page checking every live component</div>
+      <div class="entry">Added Wall display — a fullscreen kiosk mode with GPS-aware location and auto-cycling slides</div>
+      <div class="entry">Added Search to mobile view</div>
+      <div class="entry">Renamed "Next hours" predictor to "Next days," added it to desktop</div>
+      <div class="entry">Added native macOS app (Swift/WebKit wrapper)</div>
+      <div class="entry">Added MCP server to the self-host backend package</div>
+    </div>
+    <div class="day">
+      <h2>September 8, 2026</h2>
+      <div class="entry">Self-host backend package now interactively bootstraps data and schedules updates</div>
+      <div class="entry">start.ps1 detects WSL and offers to delegate to start.sh</div>
+    </div>
+    <div class="day">
+      <h2>September 7, 2026</h2>
+      <div class="entry">Added standalone self-host backend package with cross-platform start scripts</div>
+    </div>
+    <div class="day">
+      <h2>September 6, 2026</h2>
+      <div class="entry">Added "This day" map filter option</div>
+      <div class="entry">Added date-range control to Search (7/30/90 days, or all time)</div>
+      <div class="entry">Search results now show on their own satellite map</div>
+      <div class="entry">Added universal Search: station ID, temperature value, or place name</div>
+      <div class="entry">Added Account tab — local nickname + token, device-only, no server accounts</div>
+      <div class="entry">Added a pulsing "you are here" marker once your location is known</div>
+      <div class="entry">Added native Kotlin/Compose Android app with a real map, predictor, and live feed</div>
+      <div class="entry">Added next-hours predictor (from a 7-day diurnal pattern)</div>
+    </div>
+    <div class="day">
+      <h2>September 5, 2026</h2>
+      <div class="entry">Deployed the static site to GitHub Pages</div>
+    </div>
+  </div>
+</main>
