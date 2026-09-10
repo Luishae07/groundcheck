@@ -944,7 +944,10 @@ function ensureHeatCanvas(){
   heatCanvasEl = document.createElement('canvas');
   heatCanvasEl.style.position = 'absolute';
   heatCanvasEl.style.inset = '0';
-  heatCanvasEl.style.zIndex = 350;
+  // Leaflet's whole .leaflet-map-pane wrapper (tiles + everything) carries
+  // the generic .leaflet-pane class, which is z-index:400 — a value BELOW
+  // that renders invisibly underneath the entire map, not just the tiles.
+  heatCanvasEl.style.zIndex = 410;
   heatCanvasEl.style.pointerEvents = 'none';
   document.getElementById('mapbox').insertBefore(heatCanvasEl, document.getElementById('mapbox').firstChild);
 
