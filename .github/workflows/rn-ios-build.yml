@@ -26,7 +26,7 @@ jobs:
       # works on macOS. Our actual app code (rn/src, rn/package.json) is
       # injected into this scaffold afterward.
       - name: Scaffold React Native project
-        run: npx react-native@0.87.1 init GroundcheckRN --directory scaffold --pm npm --skip-install true
+        run: npx @react-native-community/cli@latest init GroundcheckRN --directory scaffold --pm npm --skip-install true --version 0.87.1
 
       - name: Inject app source
         run: |
