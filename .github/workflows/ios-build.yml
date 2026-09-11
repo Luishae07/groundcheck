@@ -23,12 +23,39 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Build (Debug, simulator, no code signing)
+      # Real device target (generic arm64), not the Simulator — a Simulator
+      # build isn't installable on an actual iPhone at all. Unsigned here;
+      # iLoader/AltStore-style sideloading tools do their own signing on
+      # install, so no Apple Developer certificate is needed in CI.
+      - name: Build (Debug, device, no code signing)
         working-directory: ios
         run: |
           xcodebuild build \
             -project Groundcheck.xcodeproj \
             -scheme Groundcheck \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination 'generic/platform=iOS' \
             -configuration Debug \
-            CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
+
+      # Package the built .app into the standard IPA layout (a zip with a
+      # top-level Payload/ folder) so it can be uploaded/installed like any
+      # normal IPA.
+      - name: Package IPA
+        working-directory: ios
+        run: |
+          APP_PATH=$(find build/Build/Products -maxdepth 2 -name "*.app" | head -1)
+          echo "Found app at: $APP_PATH"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r Groundcheck.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Groundcheck-iOS
+          path: ios/Groundcheck.ipa
+          retention-days: 30
