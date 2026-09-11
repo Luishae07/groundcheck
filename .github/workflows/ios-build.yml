@@ -27,14 +27,14 @@ jobs:
       # build isn't installable on an actual iPhone at all. Unsigned here;
       # iLoader/AltStore-style sideloading tools do their own signing on
       # install, so no Apple Developer certificate is needed in CI.
-      - name: Build (Debug, device, no code signing)
+      - name: Build (Release, device, no code signing)
         working-directory: ios
         run: |
           xcodebuild build \
             -project Groundcheck.xcodeproj \
             -scheme Groundcheck \
             -destination 'generic/platform=iOS' \
-            -configuration Debug \
+            -configuration Release \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
