@@ -4,5 +4,14 @@
   "webDir": "www",
   "ios": {
     "contentInset": "automatic"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 400,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0c11",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
   }
 }

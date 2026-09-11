@@ -39,6 +39,24 @@ jobs:
         working-directory: cap
         run: npx cap sync ios
 
+      # Location-usage strings are required before iOS will show the
+      # permission prompt at all — Capacitor's default Info.plist doesn't
+      # include them for a fresh project.
+      - name: Add location usage strings to Info.plist
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'Groundcheck uses your location to show the nearest weather station.'" cap/ios/App/App/Info.plist || true
+          /usr/libexec/PlistBuddy -c "Add :NSLocationAlwaysAndWhenInUseUsageDescription string 'Groundcheck uses your location to show the nearest weather station.'" cap/ios/App/App/Info.plist || true
+
+      # App Intents (Siri/Shortcuts support, GroundcheckIntents.swift) — a
+      # hand-written native file that has to be copied in and registered
+      # into the generated Xcode project, since `cap add ios` only knows
+      # about Capacitor's own files.
+      - name: Add App Intents (Shortcuts support)
+        run: |
+          cp cap/native/GroundcheckIntents.swift cap/ios/App/App/GroundcheckIntents.swift
+          gem install xcodeproj --no-document
+          ruby cap/native/inject_intents.rb
+
       - name: pod install
         working-directory: cap/ios/App
         run: pod install

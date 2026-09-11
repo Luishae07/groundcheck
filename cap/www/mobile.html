@@ -888,6 +888,22 @@ footer{
 </div>
 
 <script>
+// Inside the native app, prefer Capacitor's native Geolocation plugin over
+// plain web geolocation — better permission-prompt UX and more reliable
+// than WKWebView's own location bridge. Falls straight through to the
+// standard web API when there's no Capacitor runtime (e.g. testing in a
+// regular browser), so no other code in this page needs to change.
+(function(){
+  if (typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.Geolocation) return;
+  var real = navigator.geolocation;
+  navigator.geolocation = navigator.geolocation || {};
+  navigator.geolocation.getCurrentPosition = function(success, error, options){
+    Capacitor.Plugins.Geolocation.getCurrentPosition({ enableHighAccuracy: (options && options.enableHighAccuracy) || false })
+      .then(function(pos){ success(pos); })
+      .catch(function(err){ if (error) error(err); });
+  };
+})();
+
 function iconFor(temp, hum, pressure){
   const stormy = hum !== null && hum > 90 && pressure != null && pressure < 985;
   const raining = hum !== null && hum > 92;
