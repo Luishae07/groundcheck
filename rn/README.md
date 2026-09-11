@@ -1,6 +1,6 @@
 # Groundcheck — React Native (iOS)
 
-The Groundcheck iOS app, rewritten in React Native (replacing the earlier native SwiftUI app). Same feature set: Today, Map, Stations, Account.
+The Groundcheck iOS app, built in React Native. Feature set: Today, Map, Stations, Account.
 
 ## What's here
 
@@ -41,4 +41,4 @@ Requires a Mac with Xcode. This directory alone isn't a runnable project — eit
 
 ## Why React Native
 
-The app was originally native SwiftUI. Switched to React Native to match how some other major apps (e.g. Discord) build their mobile clients.
+Matches how some other major apps (e.g. Discord) build their mobile clients.
