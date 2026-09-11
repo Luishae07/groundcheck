@@ -1,0 +1,1783 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Groundcheck</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script><style>
+:root{
+  --sky-top:#4a7fb5;
+  --sky-mid:#6ea0c8;
+  --sky-bot:#a9cbe3;
+  --panel:#ffffff;
+  --panel-2:#e9eef2;
+  --ink:#132433;
+  --ink-dim:#5b7185;
+  --ink-faint:#8b9db0;
+  --line:#dbe4ec;
+  --accent:#e08a2c;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky-top:#0c1a2b;
+    --sky-mid:#152b40;
+    --sky-bot:#1f3a52;
+    --panel:#141f2a;
+    --panel-2:#0a121a;
+    --ink:#e8eef4;
+    --ink-dim:#8fa3b8;
+    --ink-faint:#5d7285;
+    --line:#22323f;
+    --accent:#f0a24a;
+  }
+}
+:root[data-theme="dark"]{
+  --sky-top:#0c1a2b;
+  --sky-mid:#152b40;
+  --sky-bot:#1f3a52;
+  --panel:#141f2a;
+  --panel-2:#0a121a;
+  --ink:#e8eef4;
+  --ink-dim:#8fa3b8;
+  --ink-faint:#5d7285;
+  --line:#22323f;
+  --accent:#f0a24a;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+html{ touch-action:manipulation; } /* kill the 300ms double-tap-zoom delay */
+body{
+  background:var(--panel-2);
+  color:var(--ink);
+  font-family:"Inter",system-ui,-apple-system,sans-serif;
+  display:flex;
+  justify-content:center;
+  overscroll-behavior-y:contain; /* stop iOS/Android pull-to-refresh & rubber-banding */
+  -webkit-text-size-adjust:100%;
+}
+button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
+
+/* phone frame — centers a real mobile viewport on wide screens, fills the width on an actual phone */
+.frame{
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  min-height:100dvh; /* accounts for mobile browser chrome (address bar) */
+  background:var(--panel-2);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  box-shadow:0 0 60px rgba(0,0,0,.18);
+}
+@media (min-width:431px){
+  body{ background:var(--panel-2); padding:2.5rem 0; }
+  .frame{ min-height:844px; border-radius:40px; overflow:hidden; }
+}
+@media (max-width:430px){
+  .frame{ box-shadow:none; } /* no floating-card shadow on an actual phone */
+}
+
+.sky{
+  background:linear-gradient(175deg,var(--sky-top) 0%,var(--sky-mid) 45%,var(--sky-bot) 100%);
+  color:#fff;
+  padding:1rem 1.35rem 2rem;
+  position:relative;
+  overflow:hidden;
+  flex:0 0 auto;
+}
+.sky::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 60% 40% at 78% -5%, rgba(255,255,255,.22), transparent 60%);
+  pointer-events:none;
+}
+.statusrow{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  font-size:.72rem;
+  opacity:.8;
+  margin-bottom:1.4rem;
+}
+.statusrow .brand{
+  font-family:"Sora",sans-serif;
+  font-weight:800;
+  font-size:.95rem;
+  letter-spacing:.01em;
+  opacity:1;
+}
+.statusrow .live{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#7CFFB2;
+  box-shadow:0 0 0 3px rgba(124,255,178,.25);
+  flex:0 0 auto;
+}
+
+.place{
+  text-align:center;
+  font-size:1.05rem;
+  font-weight:600;
+  margin-bottom:.15rem;
+}
+.place .sub{
+  display:block;
+  font-size:.72rem;
+  font-weight:400;
+  opacity:.75;
+  margin-top:.15rem;
+}
+
+.bigtemp{
+  text-align:center;
+  font-family:"Sora",sans-serif;
+  font-weight:800;
+  font-size:6.4rem;
+  line-height:1;
+  letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;
+  margin:.4rem 0 .1rem;
+}
+.bigicon{display:flex;justify-content:center;margin:.2rem 0 .1rem}
+.bigicon svg{width:88px;height:88px}
+@media (max-width:360px){
+  .bigtemp{font-size:5.2rem}
+  .bigicon svg{width:70px;height:70px}
+}
+.cond{
+  text-align:center;
+  font-size:.95rem;
+  opacity:.9;
+  margin-bottom:.1rem;
+}
+.stamp{
+  text-align:center;
+  font-size:.72rem;
+  opacity:.65;
+}
+
+.sheet{
+  flex:1 1 auto;
+  background:var(--panel-2);
+  margin-top:-1.1rem;
+  border-radius:22px 22px 0 0;
+  padding:1.5rem 1.2rem calc(1.2rem);
+  position:relative;
+}
+.sheet::before{
+  content:"";
+  position:absolute;
+  top:.55rem;
+  left:50%;
+  transform:translateX(-50%);
+  width:36px;
+  height:4px;
+  border-radius:2px;
+  background:var(--line);
+}
+
+.livecard{
+  background:linear-gradient(135deg, #c0453f, #e0824a);
+  border-radius:16px;
+  padding:.9rem 1rem;
+  margin-bottom:.9rem;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+.livecard[hidden]{ display:none; }
+.livecard .pulsedot{
+  width:9px;height:9px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 0 4px rgba(255,255,255,.3);
+  animation:livepulse 1.4s ease-in-out infinite;
+  flex:0 0 auto;
+}
+@keyframes livepulse{50%{opacity:.4}}
+@media (prefers-reduced-motion: reduce){ .livecard .pulsedot{animation:none} }
+.livecard .body{flex:1 1 auto; min-width:0}
+.livecard .tag{font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; opacity:.85}
+.livecard .id{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.85rem; font-weight:600; margin:.1rem 0}
+.livecard .row{font-size:.78rem; opacity:.92}
+.livecard .t{
+  font-family:"Sora",sans-serif;
+  font-weight:800;
+  font-size:1.7rem;
+  flex:0 0 auto;
+  font-variant-numeric:tabular-nums;
+}
+
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:.7rem;
+  margin-top:.9rem;
+}
+.stat{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:.85rem .95rem;
+  display:flex;
+  flex-direction:column;
+  gap:.3rem;
+}
+.stat .k{
+  font-size:.68rem;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--ink-faint);
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+}
+.stat .k svg{width:13px;height:13px}
+.stat .v{
+  font-family:"Sora",sans-serif;
+  font-weight:700;
+  font-size:1.35rem;
+  font-variant-numeric:tabular-nums;
+}
+
+.detailcard{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  margin-top:.9rem;
+  overflow:hidden;
+}
+.detailrow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:.7rem .95rem;
+  font-size:.85rem;
+}
+.detailrow + .detailrow{border-top:1px solid var(--line)}
+
+.strip{
+  display:flex;
+  gap:.6rem;
+  overflow-x:auto;
+  padding:.9rem 0 .3rem;
+  -webkit-overflow-scrolling:touch;
+}
+.predictchip{
+  flex:0 0 auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:.6rem .8rem;
+  min-width:64px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.25rem;
+}
+.predictchip .h{font-size:.68rem; color:var(--ink-faint)}
+.predictchip svg{width:28px; height:28px}
+.predictchip .t{font-family:"Sora",sans-serif; font-weight:700; font-size:1rem; font-variant-numeric:tabular-nums}
+.detailrow .k{color:var(--ink-dim)}
+.detailrow .v{font-weight:600;font-variant-numeric:tabular-nums}
+
+.refresh{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.4rem;
+  margin:1.1rem auto 0;
+  padding:.7rem 1.2rem;
+  min-height:44px; /* Apple/Google minimum comfortable tap target */
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-dim);
+  font-size:.85rem;
+  font-family:inherit;
+  cursor:pointer;
+  width:fit-content;
+}
+.refresh:active{transform:scale(.97)}
+.refresh svg{width:14px;height:14px}
+.refresh.spinning svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){
+  .refresh.spinning svg{animation:none}
+}
+
+.tabbar{
+  flex:0 0 auto;
+  order:-1; /* move to the top of the .frame flex column */
+  display:flex;
+  border-bottom:1px solid var(--line);
+  background:var(--panel);
+  padding:calc(.55rem + var(--safe-top)) .5rem .55rem;
+}
+.tab{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.25rem;
+  font-size:.65rem;
+  color:var(--ink-faint);
+  background:none;
+  border:none;
+  font-family:inherit;
+  padding:.4rem 0;
+  min-height:44px; /* comfortable tap target */
+}
+.tab svg{width:22px;height:22px}
+.tab.active{color:var(--accent)}
+
+.listhead{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font-size:.85rem;
+  font-weight:600;
+  margin:.9rem 0 .6rem;
+}
+.listhead .n{
+  font-size:.72rem;
+  font-weight:400;
+  color:var(--ink-faint);
+  font-variant-numeric:tabular-nums;
+}
+.faq{
+  display:flex;
+  flex-direction:column;
+  gap:.7rem;
+  max-height:calc(100dvh - 220px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.acctcard{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:1.1rem;
+}
+.acctlead{
+  font-size:.85rem;
+  color:var(--ink-dim);
+  margin:0 0 .8rem;
+  line-height:1.5;
+}
+.nicknameinput{
+  width:100%;
+  padding:.7rem .9rem;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:.9rem;
+}
+.acctname{
+  font-family:"Sora",sans-serif;
+  font-weight:800;
+  font-size:1.5rem;
+  margin-bottom:.9rem;
+}
+.acctrow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:.6rem 0;
+  border-top:1px solid var(--line);
+  font-size:.82rem;
+}
+.acctrow .k{color:var(--ink-faint)}
+.acctrow .v{font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:600; color:var(--ink)}
+.qa{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:.8rem .95rem;
+}
+.qa .q{
+  font-family:"Sora",sans-serif;
+  font-weight:700;
+  font-size:.88rem;
+  margin-bottom:.35rem;
+}
+.qa .a{
+  font-size:.82rem;
+  color:var(--ink-dim);
+  line-height:1.5;
+}
+.qa .a code{
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:.78rem;
+  background:var(--panel-2);
+  padding:.05rem .3rem;
+  border-radius:5px;
+}
+.feed{
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  max-height:calc(100dvh - 260px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.rangepicker{
+  display:block;
+  margin:0 0 .6rem;
+  padding:.45rem .7rem;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:.82rem;
+}
+#mapbox{
+  position:relative;
+  height:calc(100dvh - 340px);
+  min-height:260px;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  touch-action:pan-x pan-y;
+}
+.heatoverlay{
+  position:absolute;
+  top:12px; left:12px;
+  z-index:1000;
+  background:rgba(10,20,30,.68);
+  backdrop-filter:blur(6px);
+  border-radius:14px;
+  padding:.8rem .9rem;
+  color:#fff;
+  pointer-events:none;
+}
+.heatoverlay .title{font-size:.78rem;font-weight:700;margin-bottom:.5rem;}
+.heatoverlay .scale{
+  display:flex; gap:.5rem;
+}
+.heatoverlay .bar{
+  width:8px; height:120px; border-radius:4px;
+  background:linear-gradient(180deg,#c05a3c,#c99a2e,#2f9e6f,#3b82c4,#1e3a8a);
+}
+.heatoverlay .ticks{
+  display:flex; flex-direction:column; justify-content:space-between;
+  height:120px;
+  font-size:.68rem; color:rgba(255,255,255,.85);
+}
+.maplegend{
+  display:flex;
+  gap:.9rem;
+  justify-content:center;
+  font-size:.72rem;
+  color:var(--ink-dim);
+  margin-top:.6rem;
+  flex-wrap:wrap;
+}
+.maplegend i{
+  display:inline-block;
+  width:9px;height:9px;
+  border-radius:50%;
+  margin-right:.3rem;
+  vertical-align:middle;
+}
+.maptoggle{
+  display:flex;
+  gap:.4rem;
+  margin:.5rem 0 .6rem;
+}
+.maptogglebtn{
+  flex:1;
+  padding:.5rem 0;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-dim);
+  font-family:inherit;
+  font-size:.8rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.maptogglebtn.active{
+  background:var(--accent);
+  color:#fff;
+  border-color:transparent;
+}
+.heatlegend{
+  align-items:center;
+  gap:.6rem;
+}
+.heatgradient{
+  display:inline-block;
+  width:120px;height:8px;
+  border-radius:4px;
+  background:linear-gradient(90deg,#3b82c4,#2f9e6f,#c99a2e,#c05a3c);
+}
+.heatlabel{font-size:.72rem;color:var(--ink-dim);}
+.dotmarker{
+  width:14px;height:14px;
+  border-radius:50%;
+  background:var(--mc);
+  border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+.youarehere{
+  position:relative;
+  width:18px;height:18px;
+}
+.youarehere .pulse{
+  position:absolute;
+  inset:-14px;
+  border-radius:50%;
+  background:#3b82f6;
+  opacity:.35;
+  animation:youarehere-pulse 1.8s ease-out infinite;
+}
+.youarehere .dot{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:#3b82f6;
+  border:3px solid #fff;
+  box-shadow:0 1px 6px rgba(0,0,0,.5);
+}
+@keyframes youarehere-pulse{
+  0%{ transform:scale(.5); opacity:.45; }
+  100%{ transform:scale(1); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .youarehere .pulse{ animation:none; opacity:.2; }
+}
+.clusterdot{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:rgba(31,111,74,.85);
+  border:2px solid #fff;
+  color:#fff;
+  font-family:"Sora",sans-serif;
+  font-weight:700;
+  font-size:.78rem;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.leaflet-popup-content-wrapper{
+  background:var(--panel);
+  color:var(--ink);
+  border-radius:14px;
+  box-shadow:0 8px 28px rgba(0,0,0,.35);
+}
+.leaflet-popup-tip{ background:var(--panel); }
+.leaflet-popup-content{font-family:"Inter",system-ui,sans-serif;font-size:.82rem;margin:.7rem .9rem}
+.mappop-temp{font-family:"Sora",sans-serif;font-weight:800;font-size:1.4rem;line-height:1}
+.mappop-id{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.75rem;color:var(--ink-dim);margin:.15rem 0 .35rem}
+.mappop-row{font-size:.76rem;color:var(--ink-dim);line-height:1.4}
+
+/* glowing temperature-badge map markers */
+.tempmarker{ position:relative; width:0; height:0; }
+.tempmarker .pulse{
+  position:absolute;
+  left:50%; top:50%;
+  width:34px; height:34px;
+  margin:-17px 0 0 -17px;
+  border-radius:50%;
+  background:var(--mc);
+  opacity:.45;
+  animation:markerpulse 2.4s ease-out infinite;
+}
+.tempmarker .badge{
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  min-width:34px;
+  padding:.15rem .4rem;
+  border-radius:999px;
+  background:var(--mc);
+  color:#fff;
+  font-family:"Sora",sans-serif;
+  font-weight:700;
+  font-size:.78rem;
+  text-align:center;
+  box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 3px 10px rgba(0,0,0,.4);
+  white-space:nowrap;
+}
+@keyframes markerpulse{
+  0%{ transform:scale(.6); opacity:.55; }
+  70%{ transform:scale(1.9); opacity:0; }
+  100%{ opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .tempmarker .pulse{ animation:none; opacity:.25; }
+}
+.feedrow{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:.7rem .85rem;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  cursor:pointer;
+  text-align:left;
+  width:100%;
+  font-family:inherit;
+  color:inherit;
+  touch-action:manipulation;
+}
+.feedrow:active{background:var(--panel-2)}
+.feedrow svg{width:22px;height:22px;flex:0 0 auto}
+.feedrow .mid{flex:1 1 auto;min-width:0}
+.feedrow .id{
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:.78rem;
+  font-weight:600;
+}
+.feedrow .when{font-size:.72rem;color:var(--ink-dim);margin-top:.1rem}
+.feedrow .t{
+  font-family:"Sora",sans-serif;
+  font-weight:700;
+  font-size:1rem;
+  font-variant-numeric:tabular-nums;
+  flex:0 0 auto;
+}
+.emptystate{
+  text-align:center;
+  color:var(--ink-faint);
+  font-size:.82rem;
+  padding:2rem 1rem;
+}
+.errbanner{
+  background:#c0453644;
+  border:1px solid #c0453688;
+  color:var(--ink);
+  border-radius:12px;
+  padding:.6rem .8rem;
+  font-size:.8rem;
+  margin-bottom:.8rem;
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+}
+
+footer{
+  text-align:center;
+  font-size:.68rem;
+  color:var(--ink-faint);
+  padding:.7rem 1.2rem .2rem;
+}
+.clearcachebtn{
+  margin-top:.5rem;
+  padding:.3rem .7rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-faint);
+  font-family:inherit;
+  font-size:.68rem;
+  cursor:pointer;
+}
+.clearcachebtn:active{ transform:scale(.97); }
+</style>
+
+<div class="frame">
+  <div class="sky">
+    <div class="statusrow">
+      <span class="brand">Groundcheck</span>
+      <span class="live" id="feedStatus"><span class="dot" id="feedDot"></span><span id="feedLabel">checking feed&hellip;</span></span>
+    </div>
+    <div class="place" id="place">Loading&hellip;<span class="sub"></span></div>
+    <div class="bigicon" id="bigicon"></div>
+    <div class="bigtemp" id="bigtemp">&nbsp;</div>
+    <div class="cond" id="cond">&nbsp;</div>
+    <div class="stamp" id="stamp">&nbsp;</div>
+  </div>
+
+  <div class="sheet">
+    <div id="view-today">
+      <div class="livecard" id="liveCard" hidden></div>
+      <div class="grid2" id="stats"></div>
+      <div class="detailcard" id="details"></div>
+
+      <div class="listhead" id="predictHead" hidden>Next days<span class="n">typical day, from 7-day pattern</span></div>
+      <div class="strip" id="predictStrip" hidden></div>
+
+      <button class="refresh" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+        Refresh location
+      </button>
+
+      <div class="listhead">Last 7 days<span class="n" id="weekCount"></span></div>
+      <div class="feed" id="weekList"></div>
+    </div>
+
+    <div id="view-stations" hidden>
+      <div class="listhead">All stations, newest first<span class="n" id="stationCount"></span></div>
+      <div class="feed" id="stationList"></div>
+    </div>
+
+    <div id="view-history" hidden>
+      <div class="listhead">Reading history<span class="n" id="historyCount"></span></div>
+      <div class="feed" id="historyList"></div>
+    </div>
+
+    <div id="view-search" hidden>
+      <div class="listhead">Search</div>
+      <p style="color:var(--ink-dim);font-size:.82rem;margin:0 0 .8rem;line-height:1.5">
+        Station ID, a temperature (e.g. <code>18</code> or <code>18°C</code>), or a place name.
+      </p>
+      <div style="display:flex;gap:.5rem;margin-bottom:.6rem">
+        <input id="searchInput" class="nicknameinput" type="text" placeholder="e.g. Berlin, or 18°C, or a station ID" style="flex:1">
+        <button id="searchBtn" class="refresh" style="flex:0 0 auto">Go</button>
+      </div>
+      <select id="searchRange" class="rangepicker" style="margin-bottom:.7rem;width:100%">
+        <option value="7" selected>Only last 7 days</option>
+        <option value="30">Only last 30 days</option>
+        <option value="90">Only last 90 days</option>
+        <option value="0">All time (full archive)</option>
+      </select>
+      <div id="searchStatus" style="font-size:.78rem;color:var(--ink-faint);margin-bottom:.7rem"></div>
+      <div id="searchMapBox" style="height:220px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:.9rem"></div>
+      <div class="feed" id="searchResults"></div>
+    </div>
+
+    <div id="view-map" hidden>
+      <div class="listhead">Station map<span class="n" id="mapCount"></span></div>
+      <div class="maptoggle">
+        <button class="maptogglebtn active" data-mapmode="stations">Stations</button>
+        <button class="maptogglebtn" data-mapmode="heat">Temperature</button>
+      </div>
+      <select id="mapRange" class="rangepicker">
+        <option value="7" selected>Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="0">All time</option>
+        <option value="day">This day</option>
+      </select>
+      <input type="date" id="mapDay" class="rangepicker" hidden>
+      <div id="mapbox">
+        <div class="heatoverlay" id="heatLegend" hidden>
+          <div class="title">Temperature</div>
+          <div class="scale">
+            <span class="bar"></span>
+            <span class="ticks">
+              <span>35&deg;</span><span>20&deg;</span><span>10&deg;</span><span>0&deg;</span><span>-10&deg;</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="maplegend" id="stationsLegend">
+        <span><i style="background:#3b82c4"></i>&lt;3&deg;</span>
+        <span><i style="background:#2f9e6f"></i>3&ndash;7&deg;</span>
+        <span><i style="background:#c99a2e"></i>7&ndash;11&deg;</span>
+        <span><i style="background:#c05a3c"></i>&gt;11&deg;</span>
+      </div>
+    </div>
+
+    <div id="view-faq" hidden>
+      <div class="listhead">FAQ</div>
+      <div class="faq">
+        <div class="qa">
+          <div class="q">Why use this?</div>
+          <div class="a">You get to see <b>real, live sensor data</b> straight from actual weather balloons in flight right now — the same raw measurements meteorologists use to calibrate forecasts. It's a genuine look at the atmosphere, not a prediction.</div>
+        </div>
+        <div class="qa">
+          <div class="q">Where does this data come from?</div>
+          <div class="a">Live radiosonde (weather balloon) telemetry from <b>sonde.mine.nu</b>, specifically its <code>sondes.php</code> feed — real sensor readings from balloons currently or recently in flight, not a forecast model.</div>
+        </div>
+        <div class="qa">
+          <div class="q">Why are some temperatures missing from the list?</div>
+          <div class="a">Radiosondes spend most of a flight at high altitude, where it's routinely &minus;40&deg;C to &minus;70&deg;C. Those readings aren't representative of ground weather, so this app filters them out and only keeps readings at or above 0&deg;C — typically captured near launch or landing.</div>
+        </div>
+        <div class="qa">
+          <div class="q">Why does it say a station is far from me?</div>
+          <div class="a">This isn't a dense ground-sensor network — it's wherever balloons happened to fly recently. If nothing launched near you in the last 7 days, the nearest valid reading may be hundreds of km away. The app always labels the distance honestly instead of pretending it's local.</div>
+        </div>
+        <div class="qa">
+          <div class="q">Why does location sometimes look approximate?</div>
+          <div class="a">Precise GPS location requires a secure (HTTPS) connection. If you're on a plain http:// address, the app falls back to IP-based location, which is only accurate to city level.</div>
+        </div>
+        <div class="qa">
+          <div class="q">How often does data update?</div>
+          <div class="a">The server refetches the last 7 days of readings automatically on a schedule; the page itself also polls for new data every 5 minutes.</div>
+        </div>
+        <div class="qa">
+          <div class="q">What do Humidity/Pressure show "—"?</div>
+          <div class="a">Not every sonde model carries a working humidity or pressure sensor — some report temperature only. A dash means that particular sensor had no data, not an app error.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-account" hidden>
+      <div class="listhead">Account</div>
+
+      <div id="accountLoggedOut" class="acctcard">
+        <p class="acctlead">Save a nickname on this device — no password, no server account, just a locally-saved identity.</p>
+        <input id="nicknameInput" class="nicknameinput" type="text" placeholder="Your nickname" maxlength="24">
+        <button id="createAccountBtn" class="refresh" style="margin:.9rem 0 0">Save on this device</button>
+      </div>
+
+      <div id="accountLoggedIn" class="acctcard" hidden>
+        <p class="acctlead">Welcome back,</p>
+        <div class="acctname" id="acctNameDisplay"></div>
+        <div class="acctrow">
+          <span class="k">Local token</span>
+          <span class="v" id="acctTokenDisplay"></span>
+        </div>
+        <div class="acctrow">
+          <span class="k">Saved</span>
+          <span class="v" id="acctSinceDisplay"></span>
+        </div>
+        <button id="signOutBtn" class="refresh" style="margin:.9rem 0 0">Forget this device</button>
+      </div>
+    </div>
+
+    <footer>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="https://luishae07.github.io/groundcheck/apidocs/" style="color:inherit">API docs</a> &middot; <a href="desktop.html" style="color:inherit">Desktop view</a>
+      <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
+    </footer>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab active" data-view="today">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      Today
+    </button>
+    <button class="tab" data-view="map">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg>
+      Map
+    </button>
+    <button class="tab" data-view="stations">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      Stations
+    </button>
+    <button class="tab" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      History
+    </button>
+    <button class="tab" data-view="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Search
+    </button>
+    <button class="tab" data-view="faq">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
+      FAQ
+    </button>
+    <button class="tab" data-view="account">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Account
+    </button>
+  </div>
+</div>
+
+<script>
+function iconFor(temp, hum, pressure){
+  const stormy = hum !== null && hum > 90 && pressure != null && pressure < 985;
+  const raining = hum !== null && hum > 92;
+  const showery = hum !== null && hum > 85;
+  if (stormy){
+    return `<svg viewBox="0 0 64 64" fill="none"><path d="M16 38a11 11 0 1 1 2-21.8A14 14 0 0 1 44 20a10 10 0 0 1-1 18H16Z" fill="#9aa8b8"/><path d="M16 38a11 11 0 1 1 2-21.8A14 14 0 0 1 44 20a10 10 0 0 1-1 18H16Z" stroke="#5d7285" stroke-width="1.5"/><path d="M34 40 25 52h8l-5 12 15-16h-8l6-8Z" fill="#ffcc4d" stroke="#e0a412" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+  }
+  if (raining){
+    return `<svg viewBox="0 0 64 64" fill="none"><path d="M18 40a11 11 0 1 1 2-21.8A14 14 0 0 1 46 22a10 10 0 0 1-1 18H18Z" fill="#c7d3dd"/><path d="M18 40a11 11 0 1 1 2-21.8A14 14 0 0 1 46 22a10 10 0 0 1-1 18H18Z" stroke="#8fa3b8" stroke-width="1.5"/><g stroke="#4f8fd6" stroke-width="3" stroke-linecap="round"><line x1="21" y1="46" x2="17" y2="56"/><line x1="32" y1="46" x2="28" y2="56"/><line x1="43" y1="46" x2="39" y2="56"/></g></svg>`;
+  }
+  if (temp >= 11 && !showery){
+    return `<svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="15" fill="#ffb43c"/><g stroke="#ffb43c" stroke-width="3" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="60"/><line x1="4" y1="32" x2="12" y2="32"/><line x1="52" y1="32" x2="60" y2="32"/><line x1="12" y1="12" x2="17.5" y2="17.5"/><line x1="46.5" y1="46.5" x2="52" y2="52"/><line x1="52" y1="12" x2="46.5" y2="17.5"/><line x1="17.5" y1="46.5" x2="12" y2="52"/></g></svg>`;
+  }
+  if (showery){
+    return `<svg viewBox="0 0 64 64" fill="none"><path d="M20 44a11 11 0 1 1 2-21.8A14 14 0 0 1 48 26a10 10 0 0 1-1 18H20Z" fill="#e7edf2"/><path d="M20 44a11 11 0 1 1 2-21.8A14 14 0 0 1 48 26a10 10 0 0 1-1 18H20Z" stroke="#c3d0da" stroke-width="1.5"/><g stroke="#7fb3e0" stroke-width="2.5" stroke-linecap="round"><line x1="24" y1="50" x2="21" y2="57"/><line x1="34" y1="50" x2="31" y2="57"/><line x1="44" y1="50" x2="41" y2="57"/></g></svg>`;
+  }
+  if (temp >= 4){
+    return `<svg viewBox="0 0 64 64" fill="none"><circle cx="24" cy="30" r="10" fill="#ffb43c"/><path d="M24 44a11 11 0 1 1 2-21.8A14 14 0 0 1 52 26a10 10 0 0 1-1 18H24Z" fill="#e7edf2"/><path d="M24 44a11 11 0 1 1 2-21.8A14 14 0 0 1 52 26a10 10 0 0 1-1 18H24Z" stroke="#c3d0da" stroke-width="1.5"/></svg>`;
+  }
+  return `<svg viewBox="0 0 64 64" fill="none"><path d="M20 40a11 11 0 1 1 2-21.8A14 14 0 0 1 48 22a10 10 0 0 1-1 18H20Z" fill="#dbe3ea"/><path d="M20 40a11 11 0 1 1 2-21.8A14 14 0 0 1 48 22a10 10 0 0 1-1 18H20Z" stroke="#b7c6d3" stroke-width="1.5"/><g fill="#7fb3e0"><circle cx="24" cy="50" r="2.4"/><circle cx="34" cy="54" r="2.4"/><circle cx="44" cy="50" r="2.4"/></g></svg>`;
+}
+
+function condFor(temp, hum, pressure){
+  if (hum !== null && hum > 90 && pressure != null && pressure < 985) return "Thunderstorms possible";
+  if (hum !== null && hum > 92) return "Rain likely";
+  if (hum !== null && hum > 85) return "Showers possible";
+  if (temp >= 11) return "Clear";
+  if (temp >= 4) return "Partly cloudy";
+  return "Cool, cloudy";
+}
+
+function fmtTime(iso){
+  return new Date(iso).toLocaleString(undefined, {
+    month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function haversine(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+const svgHumidity = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2s7 8 7 13a7 7 0 1 1-14 0c0-5 7-13 7-13Z"/></svg>`;
+const svgPressure = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>`;
+const svgAlt = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3-6 9h4l-3 9 12-11h-4l5-7Z"/></svg>`;
+const svgPin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>`;
+
+function render(p, distanceKm){
+  document.getElementById('bigicon').innerHTML = iconFor(p.temp, p.humidity, p.pressure);
+  document.getElementById('cond').textContent = condFor(p.temp, p.humidity, p.pressure);
+  document.getElementById('bigtemp').textContent = p.temp.toFixed(1) + '°';
+
+  let label, sub;
+  if (distanceKm != null){
+    label = 'Nearest station: ' + p.id;
+    sub = distanceKm < 60
+      ? distanceKm.toFixed(0) + ' km from you'
+      : '⚠ ' + distanceKm.toFixed(0) + ' km away — nothing closer reported in the last 7 days';
+  } else {
+    label = 'Station ' + p.id;
+    sub = p.lat.toFixed(2) + ', ' + p.lon.toFixed(2);
+  }
+  document.getElementById('place').innerHTML =
+    label + '<span class="sub">' + sub + '</span>';
+  document.getElementById('stamp').textContent = fmtTime(p.time);
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><span class="k">${svgHumidity} Humidity</span><span class="v">${p.humidity != null ? p.humidity + '%' : '—'}</span></div>
+    <div class="stat"><span class="k">${svgPressure} Pressure</span><span class="v">${p.pressure != null ? p.pressure + ' hPa' : '—'}</span></div>
+  `;
+
+  document.getElementById('details').innerHTML = `
+    <div class="detailrow"><span class="k">${svgAlt} Sensor altitude</span><span class="v">${Math.round(p.alt)} m</span></div>
+    <div class="detailrow"><span class="k">${svgPin} Coordinates</span><span class="v">${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</span></div>
+    <div class="detailrow"><span class="k">Station ID</span><span class="v">${p.id}</span></div>
+  `;
+
+  renderPrediction(p);
+}
+
+const PREDICTOR_URL = 'https://understood-replies-tex-shortcuts.trycloudflare.com/predict';
+let predictorCache = null;
+
+function renderPrediction(anchor){
+  const fetchAndRender = (data) => {
+    if (!data || !data.hourly_avg || !data.hourly_avg.length) {
+      document.getElementById('predictHead').hidden = true;
+      document.getElementById('predictStrip').hidden = true;
+      return;
+    }
+    // Anchor the 7-day diurnal average pattern to the current real reading,
+    // so the projection is continuous with what's actually happening now
+    // instead of showing raw historical averages disconnected from today.
+    const byHour = new Map(data.hourly_avg.map(b => [b.hour, b]));
+
+    // Sparse data means many hour-of-day buckets have zero samples so far —
+    // rather than skip those hours (and show fewer than asked for), fall
+    // back to whichever populated hour is closest on the 24h clock.
+    const nearestBucket = (h) => {
+      if (byHour.has(h)) return byHour.get(h);
+      let best = null, bestDist = Infinity;
+      for (const b of data.hourly_avg){
+        const d = Math.min(Math.abs(b.hour - h), 24 - Math.abs(b.hour - h));
+        if (d < bestDist){ bestDist = d; best = b; }
+      }
+      return best;
+    };
+
+    const anchorHour = new Date(anchor.time).getUTCHours();
+    const anchorBucket = nearestBucket(anchorHour);
+    const tempOffset = (anchorBucket) ? anchor.temp - anchorBucket.avg_temp : 0;
+    const humOffset = (anchorBucket && anchorBucket.avg_humidity != null && anchor.humidity != null)
+      ? anchor.humidity - anchorBucket.avg_humidity : 0;
+    const presOffset = (anchorBucket && anchorBucket.avg_pressure != null && anchor.pressure != null)
+      ? anchor.pressure - anchorBucket.avg_pressure : 0;
+
+    // Same diurnal shape applied to each of the next 5 days (there's no
+    // real day-to-day trend data — this is one "typical day" pattern
+    // repeated), so a day chip shows the high/low across all 24 hourly
+    // buckets rather than pretending each day is a distinct forecast.
+    const dayTemps = data.hourly_avg.map(b => b.avg_temp + tempOffset);
+    const dayHigh = Math.max(...dayTemps);
+    const dayLow = Math.min(...dayTemps);
+    const middayBucket = nearestBucket(13);
+    const middayTemp = middayBucket ? middayBucket.avg_temp + tempOffset : dayHigh;
+    const middayHumidity = middayBucket && middayBucket.avg_humidity != null ? middayBucket.avg_humidity + humOffset : null;
+    const middayPressure = middayBucket && middayBucket.avg_pressure != null ? middayBucket.avg_pressure + presOffset : null;
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const anchorDate = new Date(anchor.time);
+    const chips = [];
+    for (let i = 1; i <= 5; i++){
+      const d = new Date(anchorDate);
+      d.setUTCDate(d.getUTCDate() + i);
+      chips.push({ label: dayNames[d.getUTCDay()], high: dayHigh, low: dayLow, temp: middayTemp, humidity: middayHumidity, pressure: middayPressure });
+    }
+
+    const head = document.getElementById('predictHead');
+    const strip = document.getElementById('predictStrip');
+    if (!chips.length){
+      head.hidden = true;
+      strip.hidden = true;
+      return;
+    }
+    head.hidden = false;
+    strip.hidden = false;
+    strip.innerHTML = chips.map(c => `
+      <div class="predictchip">
+        <span class="h">${c.label}</span>
+        ${iconFor(c.temp, c.humidity, c.pressure)}
+        <span class="t">${c.high.toFixed(0)}&deg;<span style="opacity:.6">/${c.low.toFixed(0)}&deg;</span></span>
+      </div>
+    `).join('');
+  };
+
+  if (predictorCache){
+    fetchAndRender(predictorCache);
+    return;
+  }
+  fetch(PREDICTOR_URL)
+    .then(r => r.json())
+    .then(data => { predictorCache = data; fetchAndRender(data); })
+    .catch(() => {
+      document.getElementById('predictHead').hidden = true;
+      document.getElementById('predictStrip').hidden = true;
+    });
+}
+
+let points = [];
+let selected = null;
+let lastLoc = null; // {lat, lon, label} — remembered so refreshes keep picking nearest-by-distance
+
+function locateByIP(){
+  return fetch('https://ipwho.is/')
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
+      return { lat: d.latitude, lon: d.longitude, label: [d.city, d.country].filter(Boolean).join(', ') };
+    });
+}
+
+function selectNearest(lat, lon, label){
+  // Prefer readings from the last 48h — a geographically closer but stale
+  // (days-old) reading is a worse match for "right now" than a slightly
+  // farther one from today.
+  const FRESH_HOURS = 24;
+  const cutoff = Date.now() - FRESH_HOURS * 3600 * 1000;
+  const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
+  const pool = fresh.length ? fresh : points;
+
+  let nearest = pool[0];
+  let best = Infinity;
+  for (const p of pool){
+    const d = haversine(lat, lon, p.lat, p.lon);
+    if (d < best){ best = d; nearest = p; }
+  }
+  selected = nearest;
+  render(nearest, best);
+  if (label){
+    const sub = document.querySelector('#place .sub');
+    sub.innerHTML = sub.innerHTML + ' &middot; approx. from ' + label;
+  }
+}
+
+function locate(){
+  const btn = document.getElementById('refreshBtn');
+  if (!points.length) return;
+  if (btn) btn.classList.add('spinning');
+
+  const finishWith = (lat, lon, label) => {
+    lastLoc = { lat, lon, label };
+    selectNearest(lat, lon, label);
+    updateYouAreHereMarker();
+    if (btn) btn.classList.remove('spinning');
+  };
+
+  const fallbackToIP = () => {
+    locateByIP()
+      .then(loc => finishWith(loc.lat, loc.lon, loc.label))
+      .catch(() => {
+        render(points[0], null);
+        document.querySelector('#place .sub').textContent = 'location unavailable';
+        if (btn) btn.classList.remove('spinning');
+      });
+  };
+
+  // Browser geolocation needs a secure context (https, or localhost) — on a
+  // plain http:// LAN address it's silently unavailable, so fall back to
+  // approximate IP-based location, which works anywhere.
+  if (!navigator.geolocation || !window.isSecureContext){
+    fallbackToIP();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => finishWith(pos.coords.latitude, pos.coords.longitude, null),
+    fallbackToIP,
+    { timeout: 8000 }
+  );
+}
+
+function renderFeed(el, list, opts){
+  if (!list.length){
+    el.innerHTML = '<div class="emptystate">No readings available</div>';
+    return;
+  }
+  const byDay = opts && opts.byDay;
+  el.innerHTML = list.map(p => {
+    const weekday = new Date(p.time).toLocaleDateString(undefined, { weekday: 'long' });
+    const dateStr = new Date(p.time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const primary = byDay ? weekday : p.id;
+    const secondary = byDay
+      ? `${dateStr} &middot; ${p.id}`
+      : `${fmtTime(p.time)} &middot; ${Math.round(p.alt)} m alt`;
+    return `
+    <button class="feedrow" data-id="${p.id}">
+      ${iconFor(p.temp, p.humidity, p.pressure)}
+      <span class="mid">
+        <div class="id">${primary}</div>
+        <div class="when">${secondary}</div>
+      </span>
+      <span class="t">${p.temp.toFixed(1)}&deg;</span>
+    </button>
+  `;
+  }).join('');
+  el.querySelectorAll('.feedrow').forEach(row => {
+    row.addEventListener('click', () => {
+      const p = points.find(pt => pt.id === row.dataset.id);
+      if (!p) return;
+      selected = p;
+      render(p, null);
+      document.querySelector('.tab[data-view="today"]').click();
+    });
+  });
+}
+
+// Stations/History/Map are expensive to build (thousands of DOM rows /
+// markers) and were being rebuilt on every data load even while hidden —
+// that's what made the app feel slow to "load weather" overall. Now they
+// only render once their tab is actually opened (see the tab click
+// handler below), and get invalidated so they rebuild once more on the
+// next data refresh instead of every refresh.
+let freshViews = new Set();
+
+function renderLists(){
+  // Cheap part only: the Today-tab week strip (capped at 7 rows).
+  const byDay = new Map();
+  for (const p of points){
+    const day = p.time.slice(0, 10); // YYYY-MM-DD
+    const cur = byDay.get(day);
+    if (!cur || p.temp > cur.temp) byDay.set(day, p); // warmest reading represents the day
+  }
+  const days = [...byDay.values()].sort((a, b) => b.tsunix - a.tsunix).slice(0, 7);
+  document.getElementById('weekCount').textContent = days.length + ' days';
+  renderFeed(document.getElementById('weekList'), days, { byDay: true });
+
+  freshViews.clear(); // new data means stations/history/map need rebuilding next time they're opened
+}
+
+function renderHeavyViewsIfNeeded(view){
+  if (freshViews.has(view)) return;
+  freshViews.add(view);
+
+  if (view === 'stations'){
+    const byStation = new Map();
+    for (const p of points){
+      if (!byStation.has(p.id)) byStation.set(p.id, p);
+    }
+    const stations = [...byStation.values()];
+    document.getElementById('stationCount').textContent = stations.length + ' stations';
+    renderFeed(document.getElementById('stationList'), stations);
+  } else if (view === 'history'){
+    document.getElementById('historyCount').textContent = points.length + ' readings';
+    renderFeed(document.getElementById('historyList'), points);
+  } else if (view === 'map'){
+    applyMapRange();
+  }
+}
+
+function pointsWithinDays(days){
+  if (!days) return points; // 0 = "All time"
+  const cutoff = Date.now() - days * 86400 * 1000;
+  return points.filter(p => new Date(p.time).getTime() >= cutoff);
+}
+
+function pointsOnDay(dateStr){
+  if (!dateStr) return [];
+  return points.filter(p => {
+    const d = new Date(p.time);
+    const y = d.getUTCFullYear(), m = String(d.getUTCMonth()+1).padStart(2,'0'), day = String(d.getUTCDate()).padStart(2,'0');
+    return `${y}-${m}-${day}` === dateStr;
+  });
+}
+
+function applyMapRange(){
+  const val = document.getElementById('mapRange').value;
+  const dayInput = document.getElementById('mapDay');
+  if (val === 'day'){
+    dayInput.hidden = false;
+    if (!dayInput.value){
+      const now = new Date();
+      dayInput.value = now.toISOString().slice(0,10);
+    }
+    renderMap(pointsOnDay(dayInput.value));
+  } else {
+    dayInput.hidden = true;
+    renderMap(pointsWithinDays(parseInt(val, 10)));
+  }
+}
+
+function tempColor(t){
+  if (t < 3) return '#3b82c4';
+  if (t < 7) return '#2f9e6f';
+  if (t < 11) return '#c99a2e';
+  return '#c05a3c';
+}
+
+let leafletMap = null;
+let leafletMarkerLayer = null;
+let mapMode = 'stations';
+let lastMapList = [];
+let youAreHereMarker = null;
+
+function updateYouAreHereMarker(){
+  if (!leafletMap || !lastLoc) return;
+  if (youAreHereMarker) leafletMap.removeLayer(youAreHereMarker);
+  youAreHereMarker = L.marker([lastLoc.lat, lastLoc.lon], {
+    icon: L.divIcon({
+      className: '',
+      html: '<div class="youarehere"><span class="pulse"></span><span class="dot"></span></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    }),
+    zIndexOffset: 1000, // always drawn above station markers/clusters
+    interactive: false
+  }).addTo(leafletMap);
+}
+
+function renderMap(list){
+  lastMapList = list;
+  document.getElementById('mapCount').textContent = list.length + ' stations';
+
+  if (!leafletMap){
+    leafletMap = L.map('mapbox', {
+      zoomControl: true, attributionControl: false, preferCanvas: true,
+      worldCopyJump: false,
+      maxBounds: [[-90, -180], [90, 180]],
+      maxBoundsViscosity: 1.0,
+      minZoom: 2
+    }).setView([51.5, 10.5], 5);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      noWrap: true,
+      attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+    }).addTo(leafletMap);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      noWrap: true,
+      opacity: 0.85
+    }).addTo(leafletMap);
+
+    L.control.attribution({ prefix: false, position: 'bottomright' })
+      .addAttribution('Tiles &copy; Esri &middot; Data: sonde.mine.nu')
+      .addTo(leafletMap);
+  }
+
+  applyMapMode();
+
+  if (list.length){
+    leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding: [24, 24] });
+  }
+}
+
+function applyMapMode(){
+  if (!leafletMap) return;
+  const list = lastMapList;
+
+  if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
+
+  document.getElementById('stationsLegend').hidden = mapMode !== 'stations';
+  document.getElementById('heatLegend').hidden = mapMode !== 'heat';
+
+  if (mapMode === 'heat'){
+    ensureHeatCanvas();
+    heatCanvasEl.style.display = 'block';
+    drawInterpolatedHeat(list);
+    return;
+  } else if (heatCanvasEl){
+    heatCanvasEl.style.display = 'none';
+  }
+
+  // Clustering keeps hundreds of stations fast: at low zoom, nearby points
+  // collapse into one bubble (far cheaper to draw and hit-test than
+  // individually rendering/interacting with every marker), expanding as
+  // you zoom in. Small colored dot icons instead of glow badges keep each
+  // individual marker cheap too.
+  leafletMarkerLayer = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    disableClusteringAtZoom: 12,
+    iconCreateFunction: cluster => {
+      const n = cluster.getChildCount();
+      const size = n < 10 ? 30 : n < 50 ? 38 : 46;
+      return L.divIcon({
+        html: `<div class="clusterdot" style="width:${size}px;height:${size}px">${n}</div>`,
+        className: '',
+        iconSize: [size, size]
+      });
+    }
+  });
+
+  list.forEach(p => {
+    const color = tempColor(p.temp);
+    const marker = L.marker([p.lat, p.lon], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="dotmarker" style="--mc:${color}"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      })
+    });
+    marker.bindPopup(() =>
+      `<div class="mappop">
+         <div class="mappop-temp" style="color:${color}">${p.temp.toFixed(1)}&deg;C</div>
+         <div class="mappop-id">${p.id}</div>
+         <div class="mappop-row">${fmtTime(p.time)}</div>
+         <div class="mappop-row">Alt ${Math.round(p.alt)} m${p.pressure != null ? ' &middot; ' + p.pressure + ' hPa' : ''}${p.humidity != null ? ' &middot; ' + p.humidity + '% RH' : ''}</div>
+       </div>`
+    );
+    leafletMarkerLayer.addLayer(marker);
+  });
+
+  leafletMap.addLayer(leafletMarkerLayer);
+  updateYouAreHereMarker();
+}
+
+// --- Interpolated temperature surface (Apple Weather-style full coverage) ---
+// leaflet.heat only draws blurred blobs around each point, leaving visible
+// gaps between sparse stations. This instead computes a smooth inverse-
+// distance-weighted color field across the whole visible map — every pixel
+// gets an estimated temperature, not just areas near a real reading.
+let heatCanvasEl = null;
+const HEAT_MIN_T = -10, HEAT_MAX_T = 35;
+
+function heatColorForT(t){
+  const stops = [
+    [0.00, 30, 41, 59],    // deep cold — slate/navy
+    [0.20, 59, 130, 196],  // cold blue
+    [0.45, 47, 158, 111],  // green
+    [0.70, 201, 154, 46],  // orange
+    [0.88, 192, 90, 60],   // hot red
+    [1.00, 140, 30, 30]    // deep hot
+  ];
+  t = Math.max(0, Math.min(1, t));
+  let a = stops[0], b = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++){
+    if (t >= stops[i][0] && t <= stops[i + 1][0]){ a = stops[i]; b = stops[i + 1]; break; }
+  }
+  const span = (b[0] - a[0]) || 1;
+  const f = (t - a[0]) / span;
+  const r = Math.round(a[1] + (b[1] - a[1]) * f);
+  const g = Math.round(a[2] + (b[2] - a[2]) * f);
+  const bl = Math.round(a[3] + (b[3] - a[3]) * f);
+  return [r, g, bl];
+}
+
+function ensureHeatCanvas(){
+  if (heatCanvasEl) return;
+  heatCanvasEl = document.createElement('canvas');
+  heatCanvasEl.style.position = 'absolute';
+  heatCanvasEl.style.inset = '0';
+  // Leaflet's whole .leaflet-map-pane wrapper (tiles + everything) carries
+  // the generic .leaflet-pane class, which is z-index:400 — a value BELOW
+  // that renders invisibly underneath the entire map, not just the tiles.
+  heatCanvasEl.style.zIndex = 410;
+  heatCanvasEl.style.pointerEvents = 'none';
+  document.getElementById('mapbox').insertBefore(heatCanvasEl, document.getElementById('mapbox').firstChild);
+
+  let redrawTimer = null;
+  const scheduleRedraw = () => {
+    if (mapMode !== 'heat') return;
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+  };
+  leafletMap.on('move zoom resize', scheduleRedraw);
+}
+
+function drawInterpolatedHeat(list){
+  if (!leafletMap || !heatCanvasEl) return;
+  const size = leafletMap.getSize();
+  const W = size.x, H = size.y;
+  if (!W || !H) return;
+  heatCanvasEl.width = W;
+  heatCanvasEl.height = H;
+
+  const valid = list.filter(p => p.temp != null);
+  const ctx = heatCanvasEl.getContext('2d');
+  if (!valid.length){ ctx.clearRect(0, 0, W, H); return; }
+
+  // Interpolate on a coarse low-res grid, then upscale with smoothing —
+  // this is what actually produces the soft, blended, full-bleed look
+  // instead of hard-edged blobs, and keeps IDW cheap (a few thousand
+  // cell computations instead of one per screen pixel).
+  const GRID_W = 72, GRID_H = Math.max(1, Math.round(GRID_W * (H / W)));
+  const off = document.createElement('canvas');
+  off.width = GRID_W; off.height = GRID_H;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(GRID_W, GRID_H);
+
+  // Cap the number of stations used per cell for performance on dense views.
+  const pts = valid.length > 700 ? valid.filter((_, i) => i % Math.ceil(valid.length / 700) === 0) : valid;
+  const llPts = pts.map(p => {
+    const cp = leafletMap.latLngToContainerPoint([p.lat, p.lon]);
+    return { x: cp.x, y: cp.y, temp: p.temp };
+  });
+
+  // Coverage falloff: a cell close to real stations shows full color; one
+  // far from any of them (e.g. a whole other continent, or empty ocean)
+  // fades to transparent instead of inheriting a distant cluster's average
+  // color, which is what made huge no-data regions look uniformly colored.
+  const COVER_PX = 140, FADE_PX = 320;
+
+  for (let gy = 0; gy < GRID_H; gy++){
+    const py = (gy + 0.5) * (H / GRID_H);
+    for (let gx = 0; gx < GRID_W; gx++){
+      const px = (gx + 0.5) * (W / GRID_W);
+      let wSum = 0, tSum = 0, minD2 = Infinity;
+      for (let i = 0; i < llPts.length; i++){
+        const dx = llPts[i].x - px, dy = llPts[i].y - py;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < minD2) minD2 = d2;
+        // Sharp falloff so nearby stations dominate a cell's color instead
+        // of every point (near or far) blending toward one flat average.
+        const w = 1 / Math.pow(d2 + 100, 2);
+        wSum += w;
+        tSum += w * llPts[i].temp;
+      }
+      const temp = tSum / wSum;
+      const t = (temp - HEAT_MIN_T) / (HEAT_MAX_T - HEAT_MIN_T);
+      const [r, g, b] = heatColorForT(t);
+
+      const dist = Math.sqrt(minD2);
+      let alpha;
+      if (dist <= COVER_PX) alpha = 200;
+      else if (dist >= FADE_PX) alpha = 0;
+      else alpha = Math.round(200 * (1 - (dist - COVER_PX) / (FADE_PX - COVER_PX)));
+
+      const idx = (gy * GRID_W + gx) * 4;
+      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = alpha;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(off, 0, 0, GRID_W, GRID_H, 0, 0, W, H);
+}
+
+function showError(msg){
+  document.getElementById('bigtemp').textContent = '—°';
+  document.getElementById('place').innerHTML =
+    'Unable to load data<span class="sub">' + msg + '</span>';
+  document.getElementById('stats').innerHTML =
+    '<div class="errbanner">Data feed unreachable. Retrying automatically&hellip;</div>';
+}
+
+function loadData(){
+  return fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
+    .then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      points = data;
+      if (!points.length){
+        showError('no readings returned');
+        return;
+      }
+      if (lastLoc){
+        selectNearest(lastLoc.lat, lastLoc.lon, lastLoc.label);
+      } else {
+        render(points[0], null);
+        locate();
+      }
+      renderLists();
+    })
+    .catch(err => showError(err.message));
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.sheet > div[id^="view-"]').forEach(v => v.hidden = true);
+    document.getElementById('view-' + tab.dataset.view).hidden = false;
+    renderHeavyViewsIfNeeded(tab.dataset.view);
+    if (tab.dataset.view === 'map' && leafletMap){
+      setTimeout(() => leafletMap.invalidateSize(), 50);
+    }
+    if (tab.dataset.view === 'search' && searchMap){
+      setTimeout(() => searchMap.invalidateSize(), 50);
+    }
+  });
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => { selected = null; locate(); });
+document.getElementById('mapRange').addEventListener('change', applyMapRange);
+document.getElementById('mapDay').addEventListener('change', applyMapRange);
+
+document.querySelectorAll('.maptogglebtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.maptogglebtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mapMode = btn.dataset.mapmode;
+    applyMapMode();
+  });
+});
+
+let searchMap = null;
+let searchMapMarkers = [];
+let searchPlaceMarker = null;
+
+function ensureSearchMap(){
+  if (searchMap) return searchMap;
+  searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, noWrap: true,
+    attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+  }).addTo(searchMap);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, noWrap: true, opacity: 0.85
+  }).addTo(searchMap);
+  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(searchMap);
+  return searchMap;
+}
+
+function renderSearchMap(list, placeLatLon){
+  const map = ensureSearchMap();
+  searchMapMarkers.forEach(m => map.removeLayer(m));
+  searchMapMarkers = [];
+  if (searchPlaceMarker){ map.removeLayer(searchPlaceMarker); searchPlaceMarker = null; }
+
+  list.forEach(p => {
+    const color = tempColor(p.temp);
+    const marker = L.circleMarker([p.lat, p.lon], { radius: 8, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.95 }).addTo(map);
+    marker.bindPopup(`<b>${p.temp.toFixed(1)}&deg;C</b><br>${p.id}`);
+    searchMapMarkers.push(marker);
+  });
+
+  if (placeLatLon){
+    searchPlaceMarker = L.marker(placeLatLon, {
+      icon: L.divIcon({ className: '', html: '<div class="youarehere"><span class="pulse"></span><span class="dot"></span></div>', iconSize: [18, 18], iconAnchor: [9, 9] })
+    }).addTo(map);
+  }
+
+  const boundsPoints = list.map(p => [p.lat, p.lon]).concat(placeLatLon ? [placeLatLon] : []);
+  if (boundsPoints.length){
+    map.invalidateSize();
+    map.fitBounds(L.latLngBounds(boundsPoints), { padding: [30, 30] });
+  }
+}
+
+function searchPool(){
+  const days = parseInt(document.getElementById('searchRange').value, 10);
+  return pointsWithinDays(days);
+}
+
+function runSearch(query){
+  const status = document.getElementById('searchStatus');
+  const results = document.getElementById('searchResults');
+  query = query.trim();
+  if (!query){ status.textContent = ''; results.innerHTML = ''; return; }
+
+  const pool = searchPool();
+  const rangeLabel = document.getElementById('searchRange').selectedOptions[0].textContent.toLowerCase();
+
+  const idMatches = pool.filter(p => p.id.toLowerCase().includes(query.toLowerCase()));
+  if (idMatches.length){
+    status.textContent = `${idMatches.length} station${idMatches.length === 1 ? '' : 's'} matching ID "${query}" (${rangeLabel})`;
+    renderFeed(results, idMatches);
+    renderSearchMap(idMatches, null);
+    return;
+  }
+
+  const tempMatch = query.match(/^-?\d+(\.\d+)?\s*°?\s*c?$/i);
+  if (tempMatch){
+    const target = parseFloat(query);
+    const ranked = [...pool].sort((a, b) => Math.abs(a.temp - target) - Math.abs(b.temp - target)).slice(0, 12);
+    status.textContent = `Closest readings to ${target}°C (${rangeLabel})`;
+    renderFeed(results, ranked);
+    renderSearchMap(ranked, null);
+    return;
+  }
+
+  if (!pool.length){
+    status.textContent = `No readings in the selected range (${rangeLabel}) — try widening it or "All time".`;
+    results.innerHTML = '';
+    renderSearchMap([], null);
+    return;
+  }
+
+  status.textContent = 'Looking up "' + query + '"…';
+  results.innerHTML = '';
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query))
+    .then(r => r.json())
+    .then(hits => {
+      if (!hits.length){
+        status.textContent = `No place found for "${query}", and no station ID or temperature matched either.`;
+        return;
+      }
+      const place = hits[0];
+      const lat = parseFloat(place.lat), lon = parseFloat(place.lon);
+      const ranked = [...pool]
+        .map(p => ({ p, d: haversine(lat, lon, p.lat, p.lon) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 12);
+      status.textContent = `Nearest stations to "${place.display_name}" (${rangeLabel})`;
+      renderFeed(results, ranked.map(r => r.p));
+      renderSearchMap(ranked.map(r => r.p), [lat, lon]);
+    })
+    .catch(() => { status.textContent = 'Search failed — try again.'; });
+}
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  runSearch(document.getElementById('searchInput').value);
+});
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runSearch(e.target.value);
+});
+document.getElementById('searchRange').addEventListener('change', () => {
+  runSearch(document.getElementById('searchInput').value);
+});
+
+document.getElementById('clearCacheBtn').addEventListener('click', async () => {
+  try {
+    if ('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) await r.unregister();
+    }
+    if (window.caches){
+      const names = await caches.keys();
+      for (const n of names) await caches.delete(n);
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (e) { /* best effort — reload regardless */ }
+  location.href = location.pathname + '?_=' + Date.now();
+});
+
+// --- Account: a per-device saved nickname + local token, no server-side
+// accounts involved. Purely for personalizing this browser/device. ---
+const ACCOUNT_KEY = 'groundcheck_account';
+
+function genLocalToken(){
+  const bytes = new Uint8Array(16);
+  (window.crypto || window.msCrypto).getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function loadAccount(){
+  try { return JSON.parse(localStorage.getItem(ACCOUNT_KEY)); }
+  catch (e) { return null; }
+}
+
+function renderAccountView(){
+  const acct = loadAccount();
+  const out = document.getElementById('accountLoggedOut');
+  const inView = document.getElementById('accountLoggedIn');
+  if (acct){
+    out.hidden = true;
+    inView.hidden = false;
+    document.getElementById('acctNameDisplay').textContent = acct.name;
+    document.getElementById('acctTokenDisplay').textContent = acct.token;
+    document.getElementById('acctSinceDisplay').textContent =
+      new Date(acct.created).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+  } else {
+    out.hidden = false;
+    inView.hidden = true;
+  }
+}
+
+document.getElementById('createAccountBtn').addEventListener('click', () => {
+  const input = document.getElementById('nicknameInput');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  const acct = { name, token: genLocalToken(), created: Date.now() };
+  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(acct));
+  renderAccountView();
+});
+
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  localStorage.removeItem(ACCOUNT_KEY);
+  document.getElementById('nicknameInput').value = '';
+  renderAccountView();
+});
+
+renderAccountView();
+
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+
+// Live feed: streamed over our WebSocket proxy (which relays
+// zeesen.mine.nu's live telemetry). We only surface it when the balloon
+// currently in flight IS the same station already shown as this app's
+// main weather reading — otherwise it's an unrelated flight and showing
+// it would be misleading, not "your" station's live data.
+const LIVE_WS_URL = 'wss://calcium-shareware-sequence-hills.trycloudflare.com';
+
+function connectLiveFeed(){
+  let ws;
+  try {
+    ws = new WebSocket(LIVE_WS_URL);
+  } catch (e) { return; }
+
+  ws.onmessage = (event) => {
+    let data;
+    try { data = JSON.parse(event.data); } catch (e) { return; }
+    const feats = data.features || [];
+    const card = document.getElementById('liveCard');
+    if (!selected) { card.hidden = true; return; }
+
+    const feat = feats.find(f => f.properties && f.properties.id === selected.id);
+    if (!feat){
+      card.hidden = true;
+      return;
+    }
+    const p = feat.properties;
+    const temp = p.temp;
+    const alt = p.alti != null ? Math.round(p.alti) : null;
+
+    card.hidden = false;
+    card.innerHTML = `
+      <span class="pulsedot"></span>
+      <div class="body">
+        <div class="tag">Live now &middot; your station is in flight</div>
+        <div class="id">${p.id}${p.places ? ' &middot; ' + p.places : ''}</div>
+        <div class="row">${alt != null ? alt + ' m' : ''}${p.speed != null ? ' &middot; ' + Math.round(p.speed) + ' km/h' : ''}${p.rate != null ? ' &middot; ' + (p.rate > 0 ? '+' : '') + p.rate.toFixed(1) + ' m/s' : ''}</div>
+      </div>
+      ${temp != null ? `<div class="t">${temp.toFixed(1)}&deg;</div>` : ''}
+    `;
+  };
+
+  ws.onclose = () => { setTimeout(connectLiveFeed, 5000); };
+  ws.onerror = () => { ws.close(); };
+}
+
+connectLiveFeed();
+</script>

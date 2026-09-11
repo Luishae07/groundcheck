@@ -1,0 +1,77 @@
+name: Build iOS App (Capacitor)
+
+on:
+  push:
+    paths:
+      - 'cap/**'
+      - '.github/workflows/cap-ios-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm install
+        working-directory: cap
+        run: npm install
+
+      # Generates the native ios/ project (Podfile, .xcworkspace) — this
+      # only really works on macOS, so it's done fresh in CI rather than
+      # checked into the repo.
+      - name: Add iOS platform
+        working-directory: cap
+        run: npx cap add ios
+
+      - name: Generate app icon + splash screen
+        working-directory: cap
+        run: npx @capacitor/assets generate --ios
+
+      - name: Sync web assets into native project
+        working-directory: cap
+        run: npx cap sync ios
+
+      - name: pod install
+        working-directory: cap/ios/App
+        run: pod install
+
+      # Real device target, unsigned — iLoader/AltStore-style sideloading
+      # tools do their own signing on install, so no Apple Developer
+      # certificate is needed in CI.
+      - name: Build (Release, device, no code signing)
+        working-directory: cap/ios/App
+        run: |
+          xcodebuild build \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
+
+      - name: Package IPA
+        working-directory: cap/ios/App
+        run: |
+          APP_PATH=$(find build/Build/Products -maxdepth 2 -name "*.app" | head -1)
+          echo "Found app at: $APP_PATH"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r Groundcheck.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Groundcheck-iOS-Capacitor
+          path: cap/ios/App/Groundcheck.ipa
+          retention-days: 30

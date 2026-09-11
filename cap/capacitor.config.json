@@ -1,0 +1,8 @@
+{
+  "appId": "com.luishae07.groundcheck",
+  "appName": "Groundcheck",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "automatic"
+  }
+}

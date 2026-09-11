@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Groundcheck</title>
+</head>
+<body style="margin:0;background:#000">
+<script>
+  // iPadOS reports itself as a Mac in its user agent string (since iPadOS
+  // 13), so the reliable way to detect a real iPad vs. a Mac is checking
+  // for touch support alongside the Mac-like UA — a Mac has no touch
+  // points, an iPad in desktop mode does.
+  var ua = navigator.userAgent;
+  var isIPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  window.location.replace(isIPad ? 'desktop.html' : 'mobile.html');
+</script>
+</body>
+</html>
