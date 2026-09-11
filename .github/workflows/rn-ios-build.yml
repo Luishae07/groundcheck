@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       # Scaffold a fresh bare React Native project — this generates the
       # native ios/ folder (Podfile, .xcodeproj) that a hand-written repo
