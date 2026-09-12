@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Groundcheck — Desktop</title>
-<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="../favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -339,7 +339,7 @@ footer a{color:inherit}
 
 <div class="topbar">
   <span class="brand">Groundcheck</span>
-  <a class="mobilelink" href="/">Mobile view</a>
+  <a class="mobilelink" href="../">Mobile view</a>
   <span class="live"><span class="dot"></span><span id="feedstatus">live feed</span></span>
 </div>
 
@@ -468,7 +468,7 @@ footer a{color:inherit}
 
         <div class="faqsection">API &amp; Developers</div>
         <div class="faqgrid">
-          <div class="qa"><div class="q">Is there a public API?</div><div class="a">Yes — see <a href="/apidocs">API docs</a>. <code>GET /api/data</code> is rate-limited (30 req/60s by default); getting a key via <code>POST /api/keys/new</code> raises that to 9000 req/10s.</div></div>
+          <div class="qa"><div class="q">Is there a public API?</div><div class="a">Yes — see <a href="../apidocs">API docs</a>. <code>GET /api/data</code> is rate-limited (30 req/60s by default); getting a key via <code>POST /api/keys/new</code> raises that to 9000 req/10s.</div></div>
           <div class="qa"><div class="q">Do I need an account to use the API?</div><div class="a">No account required — the free key endpoint just generates a token on the spot, no signup, no email.</div></div>
           <div class="qa"><div class="q">What format does the API return?</div><div class="a">Plain JSON — an array of reading objects with id, time, temp, alt, pressure, humidity, lat, lon, and source. See the API docs for the exact shape.</div></div>
           <div class="qa"><div class="q">Is there caching on API responses?</div><div class="a">No — every response is served with <code>Cache-Control: no-store</code>, so you always get the freshest data, never a stale cached copy.</div></div>
@@ -595,7 +595,7 @@ footer a{color:inherit}
     </div>
 
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs">API docs</a>
+      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs">API docs</a>
       &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
@@ -716,7 +716,7 @@ function renderHero(p, distanceKm, label){
   renderPrediction(p);
 }
 
-const PREDICTOR_URL = 'https://michael-oclc-remind-animals.trycloudflare.com/predict';
+const PREDICTOR_URL = 'https://understood-replies-tex-shortcuts.trycloudflare.com/predict';
 let predictorCache = null;
 
 function renderPrediction(anchor){
@@ -790,7 +790,7 @@ function renderPrediction(anchor){
 let lastLoc = null;
 
 function selectNearest(lat, lon, label){
-  const FRESH_HOURS = 12;
+  const FRESH_HOURS = 24;
   const cutoff = Date.now() - FRESH_HOURS * 3600 * 1000;
   const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
   const pool = fresh.length ? fresh : points;
@@ -1115,7 +1115,7 @@ document.querySelectorAll('.navbtn').forEach(btn => {
 });
 
 function loadData(){
-  fetch('/apiinternel/dont/json/microsftwindowssucks/data')
+  fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
     .then(r => r.json())
     .then(data => { points = data; render(); })
     .catch(() => { document.getElementById('feedstatus').textContent = 'feed unreachable'; });
