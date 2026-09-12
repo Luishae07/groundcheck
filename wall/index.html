@@ -86,7 +86,7 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
 </div>
 
 <div class="slide" id="slideMap">
-  <h2>Station map — today</h2>
+  <h2>Station map — last 12h</h2>
   <div id="mapbox"></div>
 </div>
 
@@ -136,7 +136,7 @@ function renderHero(p){
 }
 
 function renderMap(){
-  const cutoff = Date.now() - 24 * 3600 * 1000;
+  const cutoff = Date.now() - 12 * 3600 * 1000;
   const recent = points.filter(p => new Date(p.time).getTime() >= cutoff);
   if (!leafletMap){
     leafletMap = L.map('mapbox', { zoomControl: false, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
@@ -224,7 +224,7 @@ function locateByIP(){
 let deviceLoc = null; // {lat, lon} once resolved — cached so repeated refreshes don't re-prompt/re-geolocate
 
 function nearestReading(lat, lon){
-  const cutoff = Date.now() - 24 * 3600 * 1000;
+  const cutoff = Date.now() - 12 * 3600 * 1000;
   const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
   const pool = fresh.length ? fresh : points;
   let nearest = pool[0], best = Infinity;
