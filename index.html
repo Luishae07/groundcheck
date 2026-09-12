@@ -971,7 +971,7 @@ function render(p, distanceKm){
   renderPrediction(p);
 }
 
-const PREDICTOR_URL = 'https://understood-replies-tex-shortcuts.trycloudflare.com/predict';
+const PREDICTOR_URL = 'https://michael-oclc-remind-animals.trycloudflare.com/predict';
 let predictorCache = null;
 
 function renderPrediction(anchor){
@@ -1076,7 +1076,7 @@ function selectNearest(lat, lon, label){
   // Prefer readings from the last 48h — a geographically closer but stale
   // (days-old) reading is a worse match for "right now" than a slightly
   // farther one from today.
-  const FRESH_HOURS = 24;
+  const FRESH_HOURS = 12;
   const cutoff = Date.now() - FRESH_HOURS * 3600 * 1000;
   const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
   const pool = fresh.length ? fresh : points;
@@ -1500,7 +1500,7 @@ function showError(msg){
 }
 
 function loadData(){
-  return fetch('https://senate-armed-detector-farmers.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
+  return fetch('/apiinternel/dont/json/microsftwindowssucks/data')
     .then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
