@@ -1,0 +1,153 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>API Key Stats — Groundcheck</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sky-top:#4a7fb5; --sky-mid:#6ea0c8; --sky-bot:#a9cbe3;
+  --panel:#ffffff; --panel-2:#e9eef2;
+  --ink:#132433; --ink-dim:#5b7185; --ink-faint:#8b9db0;
+  --line:#dbe4ec; --accent:#e08a2c;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky-top:#0c1a2b; --sky-mid:#152b40; --sky-bot:#1f3a52;
+    --panel:#141f2a; --panel-2:#0a121a;
+    --ink:#e8eef4; --ink-dim:#8fa3b8; --ink-faint:#5d7285;
+    --line:#22323f; --accent:#f0a24a;
+  }
+}
+:root[data-theme="dark"]{
+  --sky-top:#0c1a2b; --sky-mid:#152b40; --sky-bot:#1f3a52;
+  --panel:#141f2a; --panel-2:#0a121a;
+  --ink:#e8eef4; --ink-dim:#8fa3b8; --ink-faint:#5d7285;
+  --line:#22323f; --accent:#f0a24a;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; min-height:100vh; color:var(--ink); background:var(--panel-2);
+  font-family:"Inter",system-ui,-apple-system,sans-serif;
+  padding:2.5rem 1.2rem 4rem;
+}
+.wrap{max-width:640px; margin:0 auto;}
+h1{font-family:"Sora",sans-serif; font-size:1.6rem; font-weight:800; margin:0 0 .3rem;}
+.sub{color:var(--ink-dim); font-size:.9rem; margin:0 0 1.8rem; line-height:1.5;}
+a{color:var(--accent);}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  padding:1.2rem 1.3rem; margin-bottom:1rem;
+}
+label{display:block; font-size:.8rem; color:var(--ink-dim); margin-bottom:.4rem; font-weight:600;}
+input[type=text]{
+  width:100%; padding:.7rem .85rem; border-radius:10px; border:1px solid var(--line);
+  background:var(--panel-2); color:var(--ink); font-family:"SF Mono",ui-monospace,monospace;
+  font-size:.85rem;
+}
+button{
+  margin-top:.8rem; padding:.65rem 1.3rem; border-radius:10px; border:none;
+  background:var(--accent); color:#1a1206; font-weight:700; font-size:.85rem;
+  cursor:pointer;
+}
+button:disabled{opacity:.5; cursor:default;}
+.stat-row{display:flex; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--line); font-size:.88rem;}
+.stat-row:last-child{border-bottom:none;}
+.stat-label{color:var(--ink-dim);}
+.stat-val{font-weight:700; font-family:"SF Mono",ui-monospace,monospace;}
+table{width:100%; border-collapse:collapse; font-size:.82rem; margin-top:.5rem;}
+th,td{text-align:left; padding:.5rem .4rem; border-bottom:1px solid var(--line);}
+th{color:var(--ink-faint); font-weight:600; text-transform:uppercase; font-size:.68rem; letter-spacing:.03em;}
+td{font-family:"SF Mono",ui-monospace,monospace;}
+.error{color:#c0453f; font-size:.85rem; margin-top:.6rem;}
+.empty{color:var(--ink-faint); font-size:.85rem; padding:.5rem 0;}
+</style>
+
+<div class="wrap">
+  <h1>API Key Stats</h1>
+  <p class="sub">Paste your Groundcheck API key to see its own usage — total requests and which IPs have used it. No login needed; the key itself is your credential, same as using it on <code>/api/data</code>.</p>
+
+  <div class="card">
+    <label for="keyInput">API key</label>
+    <input type="text" id="keyInput" placeholder="paste your key here" autocomplete="off" spellcheck="false">
+    <button id="lookupBtn" onclick="lookup()">Check usage</button>
+    <div id="errorBox" class="error" style="display:none;"></div>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="card">
+      <div class="stat-row"><span class="stat-label">Created</span><span class="stat-val" id="statCreated"></span></div>
+      <div class="stat-row"><span class="stat-label">Total requests</span><span class="stat-val" id="statTotal"></span></div>
+      <div class="stat-row"><span class="stat-label">Distinct IPs</span><span class="stat-val" id="statIps"></span></div>
+      <div class="stat-row"><span class="stat-label">Rate limit</span><span class="stat-val" id="statLimit"></span></div>
+    </div>
+    <div class="card">
+      <label style="margin-bottom:.6rem;">IPs that have used this key</label>
+      <table id="ipTable">
+        <thead><tr><th>IP</th><th>Requests</th><th>Last seen</th></tr></thead>
+        <tbody id="ipTableBody"></tbody>
+      </table>
+      <div id="ipEmpty" class="empty" style="display:none;">No IPs recorded yet.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function lookup() {
+  const key = document.getElementById('keyInput').value.trim();
+  const btn = document.getElementById('lookupBtn');
+  const errorBox = document.getElementById('errorBox');
+  const results = document.getElementById('results');
+  errorBox.style.display = 'none';
+  results.style.display = 'none';
+  if (!key) {
+    errorBox.textContent = 'Enter an API key first.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+  try {
+    const resp = await fetch(`/api/keys/${encodeURIComponent(key)}/stats`);
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${resp.status}`);
+    }
+    const data = await resp.json();
+    document.getElementById('statCreated').textContent = data.created
+      ? new Date(data.created * 1000).toLocaleString() : '—';
+    document.getElementById('statTotal').textContent = data.total_requests;
+    document.getElementById('statIps').textContent = data.distinct_ips;
+    document.getElementById('statLimit').textContent = data.limit;
+
+    const tbody = document.getElementById('ipTableBody');
+    tbody.innerHTML = '';
+    const ipEmpty = document.getElementById('ipEmpty');
+    const table = document.getElementById('ipTable');
+    if (!data.ips || data.ips.length === 0) {
+      table.style.display = 'none';
+      ipEmpty.style.display = 'block';
+    } else {
+      table.style.display = '';
+      ipEmpty.style.display = 'none';
+      for (const row of data.ips) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${row.ip}</td><td>${row.requests}</td><td>${new Date(row.last_seen * 1000).toLocaleString()}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+    results.style.display = 'block';
+  } catch (e) {
+    errorBox.textContent = e.message || 'Lookup failed.';
+    errorBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Check usage';
+  }
+}
+
+document.getElementById('keyInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') lookup();
+});
+</script>
