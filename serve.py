@@ -94,6 +94,80 @@ def load_key_usage(api_key):
     except Exception:
         return {"total": 0, "ips": {}}
 
+def resolve_key_settings(api_key):
+    """Merges a key's stored setting overrides onto the 303-entry schema's
+    defaults, so callers always get a complete settings dict regardless of
+    what the key holder has actually customized."""
+    stored = _valid_keys.get(api_key, {}).get("settings", {})
+    return {name: stored.get(name, spec["default"]) for name, spec in SETTINGS_SCHEMA.items()}
+
+NUMERIC_FIELDS = ["temp", "humidity", "pressure", "altitude", "lat", "lon", "tsunix"]
+ALL_FIELDS = NUMERIC_FIELDS + ["id", "source", "time"]
+
+def apply_settings_to_records(records, s):
+    """Actually enforces the subset of the 303 settings that can safely and
+    meaningfully transform the /api/data response. Field-level toggles that
+    default to False in a way that would be unsafe to wire as "hide this
+    field by default for everyone" (e.g. include_in_response) are
+    deliberately NOT enforced here — only settings where the default value
+    (False/None) is a genuine no-op are wired up, so an unconfigured key's
+    response is unchanged from before this existed."""
+    out = []
+    for r in records:
+        rec = dict(r)
+        skip = False
+        for f in NUMERIC_FIELDS:
+            val = rec.get(f)
+            if val is None:
+                if s.get(f"{f}_hide_if_null"):
+                    skip = True
+                    break
+                continue
+            if not isinstance(val, (int, float)):
+                continue
+            min_t = s.get(f"{f}_min_threshold")
+            if min_t is not None and val < min_t:
+                skip = True
+                break
+            max_t = s.get(f"{f}_max_threshold")
+            if max_t is not None and val > max_t:
+                skip = True
+                break
+            if s.get(f"{f}_invert_sign"):
+                val = -val
+            if f == "temp" and s.get("temp_convert_units"):
+                val = val * 9 / 5 + 32  # C -> F
+            if s.get(f"{f}_round_to_integer"):
+                val = round(val)
+            else:
+                dp = s.get(f"{f}_decimal_places")
+                if dp is not None:
+                    val = round(val, int(dp))
+            rec[f] = val
+        if skip:
+            continue
+        if s.get("strip_null_fields"):
+            rec = {k: v for k, v in rec.items() if v is not None}
+        out.append(rec)
+
+    if s.get("dedupe_by_station"):
+        seen = {}
+        for rec in out:
+            rid = rec.get("id")
+            if rid not in seen or (rec.get("tsunix") or 0) > (seen[rid].get("tsunix") or 0):
+                seen[rid] = rec
+        out = list(seen.values())
+
+    if s.get("sort_by_time_desc"):
+        out.sort(key=lambda r: r.get("tsunix") or 0, reverse=True)
+
+    if s.get("include_metadata"):
+        return {
+            "metadata": {"count": len(out), "generated_at": time.time()},
+            "readings": out,
+        }
+    return out
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE, **kwargs)
@@ -119,14 +193,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _serve_data_json(self):
+    def _serve_data_json(self, resolved_settings=None):
         path = os.path.join(BASE, "data.json")
         try:
-            with open(path, "rb") as f:
-                body = f.read()
+            with open(path) as f:
+                records = json.load(f)
         except FileNotFoundError:
             self.send_error(404, "data.json not found")
             return
+        except json.JSONDecodeError:
+            self.send_error(500, "data.json is malformed")
+            return
+
+        if resolved_settings:
+            records = apply_settings_to_records(records, resolved_settings)
+
+        indent = 2 if resolved_settings and resolved_settings.get("pretty_print") else None
+        body = json.dumps(records, indent=indent).encode()
+
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -295,7 +379,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             if api_key and api_key in _valid_keys:
                 record_key_usage(api_key, client_ip, self._request_detail())
-            self._serve_data_json()
+                self._serve_data_json(resolve_key_settings(api_key))
+            else:
+                self._serve_data_json()
             return
 
         # Self-service: GET /api/keys/<key>/stats — the key itself is the
