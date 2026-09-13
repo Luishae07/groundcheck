@@ -109,7 +109,13 @@ async function lookup() {
   btn.disabled = true;
   btn.textContent = 'Checking...';
   try {
-    const resp = await fetch(`/api/keys/${encodeURIComponent(key)}/stats`);
+    // This page is served from GitHub Pages (a static host with no
+    // backend of its own), so a relative /api/... fetch would hit
+    // luishae07.github.io itself, not the real server. Resolve the
+    // current tunnel URL first (it changes on every server restart).
+    const tunnelResp = await fetch('tunnel-url.txt', { cache: 'no-store' });
+    const tunnelUrl = (await tunnelResp.text()).trim().replace(/\/$/, '');
+    const resp = await fetch(`${tunnelUrl}/api/keys/${encodeURIComponent(key)}/stats`);
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.error || `HTTP ${resp.status}`);
