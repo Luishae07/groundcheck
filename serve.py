@@ -170,8 +170,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             "protocol": self.request_version,
         }
 
+    def _read_json_body(self):
+        length = int(self.headers.get("Content-Length", 0))
+        if not length:
+            return {}
+        try:
+            return json.loads(self.rfile.read(length))
+        except Exception:
+            return {}
+
     def do_POST(self):
-        if self.path == KEYGEN_PATH:
+        base_path = self.path.split("?", 1)[0]
+
+        if base_path == KEYGEN_PATH:
             new_key = secrets.token_hex(16)
             _valid_keys[new_key] = {"created": time.time()}
             save_keys(_valid_keys)
@@ -181,6 +192,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "usage": "Pass it as header 'X-API-Key: <key>' or query '?key=<key>' on /api/data"
             })
             return
+
+        # Self-service settings — the key itself is the credential (same
+        # pattern as /stats): POST /api/keys/<key>/settings {"label": "...",
+        # "paused": true/false} to update, or POST /api/keys/<key>/revoke
+        # to permanently delete it. No admin login needed since only
+        # someone who already holds the key can name it in the URL.
+        if base_path.startswith(KEY_STATS_PREFIX) and base_path.endswith("/settings"):
+            api_key = base_path[len(KEY_STATS_PREFIX):-len("/settings")]
+            if api_key not in _valid_keys:
+                self._json(404, {"error": "unknown api key"})
+                return
+            body = self._read_json_body()
+            if "label" in body:
+                label = str(body["label"])[:80]
+                _valid_keys[api_key]["label"] = label
+            if "paused" in body:
+                _valid_keys[api_key]["paused"] = bool(body["paused"])
+            save_keys(_valid_keys)
+            self._json(200, {"status": "ok", "key": _valid_keys[api_key]})
+            return
+
+        if base_path.startswith(KEY_STATS_PREFIX) and base_path.endswith("/revoke"):
+            api_key = base_path[len(KEY_STATS_PREFIX):-len("/revoke")]
+            if api_key not in _valid_keys:
+                self._json(404, {"error": "unknown api key"})
+                return
+            del _valid_keys[api_key]
+            save_keys(_valid_keys)
+            self._json(200, {"status": "revoked"})
+            return
+
         self.send_error(404)
 
     def do_GET(self):
@@ -194,6 +236,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if base_path == PUBLIC_PATH:
             api_key = self._get_api_key()
             client_ip = self._real_client_ip()
+            if api_key and api_key in _valid_keys and _valid_keys[api_key].get("paused"):
+                self._json(403, {"error": "key_paused", "message": "This API key is paused. Resume it via POST /api/keys/<key>/settings."})
+                return
             if api_key and api_key in _valid_keys:
                 bucket, max_reqs, window = f"key:{api_key}", KEY_MAX, KEY_WINDOW
             else:
