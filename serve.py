@@ -95,28 +95,25 @@ def load_key_usage(api_key):
         return {"total": 0, "ips": {}}
 
 def resolve_key_settings(api_key):
-    """Merges a key's stored setting overrides onto the 303-entry schema's
-    defaults, so callers always get a complete settings dict regardless of
-    what the key holder has actually customized."""
+    """Merges a key's stored setting overrides onto the schema's defaults,
+    so callers always get a complete settings dict regardless of what the
+    key holder has actually customized."""
     stored = _valid_keys.get(api_key, {}).get("settings", {})
     return {name: stored.get(name, spec["default"]) for name, spec in SETTINGS_SCHEMA.items()}
 
-NUMERIC_FIELDS = ["temp", "humidity", "pressure", "altitude", "lat", "lon", "tsunix"]
-ALL_FIELDS = NUMERIC_FIELDS + ["id", "source", "time"]
+PER_FIELD_SETTINGS_FIELDS = ["temp", "humidity", "pressure", "altitude"]
 
 def apply_settings_to_records(records, s):
-    """Actually enforces the subset of the 303 settings that can safely and
-    meaningfully transform the /api/data response. Field-level toggles that
-    default to False in a way that would be unsafe to wire as "hide this
-    field by default for everyone" (e.g. include_in_response) are
-    deliberately NOT enforced here — only settings where the default value
-    (False/None) is a genuine no-op are wired up, so an unconfigured key's
-    response is unchanged from before this existed."""
+    """Every one of these 30 settings actually transforms the response —
+    no inert/decorative entries. Defaults are all None/False, which are
+    genuine no-ops, so an unconfigured key's response is identical to
+    before this existed."""
+    now = time.time()
     out = []
     for r in records:
         rec = dict(r)
         skip = False
-        for f in NUMERIC_FIELDS:
+        for f in PER_FIELD_SETTINGS_FIELDS:
             val = rec.get(f)
             if val is None:
                 if s.get(f"{f}_hide_if_null"):
@@ -133,11 +130,11 @@ def apply_settings_to_records(records, s):
             if max_t is not None and val > max_t:
                 skip = True
                 break
-            if s.get(f"{f}_invert_sign"):
+            if f == "temp" and s.get("temp_invert_sign"):
                 val = -val
             if f == "temp" and s.get("temp_convert_units"):
                 val = val * 9 / 5 + 32  # C -> F
-            if s.get(f"{f}_round_to_integer"):
+            if f == "temp" and s.get("temp_round_to_integer"):
                 val = round(val)
             else:
                 dp = s.get(f"{f}_decimal_places")
@@ -146,6 +143,24 @@ def apply_settings_to_records(records, s):
             rec[f] = val
         if skip:
             continue
+
+        lat, lon = rec.get("lat"), rec.get("lon")
+        if lat is not None:
+            if s.get("min_lat") is not None and lat < s["min_lat"]:
+                continue
+            if s.get("max_lat") is not None and lat > s["max_lat"]:
+                continue
+        if lon is not None:
+            if s.get("min_lon") is not None and lon < s["min_lon"]:
+                continue
+            if s.get("max_lon") is not None and lon > s["max_lon"]:
+                continue
+
+        if s.get("max_age_hours") is not None:
+            ts = rec.get("tsunix") or 0
+            if now - ts > s["max_age_hours"] * 3600:
+                continue
+
         if s.get("strip_null_fields"):
             rec = {k: v for k, v in rec.items() if v is not None}
         out.append(rec)
@@ -160,6 +175,9 @@ def apply_settings_to_records(records, s):
 
     if s.get("sort_by_time_desc"):
         out.sort(key=lambda r: r.get("tsunix") or 0, reverse=True)
+
+    if s.get("limit_results") is not None:
+        out = out[: int(s["limit_results"])]
 
     if s.get("include_metadata"):
         return {
