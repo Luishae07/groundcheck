@@ -277,6 +277,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
             summary = {
                 "created": _valid_keys[api_key].get("created"),
+                "label": _valid_keys[api_key].get("label"),
+                "paused": _valid_keys[api_key].get("paused", False),
                 "total_requests": usage.get("total", 0),
                 "distinct_ips": len(ips),
                 "ips": [

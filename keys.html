@@ -97,6 +97,19 @@ tr.ip-row:hover{background:var(--panel-2);}
       <div class="stat-row"><span class="stat-label">Total requests</span><span class="stat-val" id="statTotal"></span></div>
       <div class="stat-row"><span class="stat-label">Distinct IPs</span><span class="stat-val" id="statIps"></span></div>
       <div class="stat-row"><span class="stat-label">Rate limit</span><span class="stat-val" id="statLimit"></span></div>
+      <div class="stat-row"><span class="stat-label">Status</span><span class="stat-val" id="statStatus"></span></div>
+    </div>
+
+    <div class="card">
+      <label for="labelInput">Label (private note to yourself)</label>
+      <input type="text" id="labelInput" placeholder="e.g. my home server" autocomplete="off">
+      <button id="saveLabelBtn" onclick="saveLabel()">Save label</button>
+      <div id="settingsMsg" class="empty" style="display:none;"></div>
+    </div>
+
+    <div class="card" style="display:flex; gap:.6rem; flex-wrap:wrap;">
+      <button id="pauseBtn" onclick="togglePause()"></button>
+      <button id="revokeBtn" onclick="revokeKey()" style="background:#c0453f; color:#fff;">Revoke this key</button>
     </div>
     <div class="card">
       <label style="margin-bottom:.6rem;">IPs that have used this key</label>
@@ -110,6 +123,58 @@ tr.ip-row:hover{background:var(--panel-2);}
 </div>
 
 <script>
+let currentKey = null;
+let currentTunnelUrl = null;
+
+async function getTunnelUrl() {
+  if (currentTunnelUrl) return currentTunnelUrl;
+  const resp = await fetch('tunnel-url.txt', { cache: 'no-store' });
+  currentTunnelUrl = (await resp.text()).trim().replace(/\/$/, '');
+  return currentTunnelUrl;
+}
+
+function updatePauseBtn(paused) {
+  const btn = document.getElementById('pauseBtn');
+  btn.textContent = paused ? 'Resume key' : 'Pause key';
+  document.getElementById('statStatus').textContent = paused ? 'Paused' : 'Active';
+}
+
+async function saveLabel() {
+  const label = document.getElementById('labelInput').value.trim();
+  const msg = document.getElementById('settingsMsg');
+  const tunnelUrl = await getTunnelUrl();
+  const resp = await fetch(`${tunnelUrl}/api/keys/${encodeURIComponent(currentKey)}/settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label }),
+  });
+  msg.style.display = 'block';
+  msg.textContent = resp.ok ? 'Saved.' : 'Failed to save label.';
+}
+
+async function togglePause() {
+  const btn = document.getElementById('pauseBtn');
+  const wantPause = btn.textContent === 'Pause key';
+  const tunnelUrl = await getTunnelUrl();
+  const resp = await fetch(`${tunnelUrl}/api/keys/${encodeURIComponent(currentKey)}/settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ paused: wantPause }),
+  });
+  if (resp.ok) updatePauseBtn(wantPause);
+}
+
+async function revokeKey() {
+  if (!confirm('Revoke this key? This cannot be undone — it will stop working immediately.')) return;
+  const tunnelUrl = await getTunnelUrl();
+  const resp = await fetch(`${tunnelUrl}/api/keys/${encodeURIComponent(currentKey)}/revoke`, { method: 'POST' });
+  if (resp.ok) {
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('keyInput').value = '';
+    alert('Key revoked.');
+  }
+}
+
 async function lookup() {
   const key = document.getElementById('keyInput').value.trim();
   const btn = document.getElementById('lookupBtn');
@@ -122,6 +187,7 @@ async function lookup() {
     errorBox.style.display = 'block';
     return;
   }
+  currentKey = key;
   btn.disabled = true;
   btn.textContent = 'Checking...';
   try {
@@ -129,8 +195,7 @@ async function lookup() {
     // backend of its own), so a relative /api/... fetch would hit
     // luishae07.github.io itself, not the real server. Resolve the
     // current tunnel URL first (it changes on every server restart).
-    const tunnelResp = await fetch('tunnel-url.txt', { cache: 'no-store' });
-    const tunnelUrl = (await tunnelResp.text()).trim().replace(/\/$/, '');
+    const tunnelUrl = await getTunnelUrl();
     const resp = await fetch(`${tunnelUrl}/api/keys/${encodeURIComponent(key)}/stats`);
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
@@ -142,6 +207,9 @@ async function lookup() {
     document.getElementById('statTotal').textContent = data.total_requests;
     document.getElementById('statIps').textContent = data.distinct_ips;
     document.getElementById('statLimit').textContent = data.limit;
+    document.getElementById('labelInput').value = data.label || '';
+    document.getElementById('settingsMsg').style.display = 'none';
+    updatePauseBtn(!!data.paused);
 
     const tbody = document.getElementById('ipTableBody');
     tbody.innerHTML = '';
