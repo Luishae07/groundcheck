@@ -62,6 +62,22 @@ th{color:var(--ink-faint); font-weight:600; text-transform:uppercase; font-size:
 td{font-family:"SF Mono",ui-monospace,monospace;}
 .error{color:#c0453f; font-size:.85rem; margin-top:.6rem;}
 .empty{color:var(--ink-faint); font-size:.85rem; padding:.5rem 0;}
+.expand-btn{
+  background:none; border:none; color:var(--ink-faint); cursor:pointer;
+  font-size:.9rem; padding:0; margin:0; width:1.2rem;
+}
+tr.ip-row{cursor:pointer;}
+tr.ip-row:hover{background:var(--panel-2);}
+.detail-row td{padding:0; border-bottom:1px solid var(--line);}
+.detail-wrap{padding:.7rem .8rem 1rem; background:var(--panel-2);}
+.hit{
+  border-left:2px solid var(--accent); padding:.4rem 0 .4rem .7rem; margin-bottom:.5rem;
+  font-size:.76rem; line-height:1.6;
+}
+.hit:last-child{margin-bottom:0;}
+.hit-field{color:var(--ink-faint); display:inline-block; min-width:6.5rem;}
+.hit-val{color:var(--ink); word-break:break-all;}
+.no-detail{color:var(--ink-faint); font-size:.78rem; font-style:italic; padding:.6rem .8rem;}
 </style>
 
 <div class="wrap">
@@ -85,7 +101,7 @@ td{font-family:"SF Mono",ui-monospace,monospace;}
     <div class="card">
       <label style="margin-bottom:.6rem;">IPs that have used this key</label>
       <table id="ipTable">
-        <thead><tr><th>IP</th><th>Requests</th><th>Last seen</th></tr></thead>
+        <thead><tr><th></th><th>IP</th><th>Country</th><th>Requests</th><th>Last seen</th></tr></thead>
         <tbody id="ipTableBody"></tbody>
       </table>
       <div id="ipEmpty" class="empty" style="display:none;">No IPs recorded yet.</div>
@@ -137,11 +153,58 @@ async function lookup() {
     } else {
       table.style.display = '';
       ipEmpty.style.display = 'none';
-      for (const row of data.ips) {
+      data.ips.forEach((row, i) => {
+        const country = (row.recent_requests && row.recent_requests[0] && row.recent_requests[0].cf_country) || '—';
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.ip}</td><td>${row.requests}</td><td>${new Date(row.last_seen * 1000).toLocaleString()}</td>`;
+        tr.className = 'ip-row';
+        tr.innerHTML = `<td><span class="expand-btn" id="toggle-${i}">▶</span></td><td>${row.ip}</td><td>${country}</td><td>${row.requests}</td><td>${new Date(row.last_seen * 1000).toLocaleString()}</td>`;
+
+        const detailTr = document.createElement('tr');
+        detailTr.className = 'detail-row';
+        detailTr.style.display = 'none';
+        const detailTd = document.createElement('td');
+        detailTd.colSpan = 5;
+        if (!row.recent_requests || row.recent_requests.length === 0) {
+          detailTd.innerHTML = `<div class="no-detail">No detailed request info recorded for this IP yet (older hits, before detailed logging was added).</div>`;
+        } else {
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-wrap';
+          for (const hit of row.recent_requests) {
+            const hitDiv = document.createElement('div');
+            hitDiv.className = 'hit';
+            const fields = [
+              ['Time', new Date(hit.ts * 1000).toLocaleString()],
+              ['Method', hit.method],
+              ['Path', hit.path],
+              ['Protocol', hit.protocol],
+              ['Host', hit.host],
+              ['CF-Ray', hit.cf_ray],
+              ['CF-Country', hit.cf_country],
+              ['CF-Connecting-IP', hit.cf_connecting_ip],
+              ['X-Forwarded-For', hit.x_forwarded_for],
+              ['User-Agent', hit.user_agent],
+              ['Referer', hit.referer],
+              ['Accept-Language', hit.accept_language],
+            ];
+            hitDiv.innerHTML = fields
+              .filter(([, v]) => v !== null && v !== undefined && v !== '')
+              .map(([k, v]) => `<div><span class="hit-field">${k}</span><span class="hit-val">${v}</span></div>`)
+              .join('');
+            wrap.appendChild(hitDiv);
+          }
+          detailTd.appendChild(wrap);
+        }
+        detailTr.appendChild(detailTd);
+
+        tr.addEventListener('click', () => {
+          const open = detailTr.style.display !== 'none';
+          detailTr.style.display = open ? 'none' : '';
+          document.getElementById(`toggle-${i}`).textContent = open ? '▶' : '▼';
+        });
+
         tbody.appendChild(tr);
-      }
+        tbody.appendChild(detailTr);
+      });
     }
     results.style.display = 'block';
   } catch (e) {
