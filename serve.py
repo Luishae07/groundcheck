@@ -14,6 +14,16 @@ INTERNAL_PATH = "/apiinternel/dont/json/microsftwindowssucks/data"
 PUBLIC_PATH = "/api/data"
 KEYGEN_PATH = "/api/keys/new"
 KEYS_FILE = os.path.join(BASE, "api_keys.json")
+KEY_SETTINGS_SCHEMA_FILE = os.path.join(BASE, "key_settings_schema.json")
+KEY_SETTINGS_SCHEMA_PATH = "/api/keys/settings/schema"
+
+def load_settings_schema():
+    try:
+        return json.load(open(KEY_SETTINGS_SCHEMA_FILE))
+    except Exception:
+        return {}
+
+SETTINGS_SCHEMA = load_settings_schema()  # 300+ configurable per-key preferences
 
 # Default (no API key) limit
 DEFAULT_MAX = 30
@@ -209,8 +219,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 _valid_keys[api_key]["label"] = label
             if "paused" in body:
                 _valid_keys[api_key]["paused"] = bool(body["paused"])
+
+            # Any of the 300+ schema-defined preferences (key_settings_schema.json)
+            # can be set here too — type-checked against the schema, unknown
+            # names rejected so this can't become an arbitrary-data dumping
+            # ground.
+            settings = _valid_keys[api_key].setdefault("settings", {})
+            rejected = []
+            for name, value in body.items():
+                if name in ("label", "paused"):
+                    continue
+                spec = SETTINGS_SCHEMA.get(name)
+                if spec is None:
+                    rejected.append(name)
+                    continue
+                if spec["type"] == "bool":
+                    settings[name] = bool(value)
+                elif spec["type"] == "number":
+                    if value is None:
+                        settings[name] = None
+                    else:
+                        try:
+                            settings[name] = float(value)
+                        except (TypeError, ValueError):
+                            rejected.append(name)
+
             save_keys(_valid_keys)
-            self._json(200, {"status": "ok", "key": _valid_keys[api_key]})
+            resp = {"status": "ok", "key": _valid_keys[api_key]}
+            if rejected:
+                resp["rejected_unknown_settings"] = rejected
+            self._json(200, resp)
             return
 
         if base_path.startswith(KEY_STATS_PREFIX) and base_path.endswith("/revoke"):
@@ -231,6 +269,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if base_path == INTERNAL_PATH:
             # Unrestricted internal route — no rate limiting.
             self._serve_data_json()
+            return
+
+        if base_path == KEY_SETTINGS_SCHEMA_PATH:
+            self._json(200, {"count": len(SETTINGS_SCHEMA), "schema": SETTINGS_SCHEMA})
             return
 
         if base_path == PUBLIC_PATH:
@@ -275,10 +317,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             def hit_detail(hit):
                 return None if isinstance(hit, (int, float)) else hit
 
+            stored_settings = _valid_keys[api_key].get("settings", {})
+            full_settings = {
+                name: stored_settings.get(name, spec["default"])
+                for name, spec in SETTINGS_SCHEMA.items()
+            }
+
             summary = {
                 "created": _valid_keys[api_key].get("created"),
                 "label": _valid_keys[api_key].get("label"),
                 "paused": _valid_keys[api_key].get("paused", False),
+                "settings": full_settings,
                 "total_requests": usage.get("total", 0),
                 "distinct_ips": len(ips),
                 "ips": [
