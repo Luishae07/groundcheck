@@ -78,6 +78,18 @@ tr.ip-row:hover{background:var(--panel-2);}
 .hit-field{color:var(--ink-faint); display:inline-block; min-width:6.5rem;}
 .hit-val{color:var(--ink); word-break:break-all;}
 .no-detail{color:var(--ink-faint); font-size:.78rem; font-style:italic; padding:.6rem .8rem;}
+.setting-row{
+  display:flex; align-items:center; justify-content:space-between; gap:.6rem;
+  padding:.45rem 0; border-bottom:1px solid var(--line); font-size:.8rem;
+}
+.setting-row:last-child{border-bottom:none;}
+.setting-name{font-family:"SF Mono",ui-monospace,monospace; color:var(--ink-dim); word-break:break-all;}
+.setting-row input[type=checkbox]{width:1.1rem; height:1.1rem; flex-shrink:0; accent-color:var(--accent);}
+.setting-row input[type=number]{
+  width:7rem; padding:.3rem .5rem; border-radius:6px; border:1px solid var(--line);
+  background:var(--panel-2); color:var(--ink); font-family:"SF Mono",ui-monospace,monospace;
+  font-size:.78rem; flex-shrink:0;
+}
 </style>
 
 <div class="wrap">
@@ -111,6 +123,14 @@ tr.ip-row:hover{background:var(--panel-2);}
       <button id="pauseBtn" onclick="togglePause()"></button>
       <button id="revokeBtn" onclick="revokeKey()" style="background:#c0453f; color:#fff;">Revoke this key</button>
     </div>
+
+    <div class="card">
+      <label style="margin-bottom:.3rem;">All settings (<span id="settingsCount">0</span>)</label>
+      <p class="empty" style="padding:0 0 .6rem;">303 configurable preferences for this key. Changing a value here saves it immediately.</p>
+      <input type="text" id="settingsFilter" placeholder="filter by name..." autocomplete="off" oninput="renderSettings()">
+      <div id="settingsList" style="max-height:420px; overflow-y:auto; margin-top:.8rem;"></div>
+    </div>
+
     <div class="card">
       <label style="margin-bottom:.6rem;">IPs that have used this key</label>
       <table id="ipTable">
@@ -125,12 +145,72 @@ tr.ip-row:hover{background:var(--panel-2);}
 <script>
 let currentKey = null;
 let currentTunnelUrl = null;
+let settingsSchema = null;   // name -> {type, default}
+let currentSettings = null;  // name -> current value
 
 async function getTunnelUrl() {
   if (currentTunnelUrl) return currentTunnelUrl;
   const resp = await fetch('tunnel-url.txt', { cache: 'no-store' });
   currentTunnelUrl = (await resp.text()).trim().replace(/\/$/, '');
   return currentTunnelUrl;
+}
+
+async function getSchema() {
+  if (settingsSchema) return settingsSchema;
+  const tunnelUrl = await getTunnelUrl();
+  const resp = await fetch(`${tunnelUrl}/api/keys/settings/schema`);
+  const data = await resp.json();
+  settingsSchema = data.schema;
+  return settingsSchema;
+}
+
+function renderSettings() {
+  const filter = document.getElementById('settingsFilter').value.trim().toLowerCase();
+  const list = document.getElementById('settingsList');
+  list.innerHTML = '';
+  const names = Object.keys(settingsSchema).filter(n => n.includes(filter)).sort();
+  document.getElementById('settingsCount').textContent = `${names.length} of ${Object.keys(settingsSchema).length}`;
+  for (const name of names) {
+    const spec = settingsSchema[name];
+    const value = currentSettings[name];
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    const label = document.createElement('span');
+    label.className = 'setting-name';
+    label.textContent = name;
+    row.appendChild(label);
+
+    if (spec.type === 'bool') {
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!value;
+      cb.addEventListener('change', () => saveOneSetting(name, cb.checked));
+      row.appendChild(cb);
+    } else {
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.step = 'any';
+      inp.placeholder = 'default';
+      if (value !== null && value !== undefined) inp.value = value;
+      inp.addEventListener('change', () => {
+        saveOneSetting(name, inp.value === '' ? null : Number(inp.value));
+      });
+      row.appendChild(inp);
+    }
+    list.appendChild(row);
+  }
+}
+
+async function saveOneSetting(name, value) {
+  const tunnelUrl = await getTunnelUrl();
+  const body = {};
+  body[name] = value;
+  await fetch(`${tunnelUrl}/api/keys/${encodeURIComponent(currentKey)}/settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  currentSettings[name] = value;
 }
 
 function updatePauseBtn(paused) {
@@ -210,6 +290,10 @@ async function lookup() {
     document.getElementById('labelInput').value = data.label || '';
     document.getElementById('settingsMsg').style.display = 'none';
     updatePauseBtn(!!data.paused);
+
+    currentSettings = data.settings || {};
+    await getSchema();
+    renderSettings();
 
     const tbody = document.getElementById('ipTableBody');
     tbody.innerHTML = '';
