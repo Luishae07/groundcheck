@@ -1072,18 +1072,37 @@ function locateByIP(){
     });
 }
 
+function renderNoFreshData(label){
+  document.getElementById('bigicon').innerHTML = '';
+  document.getElementById('cond').textContent = 'No recent data';
+  document.getElementById('bigtemp').textContent = '—';
+  document.getElementById('place').innerHTML =
+    'No station within 19h' + '<span class="sub">nothing reported nearby recently</span>';
+  document.getElementById('stamp').textContent = '';
+  document.getElementById('stats').innerHTML = '';
+  document.getElementById('details').innerHTML = '';
+  selected = null;
+  if (label){
+    const sub = document.querySelector('#place .sub');
+    if (sub) sub.innerHTML = sub.innerHTML + ' &middot; approx. from ' + label;
+  }
+}
+
 function selectNearest(lat, lon, label){
-  // Prefer readings from the last 48h — a geographically closer but stale
-  // (days-old) reading is a worse match for "right now" than a slightly
-  // farther one from today.
-  const FRESH_HOURS = 12;
+  // Only ever show readings from the last 19h — a stale reading (even if
+  // geographically closer) is not an acceptable stand-in for "right now".
+  const FRESH_HOURS = 19;
   const cutoff = Date.now() - FRESH_HOURS * 3600 * 1000;
   const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
-  const pool = fresh.length ? fresh : points;
 
-  let nearest = pool[0];
+  if (!fresh.length){
+    renderNoFreshData(label);
+    return;
+  }
+
+  let nearest = fresh[0];
   let best = Infinity;
-  for (const p of pool){
+  for (const p of fresh){
     const d = haversine(lat, lon, p.lat, p.lon);
     if (d < best){ best = d; nearest = p; }
   }
