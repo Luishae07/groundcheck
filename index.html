@@ -1312,6 +1312,13 @@ function renderMap(list){
       opacity: 0.85
     }).addTo(leafletMap);
 
+    L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/osm-bright/{z}/{x}/{y}.png', {
+      minZoom: 4,
+      maxZoom: 8,
+      noWrap: true,
+      opacity: 0.35
+    }).addTo(leafletMap);
+
     L.control.attribution({ prefix: false, position: 'bottomright' })
       .addAttribution('Tiles &copy; Esri &middot; Data: sonde.mine.nu')
       .addTo(leafletMap);
