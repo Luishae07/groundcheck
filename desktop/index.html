@@ -878,9 +878,8 @@ function renderMap(list){
       maxBoundsViscosity: 1.0,
       minZoom: 2
     }).setView([51.5, 10.5], 5);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, noWrap: true }).addTo(leafletMap);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, noWrap: true, opacity:.85 }).addTo(leafletMap);
-    L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(leafletMap);
+    L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/osm-bright/{z}/{x}/{y}.png', { minZoom: 4, maxZoom: 8, noWrap: true }).addTo(leafletMap);
+    L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Tiles: self-hosted').addTo(leafletMap);
   }
 
   applyMapMode();
@@ -1234,14 +1233,10 @@ let searchPlaceMarker = null;
 function ensureSearchMap(){
   if (searchMap) return searchMap;
   searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 18, noWrap: true,
-    attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+  L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/osm-bright/{z}/{x}/{y}.png', {
+    minZoom: 4, maxZoom: 8, noWrap: true
   }).addTo(searchMap);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 18, noWrap: true, opacity: 0.85
-  }).addTo(searchMap);
-  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(searchMap);
+  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles: self-hosted').addTo(searchMap);
   return searchMap;
 }
 
