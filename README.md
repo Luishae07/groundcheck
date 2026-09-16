@@ -40,7 +40,7 @@ cd groundcheck/backend
 ## API
 
 ```bash
-curl https://senate-armed-detector-farmers.trycloudflare.com/api/data
+curl https://doctrine-opinions-searched-felt.trycloudflare.com/api/data
 ```
 
 Rate-limited (30 req/60s by default); `POST /api/keys/new` gets you a free key raising that to 9000 req/10s. Full docs in `apidocs/`.
