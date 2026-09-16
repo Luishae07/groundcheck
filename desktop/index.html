@@ -878,7 +878,7 @@ function renderMap(list){
       maxBoundsViscosity: 1.0,
       minZoom: 2
     }).setView([51.5, 10.5], 5);
-    L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/osm-bright/{z}/{x}/{y}.png', { minZoom: 4, maxZoom: 8, noWrap: true }).addTo(leafletMap);
+    L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/klokantech-basic/{z}/{x}/{y}.png', { minZoom: 4, maxZoom: 8, noWrap: true }).addTo(leafletMap);
     L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Tiles: self-hosted').addTo(leafletMap);
   }
 
@@ -1233,7 +1233,7 @@ let searchPlaceMarker = null;
 function ensureSearchMap(){
   if (searchMap) return searchMap;
   searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
-  L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/osm-bright/{z}/{x}/{y}.png', {
+  L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/klokantech-basic/{z}/{x}/{y}.png', {
     minZoom: 4, maxZoom: 8, noWrap: true
   }).addTo(searchMap);
   L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles: self-hosted').addTo(searchMap);
