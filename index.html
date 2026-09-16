@@ -1302,8 +1302,8 @@ function renderMap(list){
     }).setView([51.5, 10.5], 5);
 
     L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/klokantech-basic/{z}/{x}/{y}.png', {
-      minZoom: 4,
-      maxZoom: 8,
+      maxZoom: 14,
+      maxNativeZoom: 14,
       noWrap: true,
       attribution: 'Tiles: self-hosted (tilemaker + MapLibre)'
     }).addTo(leafletMap);
@@ -1574,7 +1574,7 @@ function ensureSearchMap(){
   if (searchMap) return searchMap;
   searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
   L.tileLayer('https://washing-alarm-expect-springs.trycloudflare.com/styles/klokantech-basic/{z}/{x}/{y}.png', {
-    minZoom: 4, maxZoom: 8, noWrap: true
+    maxZoom: 14, maxNativeZoom: 14, noWrap: true
   }).addTo(searchMap);
   L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles: self-hosted').addTo(searchMap);
   return searchMap;
