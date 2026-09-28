@@ -883,8 +883,8 @@ function renderMap(list){
       maxBoundsViscosity: 1.0,
       minZoom: 2
     }).setView([51.5, 10.5], 5);
-    L.tileLayer('https://costumes-constitution-remaining-production.trycloudflare.com/styles/klokantech-basic/{z}/{x}/{y}.png', { maxZoom: 14, maxNativeZoom: 14, noWrap: true }).addTo(leafletMap);
-    L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Tiles: self-hosted').addTo(leafletMap);
+    L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, maxNativeZoom: 18, noWrap: true }).addTo(leafletMap);
+    L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Imagery: Esri, Maxar, Earthstar Geographics').addTo(leafletMap);
   }
 
   applyMapMode();
@@ -1238,10 +1238,10 @@ let searchPlaceMarker = null;
 function ensureSearchMap(){
   if (searchMap) return searchMap;
   searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
-  L.tileLayer('https://costumes-constitution-remaining-production.trycloudflare.com/styles/klokantech-basic/{z}/{x}/{y}.png', {
-    maxZoom: 14, maxNativeZoom: 14, noWrap: true
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, maxNativeZoom: 18, noWrap: true
   }).addTo(searchMap);
-  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles: self-hosted').addTo(searchMap);
+  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Imagery: Esri, Maxar, Earthstar Geographics').addTo(searchMap);
   return searchMap;
 }
 
