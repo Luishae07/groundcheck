@@ -80,6 +80,27 @@ def is_blocked(ip):
         return False
     return any(addr in net for net in load_blocked_ips())
 
+BLOCKED_UA_FILE = os.path.join(BASE, "blocked-user-agents.json")
+_blocked_ua_cache = {"mtime": None, "names": []}
+
+def load_blocked_user_agents():
+    try:
+        mtime = os.path.getmtime(BLOCKED_UA_FILE)
+    except OSError:
+        return []
+    if mtime != _blocked_ua_cache["mtime"]:
+        try:
+            names = [str(x).strip().lower() for x in json.load(open(BLOCKED_UA_FILE)) if str(x).strip()]
+        except (OSError, ValueError):
+            names = []
+        _blocked_ua_cache["names"] = names
+        _blocked_ua_cache["mtime"] = mtime
+    return _blocked_ua_cache["names"]
+
+def is_blocked_user_agent(ua):
+    ua = (ua or "").lower()
+    return any(name in ua for name in load_blocked_user_agents())
+
 KEY_IP_LOGS_DIR = os.path.join(BASE, "key_ip_logs")
 os.makedirs(KEY_IP_LOGS_DIR, exist_ok=True)
 KEY_STATS_PREFIX = "/api/keys/"
@@ -401,9 +422,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         base_path = self.path.split("?", 1)[0]
 
         if base_path == INTERNAL_PATH:
-            # Unrestricted internal route — no rate limiting, but IPs/ranges in blocked_ips.json are refused.
+            # Unrestricted internal route — no rate limiting, but IPs/ranges in blocked_ips.json
+            # and User-Agents in blocked-user-agents.json are refused.
             if is_blocked(self._real_client_ip()):
-                self._json(403, {"error": "blocked", "message": "This address is blocked from the internal API."})
+                self._json(403, {"error": "blocked", "message": "Nice try, robot. This IP has been banned from the weather. Go outside and check yourself."})
+                return
+            if is_blocked_user_agent(self.headers.get("User-Agent")):
+                self._json(403, {"error": "blocked", "message": "We know you're a bot. The weather does not care about your feelings, but we do not serve bots here. Shoo."})
                 return
             self._serve_data_json()
             return
