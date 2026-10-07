@@ -1,3 +1,4 @@
+import ipaddress
 #!/usr/bin/env python3
 import http.server
 import socketserver
@@ -47,6 +48,37 @@ def save_keys(keys):
 
 _valid_keys = load_keys()  # key -> {"created": ts, "label": str}
 _rate_state = {}  # bucket_id -> [timestamps]
+
+BLOCKED_IPS_FILE = os.path.join(BASE, "blocked_ips.json")
+_blocked_cache = {"mtime": None, "ips": set()}
+
+def load_blocked_ips():
+    # Re-read only when the file changes, so edits take effect without a restart.
+    # Entries may be single addresses or CIDR ranges.
+    try:
+        mtime = os.path.getmtime(BLOCKED_IPS_FILE)
+    except OSError:
+        return []
+    if mtime != _blocked_cache["mtime"]:
+        nets = []
+        try:
+            for entry in json.load(open(BLOCKED_IPS_FILE)):
+                try:
+                    nets.append(ipaddress.ip_network(str(entry).strip(), strict=False))
+                except ValueError:
+                    pass
+        except (OSError, ValueError):
+            pass
+        _blocked_cache["ips"] = nets
+        _blocked_cache["mtime"] = mtime
+    return _blocked_cache["ips"]
+
+def is_blocked(ip):
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return any(addr in net for net in load_blocked_ips())
 
 KEY_IP_LOGS_DIR = os.path.join(BASE, "key_ip_logs")
 os.makedirs(KEY_IP_LOGS_DIR, exist_ok=True)
@@ -369,7 +401,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         base_path = self.path.split("?", 1)[0]
 
         if base_path == INTERNAL_PATH:
-            # Unrestricted internal route — no rate limiting.
+            # Unrestricted internal route — no rate limiting, but IPs in blocked_ips.json are refused.
+            if is_blocked(self._real_client_ip()):
+                self._json(403, {"error": "blocked", "message": "This address is blocked from the internal API."})
+                return
             self._serve_data_json()
             return
 
