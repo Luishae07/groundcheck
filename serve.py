@@ -1,4 +1,3 @@
-import ipaddress
 #!/usr/bin/env python3
 import http.server
 import socketserver
@@ -7,6 +6,7 @@ import json
 import os
 import secrets
 import hashlib
+import ipaddress
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PORT = 8765
@@ -50,7 +50,7 @@ _valid_keys = load_keys()  # key -> {"created": ts, "label": str}
 _rate_state = {}  # bucket_id -> [timestamps]
 
 BLOCKED_IPS_FILE = os.path.join(BASE, "blocked_ips.json")
-_blocked_cache = {"mtime": None, "ips": set()}
+_blocked_cache = {"mtime": None, "ips": []}
 
 def load_blocked_ips():
     # Re-read only when the file changes, so edits take effect without a restart.
@@ -401,7 +401,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         base_path = self.path.split("?", 1)[0]
 
         if base_path == INTERNAL_PATH:
-            # Unrestricted internal route — no rate limiting, but IPs in blocked_ips.json are refused.
+            # Unrestricted internal route — no rate limiting, but IPs/ranges in blocked_ips.json are refused.
             if is_blocked(self._real_client_ip()):
                 self._json(403, {"error": "blocked", "message": "This address is blocked from the internal API."})
                 return
