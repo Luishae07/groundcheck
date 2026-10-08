@@ -36,7 +36,18 @@ class MainActivity : AppCompatActivity() {
     // ephemeral (gets a new random address whenever it restarts), so the app
     // shell itself would break every time. GitHub Pages has a permanent URL;
     // the page's own JS still talks to the tunnel for live data underneath.
-    private val appUrl = "https://luishae07.github.io/groundcheck/desktop/"
+    //
+    // Two layouts exist: the root page is phone-optimized (narrow, touch-first),
+    // desktop/ is the wide tablet layout. smallestScreenWidthDp >= 600 is the
+    // standard Android tablet breakpoint (same one resource qualifiers like
+    // sw600dp use), so pick the layout actually suited to the device instead
+    // of hardcoding the tablet one for every screen size.
+    private val appUrl: String
+        get() {
+            val isTablet = resources.configuration.smallestScreenWidthDp >= 600
+            return if (isTablet) "https://luishae07.github.io/groundcheck/desktop/"
+                   else "https://luishae07.github.io/groundcheck/"
+        }
 
     private var pendingGeoOrigin: String? = null
     private var pendingGeoCallback: GeolocationPermissions.Callback? = null

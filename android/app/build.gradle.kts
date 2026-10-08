@@ -15,9 +15,20 @@ android {
         versionName = "3.0"
     }
 
+    signingConfigs {
+        create("release") {
+            val pass = file("/srv/secrets/android/groundcheck-release.storepass").readText().trim()
+            storeFile = file("/srv/secrets/android/groundcheck-release.keystore")
+            storePassword = pass
+            keyAlias = "groundcheck"
+            keyPassword = pass
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
