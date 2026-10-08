@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Download Groundcheck</title>
+<title>Download Groundcheck — macOS &amp; Android</title>
 <meta name="description" content="Groundcheck desktop app for macOS — live radiosonde ground-temperature weather in its own window.">
 <link rel="icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -395,15 +395,20 @@ p.section-sub {
 
   <div class="hero">
     <img class="icon" src="favicon.ico" alt="">
-    <h1>Groundcheck Desktop</h1>
-    <p>Live radiosonde ground-temperature weather, in its own window &mdash; no browser tab required.</p>
+    <h1>Groundcheck Apps</h1>
+    <p>Live radiosonde ground-temperature weather, in its own window or on your phone &mdash; no browser tab required.</p>
     <div class="btnrow">
       <a class="btn" href="https://github.com/Luishae07/groundcheck/releases/download/desktop-mac/Groundcheck.app.zip">
         <span class="arrow">&#11015;</span> Download for macOS
       </a>
+      <a class="btn" href="https://github.com/Luishae07/groundcheck/releases/download/desktop-android/Groundcheck.apk">
+        <span class="arrow">&#11015;</span> Download for Android
+      </a>
+    </div>
+    <div class="btnrow" style="margin-top:12px">
       <a class="btn secondary" href="https://github.com/Luishae07/groundcheck">View source (AGPL-3.0)</a>
     </div>
-    <div class="filemeta">Groundcheck.app.zip &middot; <b>~870 MB</b> &middot; macOS 11+ &middot; Apple Silicon &amp; Intel</div>
+    <div class="filemeta">macOS: Groundcheck.app.zip &middot; <b>~870 MB</b> &middot; macOS 11+ &nbsp;|&nbsp; Android: Groundcheck.apk &middot; <b>~5 MB</b> &middot; Android 7+</div>
   </div>
 
   <div class="statstrip">
@@ -476,13 +481,14 @@ p.section-sub {
     <p class="section-sub">Same data everywhere &mdash; the desktop app just skips the browser chrome and wires up native geolocation.</p>
     <div class="compare">
       <table>
-        <tr><th></th><th class="hi">Desktop app</th><th>Web browser</th><th>Mobile (iOS/Android)</th></tr>
+        <tr><th></th><th class="hi">Desktop app</th><th>Web browser</th><th>Android app</th></tr>
         <tr><td>Live data</td><td class="hi yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
         <tr><td>No install needed</td><td class="hi no">&mdash;</td><td class="yes">&#10003;</td><td class="no">&mdash;</td></tr>
         <tr><td>Own dock / app icon</td><td class="hi yes">&#10003;</td><td class="no">&mdash;</td><td class="yes">&#10003;</td></tr>
         <tr><td>System geolocation</td><td class="hi yes">&#10003;</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+        <tr><td>Auto phone/tablet layout</td><td class="hi no">n/a</td><td class="no">&mdash;</td><td class="yes">&#10003;</td></tr>
         <tr><td>Works offline</td><td class="hi no">&mdash;</td><td class="no">&mdash;</td><td class="no">&mdash;</td></tr>
-        <tr><td>Code-signed</td><td class="hi no">Not yet</td><td class="yes">n/a</td><td class="yes">&#10003;</td></tr>
+        <tr><td>Signed</td><td class="hi no">Not yet</td><td class="yes">n/a</td><td class="yes">Self-signed</td></tr>
       </table>
     </div>
   </section>
@@ -499,12 +505,16 @@ p.section-sub {
 
   <section>
     <h2 class="section-title">System requirements</h2>
-    <div class="reqs">
-      <div class="reqrow"><span class="k">OS</span><span class="v">macOS 11 (Big Sur) or later</span></div>
-      <div class="reqrow"><span class="k">Architecture</span><span class="v">Apple Silicon &amp; Intel</span></div>
+    <div class="reqs" style="margin-bottom:18px">
+      <div class="reqrow"><span class="k">macOS</span><span class="v">11 (Big Sur) or later, Apple Silicon &amp; Intel</span></div>
       <div class="reqrow"><span class="k">Download size</span><span class="v">~870 MB</span></div>
-      <div class="reqrow"><span class="k">Internet</span><span class="v">Required (live data)</span></div>
       <div class="reqrow"><span class="k">Code signing</span><span class="v">Unsigned (see install steps below)</span></div>
+    </div>
+    <div class="reqs">
+      <div class="reqrow"><span class="k">Android</span><span class="v">7.0 (Nougat) or later</span></div>
+      <div class="reqrow"><span class="k">Download size</span><span class="v">~5 MB</span></div>
+      <div class="reqrow"><span class="k">Signing</span><span class="v">Signed release build, not Play Store</span></div>
+      <div class="reqrow"><span class="k">Layout</span><span class="v">Auto-switches phone/tablet by screen size</span></div>
     </div>
   </section>
 
@@ -524,6 +534,13 @@ p.section-sub {
   <section>
     <h2 class="section-title">Changelog</h2>
     <div class="timeline">
+      <div class="tlitem">
+        <div class="ver">v3.0</div>
+        <div class="desc">
+          <h4>Android: phone/tablet layout auto-switching</h4>
+          <p>The Android app was always loading the wide tablet layout, even on phones. It now checks the device's screen size and loads the right layout automatically, signed release build.</p>
+        </div>
+      </div>
       <div class="tlitem">
         <div class="ver">v1.0</div>
         <div class="desc">
@@ -585,11 +602,20 @@ p.section-sub {
 
   <section style="margin-bottom:0">
     <h2 class="section-title">Installing</h2>
-    <div class="note">
+    <div class="note" style="margin-bottom:16px">
+      <h3>macOS</h3>
       <ol>
         <li>Unzip the download and drag <b>Groundcheck.app</b> into Applications.</li>
         <li>Since it isn't code-signed, macOS will block the first launch as "unidentified developer."</li>
         <li><b>Right-click (or Control-click)</b> the app &rarr; <b>Open</b> &rarr; confirm. After that it opens normally, every time.</li>
+      </ol>
+    </div>
+    <div class="note">
+      <h3>Android</h3>
+      <ol>
+        <li>Download <b>Groundcheck.apk</b> on your phone or tablet.</li>
+        <li>Since it isn't from the Play Store, Android will ask to allow installs from this source &mdash; approve it for your browser or file manager.</li>
+        <li>Open the APK to install. The app automatically shows the phone layout on phones and the tablet layout on tablets.</li>
       </ol>
     </div>
   </section>
