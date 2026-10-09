@@ -119,7 +119,9 @@ def main():
                 continue
             with open("update.log", "ab") as f:
                 subprocess.call([py, "update.py", "--window", window], env=env, stdout=f, stderr=f)
-    if auto:
+    # a-Shell crashes (segmentation fault) when the updater's internet code runs in a background thread,
+    # so in single-process mode the main thread does the updating itself, further down.
+    if auto and not INPROC:
         threading.Thread(target=updater, daemon=True).start()
 
     ip = lan_ip()
@@ -130,8 +132,15 @@ def main():
     if browser:
         webbrowser.open(f"http://localhost:{http_port}/")
     try:
+        last_daily, next_run = 0.0, time.time() + 60
         while INPROC or all(p.poll() is None for p in procs[:1]):
             time.sleep(1)
+            if INPROC and auto and time.time() >= next_run:
+                window = "86400" if time.time() - last_daily > 86400 else "60"
+                if window == "86400":
+                    last_daily = time.time()
+                run_script("update.py", ["--window", window], "update.log", use_argv=True)
+                next_run = time.time() + 60
         print("The web server stopped; see serve.log.")
     except KeyboardInterrupt:
         pass
