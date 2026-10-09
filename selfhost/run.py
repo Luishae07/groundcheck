@@ -93,7 +93,12 @@ def main():
         if rc != 0:
             print("The first fetch failed. Check your internet connection and run this again.")
             sys.exit(1)
-    auto = yn("Keep the data up to date automatically while this runs?", "y")
+    elif INPROC:
+        print("Catching up on the last day of readings...")
+        run_script("update.py", ["--window", "86400"], "update.log", use_argv=True)
+    # a-Shell cannot run the internet updater next to the servers (it crashes), so on iPhone the data is
+    # refreshed each time this starts instead of every minute.
+    auto = False if INPROC else yn("Keep the data up to date automatically while this runs?", "y")
     browser = yn("Open the app in your browser?", "n")
 
     procs = []
@@ -129,6 +134,7 @@ def main():
     print("Logs: serve.log, ws_proxy.log, update.log.   Press Ctrl+C to stop.")
     if INPROC:
         print("Keep this app open on screen: iOS pauses it, and the server with it, when you leave.")
+        print("The data is refreshed each time you start it (stop with Ctrl+C, then run python3 run.py again).")
     if browser:
         webbrowser.open(f"http://localhost:{http_port}/")
     try:
