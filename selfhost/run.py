@@ -97,7 +97,7 @@ def main():
         window = str(max(3600, min(age + 600, 90 * 86400)))
         print(f"Catching up on the readings since the last update ({int(window) // 3600} h)...")
         if INPROC:
-            run_script("update.py", ["--window", window], "update.log", use_argv=True)
+            run_script("update.py", ["--window", window], "update.log")
         else:
             subprocess.call([py, "update.py", "--window", window], env=env)
     auto = yn("Keep the data up to date automatically while this runs?", "y")
