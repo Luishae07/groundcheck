@@ -8,6 +8,9 @@ static NSString *const kBase = @"https://luishae07.github.io/groundcheck/";
 @interface GCViewController : UIViewController <WKNavigationDelegate, CLLocationManagerDelegate>
 @property (nonatomic, strong) WKWebView *web;
 @property (nonatomic, strong) CLLocationManager *loc;
+@property (nonatomic, copy) NSString *pendingView;
+@property (nonatomic, assign) BOOL loaded;
+- (void)openView:(NSString *)view;
 @end
 
 @implementation GCViewController
@@ -49,6 +52,24 @@ static NSString *const kBase = @"https://luishae07.github.io/groundcheck/";
     [self.web loadRequest:[NSURLRequest requestWithURL:[self appURL]]];
 }
 
+// Shortcuts and icon quick actions: switch the web app to one of its tabs
+- (void)openView:(NSString *)view {
+    view = view.lowercaseString;
+    NSArray *views = @[@"today", @"map", @"stations", @"history", @"search", @"faq", @"account"];
+    if (![views containsObject:view]) return;
+    if (!self.loaded) { self.pendingView = view; return; }
+    NSString *js = [NSString stringWithFormat:
+        @"(function go(n){var b=document.querySelector('.tab[data-view=\"%@\"]');"
+         "if(b){b.click();}else if(n>0){setTimeout(function(){go(n-1);},250);}})(12);", view];
+    [self.web evaluateJavaScript:js completionHandler:nil];
+}
+
+- (void)webView:(WKWebView *)w didStartProvisionalNavigation:(WKNavigation *)n { self.loaded = NO; }
+- (void)webView:(WKWebView *)w didFinishNavigation:(WKNavigation *)n {
+    self.loaded = YES;
+    if (self.pendingView) { NSString *v = self.pendingView; self.pendingView = nil; [self openView:v]; }
+}
+
 - (UIStatusBarStyle)preferredStatusBarStyle { return UIStatusBarStyleLightContent; }
 
 // links that leave Groundcheck open in Safari
@@ -84,6 +105,23 @@ static NSString *const kBase = @"https://luishae07.github.io/groundcheck/";
 @end
 
 @implementation GCAppDelegate
+
+- (GCViewController *)vc { return (GCViewController *)self.window.rootViewController; }
+
+// groundcheck://stations  (or groundcheck:///stations), for the Shortcuts app's "Open URL" action
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)opts {
+    NSString *v = url.host.length ? url.host : (url.pathComponents.count > 1 ? url.pathComponents[1] : @"today");
+    [[self vc] openView:v];
+    return YES;
+}
+
+// long-press on the app icon
+- (void)application:(UIApplication *)app performActionForShortcutItem:(UIApplicationShortcutItem *)item
+                                                    completionHandler:(void (^)(BOOL))done {
+    [[self vc] openView:item.type];
+    done(YES);
+}
+
 - (BOOL)application:(UIApplication *)app didFinishLaunchingWithOptions:(NSDictionary *)opts {
     self.window = [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
     self.window.rootViewController = [GCViewController new];
