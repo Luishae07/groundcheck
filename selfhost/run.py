@@ -5,6 +5,7 @@ first data, then runs the web server, the live feed and the automatic radiosonde
     python3 run.py            # asks the questions
     python3 run.py --yes      # all defaults, no questions
 """
+import hashlib
 import os
 import runpy
 import socket
@@ -16,6 +17,8 @@ import webbrowser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 YES = "--yes" in sys.argv
+# default port: the first four digits of the SHA-256 of "tacos" (1734), live feed on the next one
+DEFAULT_PORT = int("".join(c for c in hashlib.sha256(b"tacos").hexdigest() if c.isdigit())[:4])
 # iPhone/iPad terminals (a-Shell) cannot start several programs at once, so everything runs inside this
 # one Python process there. Force it anywhere with --inprocess.
 INPROC = "--inprocess" in sys.argv or "/var/mobile" in os.path.realpath(os.path.expanduser("~"))
@@ -71,8 +74,8 @@ def lan_ip():
 def main():
     os.chdir(HERE)
     print("Groundcheck backend\n====================")
-    http_port = ask("Web / data API port", "8765")
-    ws_port = ask("Live-feed port", "8766")
+    http_port = ask("Web / data API port", str(DEFAULT_PORT))
+    ws_port = ask("Live-feed port", str(DEFAULT_PORT + 1))
     max_alt = ask("Max ground-level altitude filter in meters", "980")
     env = dict(os.environ, GROUNDCHECK_HTTP_PORT=http_port, GROUNDCHECK_WS_PORT=ws_port, GROUNDCHECK_MAX_ALT_M=max_alt)
     py = sys.executable
