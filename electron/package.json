@@ -1,0 +1,29 @@
+{
+  "name": "groundcheck-desktop",
+  "version": "1.0.0",
+  "description": "Groundcheck desktop client",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac --win --linux"
+  },
+  "build": {
+    "appId": "com.luishae07.groundcheck",
+    "productName": "Groundcheck",
+    "icon": "icon.png",
+    "files": ["main.js", "icon.png"],
+    "mac": {
+      "target": ["dmg", "pkg"],
+      "category": "public.app-category.weather",
+      "extendInfo": {
+        "NSLocationWhenInUseUsageDescription": "Groundcheck uses your location to center the map and find the nearest weather station."
+      }
+    },
+    "win": { "target": "nsis" },
+    "linux": { "target": "AppImage", "category": "Utility" }
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  }
+}
