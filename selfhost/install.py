@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Groundcheck self-host installer. Needs only Python 3 (no git, no tar, no unzip, no Docker).
 
-    curl -fsSL -o install.py https://raw.githubusercontent.com/Luishae07/groundcheck/main/selfhost/install.py
-    python3 install.py            # installs into ./groundcheck and starts the guided setup
-    python3 install.py mydir      # a different folder
-    python3 install.py --no-start # only download
+    curl -sL 192.168.1.27/gc | python3 -                 # installs into ./groundcheck, then the guided setup
+    curl -sL 192.168.1.27/gc | python3 - mydir           # a different folder
+    python3 install.py --no-start                        # only download (when saved as a file)
 """
 import io
 import os
@@ -52,8 +51,14 @@ def main():
         cmd = ["powershell", "-ExecutionPolicy", "Bypass", "-File", "start.ps1"]
     else:
         cmd = ["bash", "start.sh"]
+    stdin = None
+    if not sys.stdin.isatty():  # run as "curl ... | python3 -": the questions must read the keyboard
+        try:
+            stdin = open("CON" if os.name == "nt" else "/dev/tty")
+        except OSError:
+            pass
     try:
-        sys.exit(subprocess.call(cmd))
+        sys.exit(subprocess.call(cmd, stdin=stdin))
     except FileNotFoundError:
         print(f"Could not run {' '.join(cmd)}. Start it by hand: cd {dest} && python3 update.py --days 10 && python3 serve.py")
 
