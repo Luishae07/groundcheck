@@ -79,6 +79,35 @@ def yn(question, default="y"):
     return ask(question + " (y/n)", default).lower().startswith("y")
 
 
+MIRROR_URL = "http://192.168.1.27:8765/api/data"
+
+
+def mirror_data():
+    """Copy the full reading history from our home server instead of from the radiosonde source.
+    The source only hands out the latest reading per balloon, so a phone that cannot poll every minute
+    ends up with a thin, old slice; the home server has polled all along. Returns True on success."""
+    url = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--mirror=")), MIRROR_URL)
+    print(f"Copying the readings from {url} ...")
+    try:
+        import json
+        import urllib.request
+        req = urllib.request.Request(url, headers={"User-Agent": "groundcheck-selfhost"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            raw = r.read()
+        data = json.loads(raw)
+        if not isinstance(data, list) or not data:
+            raise ValueError("unexpected answer")
+        with open("data.json.tmp", "wb") as f:
+            f.write(raw)
+        os.replace("data.json.tmp", "data.json")
+        newest = max((x.get("time", "") for x in data if isinstance(x, dict)), default="?")
+        print(f"Got {len(data)} readings, newest {newest}.")
+        return True
+    except Exception as e:
+        print(f"Could not reach the home server ({e}); using the radiosonde source instead.")
+        return False
+
+
 def lan_ip():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -102,7 +131,10 @@ def main():
         os.environ.update(env)
         print("(running everything inside one process)")
 
-    if not os.path.exists("data.json"):
+    mirrored = mirror_data() if (INPROC or "--mirror" in sys.argv or any(a.startswith("--mirror=") for a in sys.argv)) else False
+    if mirrored:
+        pass
+    elif not os.path.exists("data.json"):
         days = ask("No data yet. How many days of radiosonde history to fetch first", "10")
         print(f"Fetching the last {days} day(s); large ranges take a while...")
         rc = run_script("update.py", ["--days", days]) if INPROC else subprocess.call([py, "update.py", "--days", days], env=env)
