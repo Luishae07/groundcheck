@@ -17,7 +17,7 @@ jobs:
           APP=build/Payload/Groundcheck.app
           mkdir -p "$APP"
           xcrun --sdk iphoneos clang -arch arm64 -fobjc-arc -miphoneos-version-min=14.0 -isysroot "$SDK" \
-            -framework UIKit -framework WebKit -framework CoreLocation -framework Foundation \
+            -framework UIKit -framework WebKit -framework CoreLocation -framework CoreGraphics -framework QuartzCore -framework Foundation \
             ios/main.m -o "$APP/Groundcheck"
           cp ios/Info.plist "$APP/Info.plist"
           for s in "AppIcon60x60@2x:120" "AppIcon60x60@3x:180" "AppIcon76x76:76" "AppIcon76x76@2x:152" "AppIcon83.5x83.5@2x:167"; do
