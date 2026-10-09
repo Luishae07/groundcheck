@@ -22,25 +22,31 @@ INPROC = "--inprocess" in sys.argv or "/var/mobile" in os.path.realpath(os.path.
 _argv_lock = threading.Lock()
 
 
-def run_script(script, args, log=None):
-    """Run a script of the backend in this process, as if started with python3 script args."""
-    with _argv_lock:
-        old = sys.argv
-        sys.argv = [script] + list(args)
-        try:
+def run_script(script, args, log=None, use_argv=False):
+    """Run a script of the backend in this process, as if started with python3 script args.
+    Only the updater takes command-line arguments, so only it holds the lock around sys.argv: the
+    servers run for ever and must not keep the updater waiting."""
+    try:
+        if use_argv:
+            with _argv_lock:
+                old = sys.argv
+                sys.argv = [script] + list(args)
+                try:
+                    runpy.run_path(script, run_name="__main__")
+                finally:
+                    sys.argv = old
+        else:
             runpy.run_path(script, run_name="__main__")
-            return 0
-        except SystemExit as e:
-            return e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
-        except Exception as e:  # keep the other parts running
-            msg = f"{script} stopped: {e!r}"
-            print(msg)
-            if log:
-                with open(log, "a") as f:
-                    f.write(msg + "\n")
-            return 1
-        finally:
-            sys.argv = old
+        return 0
+    except SystemExit as e:
+        return e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
+    except Exception as e:  # keep the other parts running
+        msg = f"{script} stopped: {e!r}"
+        print(msg)
+        if log:
+            with open(log, "a") as f:
+                f.write(msg + "\n")
+        return 1
 
 
 def ask(question, default):
@@ -83,7 +89,7 @@ def main():
     if not os.path.exists("data.json"):
         days = ask("No data yet. How many days of radiosonde history to fetch first", "10")
         print(f"Fetching the last {days} day(s); large ranges take a while...")
-        rc = run_script("update.py", ["--days", days]) if INPROC else subprocess.call([py, "update.py", "--days", days], env=env)
+        rc = run_script("update.py", ["--days", days], use_argv=True) if INPROC else subprocess.call([py, "update.py", "--days", days], env=env)
         if rc != 0:
             print("The first fetch failed. Check your internet connection and run this again.")
             sys.exit(1)
@@ -109,7 +115,7 @@ def main():
             if window == "86400":
                 last_daily = time.time()
             if INPROC:
-                run_script("update.py", ["--window", window], "update.log")
+                run_script("update.py", ["--window", window], "update.log", use_argv=True)
                 continue
             with open("update.log", "ab") as f:
                 subprocess.call([py, "update.py", "--window", window], env=env, stdout=f, stderr=f)
