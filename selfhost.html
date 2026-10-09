@@ -53,9 +53,46 @@ footer{margin-top:50px;color:var(--dim);font-size:14px}
 <h2>What it needs</h2>
 <ul>
   <li><b>Python 3</b> (nothing else to install).</li>
-  <li><b>512 MB of memory</b> and <b>1 GB of disk</b> are plenty.</li>
+  <li><b>512 MB of memory</b> and <b>1 GB of disk</b> are plenty (see <a href="#storage">Storage</a>).</li>
   <li>A normal internet connection. It makes one small request a minute.</li>
 </ul>
+
+
+<h2 id="storage">Storage</h2>
+<p>Good news: <b>the data barely takes any room.</b> These are the real numbers from the running Groundcheck server, after 3.5 years of collecting:</p>
+<div class="card scroll"><table>
+<tr><th>File</th><th>What it is</th><th>Size</th></tr>
+<tr><td><code>data.json</code></td><td>the ground-level readings the app shows (about 6,300 of them)</td><td>1.5 MB</td></tr>
+<tr><td><code>station_store.json</code></td><td>the raw store the updater merges new readings into</td><td>3 MB</td></tr>
+<tr><td colspan="2"><b>Growth</b></td><td><b>about 1.3 MB a year</b></td></tr>
+</table></div>
+<p>In ten years that is about 13 MB. Even the smallest card or disk you can buy is far more than enough.</p>
+
+<div class="card note">
+  <b>Logs are the real storage risk.</b> On the live server the whole folder is 5.7 GB, and nearly all of it is log files: <code>serve.log</code> is 3 GB and <code>ws_proxy.log</code> nearly 1 GB, because every single request gets a line. That would fill a small SD card within months. So answer <b>n</b> to "Enable logs?" in <code>start.sh</code>. If you want logs while testing, rotate them so they stay small. Put this in <code>/etc/logrotate.d/groundcheck</code> (change the folder):
+  <pre><code>/home/pi/groundcheck-main/backend/*.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+    copytruncate
+}</code></pre>
+</div>
+
+<h3 style="margin:22px 0 6px">Which storage to buy</h3>
+<div class="card scroll"><table>
+<tr><th>Storage</th><th>Cost (roughly)</th><th>Notes</th></tr>
+<tr><td><b>SD card</b> (8–32 GB) for a Raspberry Pi</td><td>€5–10</td><td>Enough for decades of data. SD cards wear out from constant writing, so keep logs off, and a "high endurance" card is the safer pick.</td></tr>
+<tr><td><b>USB stick or small SSD</b> on a Pi</td><td>€5–25</td><td>Longer-lived than an SD card, if you want something sturdier.</td></tr>
+<tr><td><b>Disk included with a VPS or free cloud tier</b></td><td>€0 extra</td><td>Usually 10–40 GB, which is far more than needed.</td></tr>
+<tr><td><b>An old computer's own disk</b></td><td>€0</td><td>Already there.</td></tr>
+</table></div>
+
+<h3 style="margin:22px 0 6px">Back it up (two small files)</h3>
+<p>All the history is in <code>data.json</code> and <code>station_store.json</code>. Copy them somewhere safe now and then:</p>
+<pre><code>scp pi@your-machine:groundcheck-main/backend/{data.json,station_store.json} ~/groundcheck-backup/</code></pre>
+<p>To restore after a failure, put the two files back in the <code>backend</code> folder before you start the server. Together they are under 5 MB, so any free cloud drive, USB stick or spare computer can hold the backups.</p>
 
 <h2>Set it up (about five minutes)</h2>
 <p>On the machine you picked, in a terminal:</p>
@@ -74,7 +111,7 @@ bash start.sh</code></pre>
 <tr><td>Check every minute?</td><td><b>y</b></td></tr>
 <tr><td>Also check once daily?</td><td><b>y</b></td></tr>
 <tr><td>Run in the background with nohup?</td><td><b>y</b></td></tr>
-<tr><td>Enable logs?</td><td><b>y</b></td></tr>
+<tr><td>Enable logs?</td><td><b>n</b> (see <a href="#storage">Storage</a>: logs are what fill the disk)</td></tr>
 </table></div>
 <p>Then open <code>http://localhost:8765/</code> (or the machine's address from another device on your network). The cron job keeps adding new readings; the more days it runs, the fuller the history.</p>
 
