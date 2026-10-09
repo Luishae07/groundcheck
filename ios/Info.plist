@@ -31,5 +31,22 @@
     <key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array></dict></dict>
   <key>CFBundleIcons~ipad</key><dict><key>CFBundlePrimaryIcon</key><dict>
     <key>CFBundleIconFiles</key><array><string>AppIcon60x60</string><string>AppIcon76x76</string><string>AppIcon83.5x83.5</string></array></dict></dict>
+  <key>CFBundleURLTypes</key><array><dict>
+    <key>CFBundleURLName</key><string>com.luishae07.groundcheck.ios</string>
+    <key>CFBundleURLSchemes</key><array><string>groundcheck</string></array></dict></array>
+  <key>UIApplicationShortcutItems</key><array>
+    <dict><key>UIApplicationShortcutItemType</key><string>today</string>
+      <key>UIApplicationShortcutItemTitle</key><string>Today</string>
+      <key>UIApplicationShortcutItemIconType</key><string>UIApplicationShortcutIconTypeCloud</string></dict>
+    <dict><key>UIApplicationShortcutItemType</key><string>map</string>
+      <key>UIApplicationShortcutItemTitle</key><string>Map</string>
+      <key>UIApplicationShortcutItemIconType</key><string>UIApplicationShortcutIconTypeMarkLocation</string></dict>
+    <dict><key>UIApplicationShortcutItemType</key><string>stations</string>
+      <key>UIApplicationShortcutItemTitle</key><string>Stations</string>
+      <key>UIApplicationShortcutItemIconType</key><string>UIApplicationShortcutIconTypeLocation</string></dict>
+    <dict><key>UIApplicationShortcutItemType</key><string>search</string>
+      <key>UIApplicationShortcutItemTitle</key><string>Search</string>
+      <key>UIApplicationShortcutItemIconType</key><string>UIApplicationShortcutIconTypeSearch</string></dict>
+  </array>
 </dict>
 </plist>
