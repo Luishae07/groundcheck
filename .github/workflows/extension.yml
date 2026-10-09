@@ -1,0 +1,36 @@
+name: Browser extension (.xpi)
+on:
+  workflow_dispatch:
+  push:
+    paths: ['extension/**', '.github/workflows/extension.yml']
+permissions:
+  contents: write
+concurrency:
+  group: extension
+  cancel-in-progress: true
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the manifest
+        run: python3 -c "import json;m=json.load(open('extension/manifest.json'));print(m['name'],m['version'],'manifest v'+str(m['manifest_version']))"
+      - name: Package (an .xpi is a zip with the manifest at the top)
+        run: |
+          cd extension
+          zip -r -X ../Flowsearch-Groundcheck.xpi . -x '.*'
+          cd ..
+          cp Flowsearch-Groundcheck.xpi Flowsearch-Groundcheck.zip
+          unzip -l Flowsearch-Groundcheck.xpi | tail -15
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: Flowsearch-Groundcheck.xpi
+      - name: Publish to the "extension" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view extension >/dev/null 2>&1 || gh release create extension \
+            --title "Flowsearch + Groundcheck extension" \
+            --notes "Firefox 127+ and Chrome. Firefox: about:debugging > This Firefox > Load Temporary Add-on, pick the .xpi. Chrome: unzip the .zip, chrome://extensions > Developer mode > Load unpacked."
+          gh release upload extension Flowsearch-Groundcheck.xpi Flowsearch-Groundcheck.zip --clobber
