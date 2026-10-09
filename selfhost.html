@@ -33,6 +33,17 @@ footer{margin-top:50px;color:var(--dim);font-size:14px}
 <h1>Self-host Groundcheck for almost nothing</h1>
 <p class="lead">Groundcheck's server is one small Python program. No database, no Docker, no extra packages. It runs on nearly anything, so the real question is only: <b>what is the cheapest machine you can leave switched on?</b></p>
 
+<h2 style="margin-top:30px">You probably shouldn't need this</h2>
+<div class="card ok">
+  <p style="margin-top:0">Most people don't have to run anything. The hosted Groundcheck is free, and it already has the full history:</p>
+  <ul>
+    <li>the <a href="index.html">web app</a>, which works on any phone or computer,</li>
+    <li>the apps for iPhone, iPad, Android and Mac on the <a href="download.html">download page</a>,</li>
+    <li>and the <a href="accuracy.html">forecast scoreboard</a>, which needs nothing from you.</li>
+  </ul>
+  <p><b>Self-hosting makes sense only if</b> you want your own copy of the data, want it to keep working when someone else's server is down, want to build something on top of the data, or simply like running your own things. If none of that is you, close this page. You'll have lost nothing.</p>
+</div>
+
 <div class="card note">
   <b>Why it must stay on.</b> The weather-balloon source only hands out the <i>latest</i> reading of each balloon. Groundcheck builds its history by asking <b>every minute</b>, and it catches balloons just after launch or landing that way. A computer that sleeps or is switched off misses them. So "cheapest" really means "cheapest thing that is on all day".
 </div>
