@@ -1,0 +1,32 @@
+name: Forecast accuracy
+on:
+  workflow_dispatch:
+    inputs:
+      max_new:
+        description: Most new balloons to look up in this run
+        default: "300"
+  schedule:
+    - cron: "23 5 * * *"
+permissions:
+  contents: write
+concurrency:
+  group: accuracy
+  cancel-in-progress: false
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Score the models against the balloons
+        run: cd accuracy && go run . -out ../accuracy-data -max-new "${{ github.event.inputs.max_new || '300' }}"
+      - name: Commit the results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add accuracy-data
+          git diff --cached --quiet || git commit -m "Forecast accuracy: new balloons scored"
+          git pull --rebase origin main
+          git push
