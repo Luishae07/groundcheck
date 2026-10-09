@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Groundcheck self-host installer. Needs only Python 3 (no git, no tar, no unzip, no Docker).
 
-    curl -sL 192.168.1.27/gc | python3 -                 # installs into ./groundcheck, then the guided setup
+    curl -sL 192.168.1.27/gc | python3 -                 # installs into ./groundcheck, then asks a few questions
     curl -sL 192.168.1.27/gc | python3 - mydir           # a different folder
     python3 install.py --no-start                        # only download (when saved as a file)
 """
@@ -14,6 +14,7 @@ import zipfile
 
 URL = "https://github.com/Luishae07/groundcheck/archive/refs/heads/main.zip"
 PREFIX = "groundcheck-main/backend/"
+LAUNCHER = "groundcheck-main/selfhost/run.py"
 
 
 def main():
@@ -29,9 +30,14 @@ def main():
     n = 0
     with zipfile.ZipFile(io.BytesIO(data)) as z:
         for info in z.infolist():
-            if not info.filename.startswith(PREFIX) or info.is_dir():
+            if info.is_dir():
                 continue
-            rel = info.filename[len(PREFIX):]
+            if info.filename == LAUNCHER:
+                rel = "run.py"
+            elif info.filename.startswith(PREFIX):
+                rel = info.filename[len(PREFIX):]
+            else:
+                continue
             target = os.path.normpath(os.path.join(dest, rel))
             if not target.startswith(dest + os.sep):  # never write outside the folder
                 continue
@@ -47,10 +53,7 @@ def main():
         return
     print("\nStarting the setup...\n")
     os.chdir(dest)
-    if os.name == "nt":
-        cmd = ["powershell", "-ExecutionPolicy", "Bypass", "-File", "start.ps1"]
-    else:
-        cmd = ["bash", "start.sh"]
+    cmd = [sys.executable, "run.py"]
     stdin = None
     if not sys.stdin.isatty():  # run as "curl ... | python3 -": the questions must read the keyboard
         try:
@@ -60,7 +63,7 @@ def main():
     try:
         sys.exit(subprocess.call(cmd, stdin=stdin))
     except FileNotFoundError:
-        print(f"Could not run {' '.join(cmd)}. Start it by hand: cd {dest} && python3 update.py --days 10 && python3 serve.py")
+        print(f"Could not start it. Run it by hand: cd {dest} && python3 run.py")
 
 
 if __name__ == "__main__":
