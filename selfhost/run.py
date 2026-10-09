@@ -22,31 +22,25 @@ INPROC = "--inprocess" in sys.argv or "/var/mobile" in os.path.realpath(os.path.
 _argv_lock = threading.Lock()
 
 
-def run_script(script, args, log=None, use_argv=False):
-    """Run a script of the backend in this process, as if started with python3 script args.
-    Only the updater takes command-line arguments, so only it holds the lock around sys.argv: the
-    servers run for ever and must not keep the updater waiting."""
-    try:
-        if use_argv:
-            with _argv_lock:
-                old = sys.argv
-                sys.argv = [script] + list(args)
-                try:
-                    runpy.run_path(script, run_name="__main__")
-                finally:
-                    sys.argv = old
-        else:
+def run_script(script, args, log=None):
+    """Run a script of the backend in this process, as if started with python3 script args."""
+    with _argv_lock:
+        old = sys.argv
+        sys.argv = [script] + list(args)
+        try:
             runpy.run_path(script, run_name="__main__")
-        return 0
-    except SystemExit as e:
-        return e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
-    except Exception as e:  # keep the other parts running
-        msg = f"{script} stopped: {e!r}"
-        print(msg)
-        if log:
-            with open(log, "a") as f:
-                f.write(msg + "\n")
-        return 1
+            return 0
+        except SystemExit as e:
+            return e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
+        except Exception as e:  # keep the other parts running
+            msg = f"{script} stopped: {e!r}"
+            print(msg)
+            if log:
+                with open(log, "a") as f:
+                    f.write(msg + "\n")
+            return 1
+        finally:
+            sys.argv = old
 
 
 def ask(question, default):
@@ -89,16 +83,11 @@ def main():
     if not os.path.exists("data.json"):
         days = ask("No data yet. How many days of radiosonde history to fetch first", "10")
         print(f"Fetching the last {days} day(s); large ranges take a while...")
-        rc = run_script("update.py", ["--days", days], use_argv=True) if INPROC else subprocess.call([py, "update.py", "--days", days], env=env)
+        rc = run_script("update.py", ["--days", days]) if INPROC else subprocess.call([py, "update.py", "--days", days], env=env)
         if rc != 0:
             print("The first fetch failed. Check your internet connection and run this again.")
             sys.exit(1)
-    elif INPROC:
-        print("Catching up on the last day of readings...")
-        run_script("update.py", ["--window", "86400"], "update.log", use_argv=True)
-    # a-Shell cannot run the internet updater next to the servers (it crashes), so on iPhone the data is
-    # refreshed each time this starts instead of every minute.
-    auto = False if INPROC else yn("Keep the data up to date automatically while this runs?", "y")
+    auto = yn("Keep the data up to date automatically while this runs?", "y")
     browser = yn("Open the app in your browser?", "n")
 
     procs = []
@@ -120,13 +109,11 @@ def main():
             if window == "86400":
                 last_daily = time.time()
             if INPROC:
-                run_script("update.py", ["--window", window], "update.log", use_argv=True)
+                run_script("update.py", ["--window", window], "update.log")
                 continue
             with open("update.log", "ab") as f:
                 subprocess.call([py, "update.py", "--window", window], env=env, stdout=f, stderr=f)
-    # a-Shell crashes (segmentation fault) when the updater's internet code runs in a background thread,
-    # so in single-process mode the main thread does the updating itself, further down.
-    if auto and not INPROC:
+    if auto:
         threading.Thread(target=updater, daemon=True).start()
 
     ip = lan_ip()
@@ -134,19 +121,11 @@ def main():
     print("Logs: serve.log, ws_proxy.log, update.log.   Press Ctrl+C to stop.")
     if INPROC:
         print("Keep this app open on screen: iOS pauses it, and the server with it, when you leave.")
-        print("The data is refreshed each time you start it (stop with Ctrl+C, then run python3 run.py again).")
     if browser:
         webbrowser.open(f"http://localhost:{http_port}/")
     try:
-        last_daily, next_run = 0.0, time.time() + 60
         while INPROC or all(p.poll() is None for p in procs[:1]):
             time.sleep(1)
-            if INPROC and auto and time.time() >= next_run:
-                window = "86400" if time.time() - last_daily > 86400 else "60"
-                if window == "86400":
-                    last_daily = time.time()
-                run_script("update.py", ["--window", window], "update.log", use_argv=True)
-                next_run = time.time() + 60
         print("The web server stopped; see serve.log.")
     except KeyboardInterrupt:
         pass
