@@ -1,0 +1,47 @@
+name: macOS app (.zip and .pkg)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mac-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+      - name: Build the app (Intel + Apple chip in one)
+        working-directory: electron
+        run: |
+          npm ci
+          npx electron-builder --mac dir --universal --publish never -c.mac.identity=null
+          ls dist
+      - name: Ad-hoc sign, zip and make the .pkg
+        run: |
+          set -euo pipefail
+          APP=$(ls -d electron/dist/mac-universal/Groundcheck.app)
+          mkdir -p out
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --verbose=2 "$APP"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" out/Groundcheck.app.zip
+          pkgbuild --component "$APP" --install-location /Applications \
+            --identifier com.luishae07.groundcheck.desktop --version 1.0.0 out/Groundcheck.pkg
+          lipo -archs "$APP/Contents/MacOS/Groundcheck"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Groundcheck-mac
+          path: out/*
+      - name: Publish to the "desktop-mac" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view desktop-mac >/dev/null 2>&1 || gh release create desktop-mac \
+            --title "Groundcheck for macOS" --notes "Ad-hoc signed. Intel and Apple-chip Macs."
+          gh release upload desktop-mac out/Groundcheck.app.zip out/Groundcheck.pkg --clobber
