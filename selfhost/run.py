@@ -90,6 +90,16 @@ def main():
         if rc != 0:
             print("The first fetch failed. Check your internet connection and run this again.")
             sys.exit(1)
+    else:
+        # data already exists: catch up on everything since it was last updated (the updater only
+        # merges new readings, so this is safe to repeat)
+        age = int(time.time() - os.path.getmtime("data.json"))
+        window = str(max(3600, min(age + 600, 90 * 86400)))
+        print(f"Catching up on the readings since the last update ({int(window) // 3600} h)...")
+        if INPROC:
+            run_script("update.py", ["--window", window], "update.log", use_argv=True)
+        else:
+            subprocess.call([py, "update.py", "--window", window], env=env)
     auto = yn("Keep the data up to date automatically while this runs?", "y")
     browser = yn("Open the app in your browser?", "n")
 
