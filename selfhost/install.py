@@ -60,11 +60,20 @@ def main():
             stdin = open("CON" if os.name == "nt" else "/dev/tty")
         except OSError:
             pass
+    rc = None
     try:
-        sys.exit(subprocess.call(cmd, stdin=stdin))
-    except FileNotFoundError:
-        print(f"Could not start it. Run it by hand: cd {dest} && python3 run.py")
-
+        rc = subprocess.call(cmd, stdin=stdin)
+    except Exception as e:  # e.g. a terminal app that cannot start another Python
+        print(f"Could not start run.py as its own program ({e!r}).")
+    if rc == 0:
+        return
+    if rc is not None:
+        print(f"\nrun.py ended with exit code {rc}. Running it inside this process instead...\n")
+    else:
+        print("Running it inside this process instead...\n")
+    import runpy
+    sys.argv = ["run.py", "--inprocess"]
+    runpy.run_path("run.py", run_name="__main__")
 
 if __name__ == "__main__":
     main()
