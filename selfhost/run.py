@@ -122,8 +122,10 @@ def lan_ip():
 def main():
     os.chdir(HERE)
     print("Groundcheck backend\n====================")
-    http_port = ask("Web / data API port", str(pick_port()))
-    ws_port = ask("Live-feed port", str(pick_port({int(http_port)} if http_port.isdigit() else ())))
+    # --port=8765 pins the ports (the live feed gets the next one), so a restarted server keeps its address
+    fixed = next((int(a.split("=", 1)[1]) for a in sys.argv if a.startswith("--port=") and a.split("=", 1)[1].isdigit()), None)
+    http_port = ask("Web / data API port", str(fixed or pick_port()))
+    ws_port = ask("Live-feed port", str(fixed + 1 if fixed else pick_port({int(http_port)} if http_port.isdigit() else ())))
     max_alt = ask("Max ground-level altitude filter in meters", "980")
     env = dict(os.environ, GROUNDCHECK_HTTP_PORT=http_port, GROUNDCHECK_WS_PORT=ws_port, GROUNDCHECK_MAX_ALT_M=max_alt)
     py = sys.executable
