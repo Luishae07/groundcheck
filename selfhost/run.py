@@ -7,6 +7,8 @@ first data, then runs the web server, the live feed and the automatic radiosonde
 """
 import hashlib
 import os
+import random
+import string
 import runpy
 import socket
 import subprocess
@@ -17,8 +19,25 @@ import webbrowser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 YES = "--yes" in sys.argv
-# default port: the first four digits of the SHA-256 of "tacos" (1734), live feed on the next one
-DEFAULT_PORT = int("".join(c for c in hashlib.sha256(b"tacos").hexdigest() if c.isdigit())[:4])
+
+
+def pick_port(taken=()):
+    """A fresh port on every launch: make a random 10-character string, hash it with SHA-256 and use
+    the first four digits of the hash. Tries again if that is below 1024 or already in use."""
+    while True:
+        word = "".join(random.SystemRandom().choice(string.ascii_lowercase + string.digits) for _ in range(10))
+        digits = "".join(c for c in hashlib.sha256(word.encode()).hexdigest() if c.isdigit())[:4]
+        port = int(digits)
+        if port < 1024 or port in taken:
+            continue
+        try:
+            probe = socket.socket()
+            probe.bind(("", port))
+            probe.close()
+            return port
+        except OSError:
+            continue
+
 # iPhone/iPad terminals (a-Shell) cannot start several programs at once, so everything runs inside this
 # one Python process there. Force it anywhere with --inprocess.
 INPROC = "--inprocess" in sys.argv or "/var/mobile" in os.path.realpath(os.path.expanduser("~"))
@@ -74,8 +93,8 @@ def lan_ip():
 def main():
     os.chdir(HERE)
     print("Groundcheck backend\n====================")
-    http_port = ask("Web / data API port", str(DEFAULT_PORT))
-    ws_port = ask("Live-feed port", str(DEFAULT_PORT + 1))
+    http_port = ask("Web / data API port", str(pick_port()))
+    ws_port = ask("Live-feed port", str(pick_port({int(http_port)} if http_port.isdigit() else ())))
     max_alt = ask("Max ground-level altitude filter in meters", "980")
     env = dict(os.environ, GROUNDCHECK_HTTP_PORT=http_port, GROUNDCHECK_WS_PORT=ws_port, GROUNDCHECK_MAX_ALT_M=max_alt)
     py = sys.executable
