@@ -1,0 +1,41 @@
+name: iOS app (.ipa)
+on:
+  workflow_dispatch:
+  push:
+    paths: ['ios/**', '.github/workflows/ios.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile the app
+        run: |
+          set -euo pipefail
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          APP=build/Payload/Groundcheck.app
+          mkdir -p "$APP"
+          xcrun --sdk iphoneos clang -arch arm64 -fobjc-arc -miphoneos-version-min=14.0 -isysroot "$SDK" \
+            -framework UIKit -framework WebKit -framework CoreLocation -framework Foundation \
+            ios/main.m -o "$APP/Groundcheck"
+          cp ios/Info.plist "$APP/Info.plist"
+          for s in "AppIcon60x60@2x:120" "AppIcon60x60@3x:180" "AppIcon76x76:76" "AppIcon76x76@2x:152" "AppIcon83.5x83.5@2x:167"; do
+            name="${s%%:*}"; px="${s##*:}"
+            sips -z "$px" "$px" ios/icon.png --out "$APP/${name}.png" >/dev/null
+          done
+          codesign -f -s - "$APP"
+          (cd build && zip -qry Groundcheck.ipa Payload)
+          ls -la build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Groundcheck-ipa
+          path: build/Groundcheck.ipa
+      - name: Publish to the "ios" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view ios >/dev/null 2>&1 || gh release create ios \
+            --title "Groundcheck for iPhone and iPad (.ipa)" \
+            --notes "Unsigned .ipa. Install it with Sideloadly or AltStore, which sign it with your own Apple ID."
+          gh release upload ios build/Groundcheck.ipa --clobber
