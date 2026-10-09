@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Self-host Groundcheck for almost nothing</title>
+<meta name="description" content="The cheapest way to run your own Groundcheck server: what to buy, what it costs, and the exact commands.">
+<style>
+:root{--bg:#0e1628;--card:#17203a;--line:#2a3558;--text:#ecf0ff;--dim:#9aa1c2;--accent:#7c8cff;--good:#34d399;--warn:#fbbf24;--code:#0a1020}
+@media (prefers-color-scheme: light){:root{--bg:#f4f6fc;--card:#fff;--line:#d9deef;--text:#151a2e;--dim:#5b6384;--accent:#4f5fe0;--good:#0f9d6b;--warn:#b7791f;--code:#eef1fb}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:860px;margin:0 auto;padding:34px 18px 80px}
+h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:0 0 10px}
+h2{font-size:23px;margin:40px 0 10px}
+p{margin:10px 0}.lead{font-size:19px;color:var(--dim)}
+a{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
+.note{border-left:4px solid var(--warn)}.ok{border-left:4px solid var(--good)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:13px 14px;overflow-x:auto;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace;margin:10px 0}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--code);padding:1px 6px;border-radius:5px}
+pre code{background:none;padding:0}
+.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 10px;border-top:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:600;border-top:0}
+tr.best td:first-child{border-left:4px solid var(--good)}
+.tag{display:inline-block;padding:1px 9px;border-radius:999px;background:var(--code);border:1px solid var(--line);font-size:12px;color:var(--dim)}
+ol li,ul li{margin:6px 0}
+footer{margin-top:50px;color:var(--dim);font-size:14px}
+</style>
+</head>
+<body><main>
+
+<h1>Self-host Groundcheck for almost nothing</h1>
+<p class="lead">Groundcheck's server is one small Python program. No database, no Docker, no extra packages. It runs on nearly anything, so the real question is only: <b>what is the cheapest machine you can leave switched on?</b></p>
+
+<div class="card note">
+  <b>Why it must stay on.</b> The weather-balloon source only hands out the <i>latest</i> reading of each balloon. Groundcheck builds its history by asking <b>every minute</b>, and it catches balloons just after launch or landing that way. A computer that sleeps or is switched off misses them. So "cheapest" really means "cheapest thing that is on all day".
+</div>
+
+<h2>The options</h2>
+<div class="card scroll">
+<table>
+<tr><th>Machine</th><th>Cost (roughly)</th><th>Always on?</th><th>Good for</th></tr>
+<tr><td><b>A computer you already own</b></td><td>€0, plus a few € a month of power if it runs all day</td><td>Only while it is on</td><td>Trying it out</td></tr>
+<tr><td><b>An old Android phone</b> with Termux, kept plugged in</td><td>€0</td><td>Yes, if it never sleeps</td><td>Tinkering</td></tr>
+<tr class="best"><td><b>A Raspberry Pi</b> (any Pi from the 3 up; a Zero 2 W is enough)</td><td>One-time €20–60, then about €2–5 a year of electricity</td><td>Yes, 24/7</td><td><span class="tag">best long-term</span> quiet, tiny, yours</td></tr>
+<tr><td><b>A free cloud tier</b> (for example Oracle Cloud "Always Free" or Google's e2-micro)</td><td>€0, but they ask for a card and free capacity is sometimes full</td><td>Yes, 24/7</td><td>Free and public</td></tr>
+<tr><td><b>A cheap VPS</b> (rented small server)</td><td>About €3–5 a month</td><td>Yes, 24/7</td><td>The easiest public setup</td></tr>
+</table>
+</div>
+<p class="dim" style="color:var(--dim);font-size:14px">Prices are rough and change often. Check the current price before you buy. Any of these is already more than Groundcheck needs.</p>
+
+<h2>What it needs</h2>
+<ul>
+  <li><b>Python 3</b> (nothing else to install).</li>
+  <li><b>512 MB of memory</b> and <b>1 GB of disk</b> are plenty.</li>
+  <li>A normal internet connection. It makes one small request a minute.</li>
+</ul>
+
+<h2>Set it up (about five minutes)</h2>
+<p>On the machine you picked, in a terminal:</p>
+<pre><code>curl -L -o groundcheck.zip https://github.com/Luishae07/groundcheck/archive/refs/heads/main.zip
+python3 -m zipfile -e groundcheck.zip .
+cd groundcheck-main/backend
+bash start.sh</code></pre>
+<p>The second line unpacks the download with Python itself, so you don't need <code>unzip</code>, <code>tar</code> or <code>git</code>. <code>start.sh</code> then asks a few questions. These answers give the cheapest, always-up-to-date setup:</p>
+<div class="card scroll"><table>
+<tr><th>Question</th><th>Answer</th></tr>
+<tr><td>HTTP data API port</td><td>Press Enter (8765)</td></tr>
+<tr><td>WebSocket live-feed port</td><td>Press Enter (8766)</td></tr>
+<tr><td>Max ground-level altitude filter</td><td>Press Enter (980)</td></tr>
+<tr><td>Create <code>data.json</code> now?</td><td><b>y</b>, then choose how many days of history to fetch, for example <b>10</b></td></tr>
+<tr><td>Set up automatic checks with cron?</td><td><b>y</b></td></tr>
+<tr><td>Check every minute?</td><td><b>y</b></td></tr>
+<tr><td>Also check once daily?</td><td><b>y</b></td></tr>
+<tr><td>Run in the background with nohup?</td><td><b>y</b></td></tr>
+<tr><td>Enable logs?</td><td><b>y</b></td></tr>
+</table></div>
+<p>Then open <code>http://localhost:8765/</code> (or the machine's address from another device on your network). The cron job keeps adding new readings; the more days it runs, the fuller the history.</p>
+
+<h2>Keep it running after a restart</h2>
+<p>The cron job restarts the updates by itself. The web server also needs to start when the machine boots. Run <code>crontab -e</code> and add two lines (change the folder to where you unpacked it):</p>
+<pre><code>@reboot cd /home/pi/groundcheck-main/backend &amp;&amp; nohup python3 serve.py &gt;/dev/null 2&gt;&amp;1 &amp;
+@reboot cd /home/pi/groundcheck-main/backend &amp;&amp; nohup python3 ws_proxy.py &gt;/dev/null 2&gt;&amp;1 &amp;</code></pre>
+
+<h2>Reaching it from outside the house</h2>
+<div class="card scroll"><table>
+<tr><th>Way</th><th>Cost</th><th>Notes</th></tr>
+<tr><td><b>Home network only</b></td><td>€0</td><td>Open <code>http://&lt;machine-ip&gt;:8765/</code> from any device on your Wi-Fi.</td></tr>
+<tr><td><b>Cloudflare quick tunnel</b></td><td>€0</td><td><code>cloudflared tunnel --url http://localhost:8765</code> gives a public https address. It <b>changes</b> every time the tunnel restarts.</td></tr>
+<tr><td><b>Permanent tunnel with your own domain</b></td><td>about €10 a year for the domain</td><td>A fixed address that never changes. The tunnel itself is free.</td></tr>
+<tr><td><b>A VPS with a public address</b></td><td>included in the VPS price</td><td>Open the port in its firewall and use the machine's address.</td></tr>
+</table></div>
+
+<h2>The cheapest sensible plan</h2>
+<div class="card ok">
+  <ol>
+    <li>Use a <b>Raspberry Pi</b> you already have, or an old laptop, as the always-on machine. About €20–60 if you have to buy one.</li>
+    <li>Run the four commands above and answer <b>y</b> to cron every minute.</li>
+    <li>Add the two <code>@reboot</code> lines.</li>
+    <li>Leave it on your home network, or add a free Cloudflare quick tunnel when you want to show it to someone.</li>
+  </ol>
+  Running cost afterwards: a few euros of electricity a year. If you don't want any hardware, a free cloud tier or a €3–5 a month VPS does the same job.
+</div>
+
+<h2>Questions</h2>
+<p><b>Does it cost anything per visit?</b> No. It only serves one small data file, and there are no accounts or databases to pay for.</p>
+<p><b>Can I run it on a phone?</b> Yes, on Android with Termux. An iPhone app can run it only while the app is open on screen, so it's no good for a server.</p>
+<p><b>I only want to see the data, not host it.</b> You don't need any of this. The hosted Groundcheck app and the apps for iPhone, Android and desktop are free to use.</p>
+<p><b>Is it safe to put on the internet?</b> It only serves public weather-balloon readings and has no login. Keep Python and the machine updated, and prefer a tunnel over opening your router.</p>
+
+<footer>Groundcheck · <a href="https://github.com/Luishae07/groundcheck">source on GitHub</a> · AGPL-3.0</footer>
+</main></body></html>
