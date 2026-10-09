@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Flowsearch + Groundcheck</title>
+<style>
+:root{color-scheme:dark;--bg:#0e1628;--card:#17203a;--line:#2a3558;--text:#ecf0ff;--dim:#8c92b0;--accent:#7c8cff}
+*{box-sizing:border-box}body{margin:0;width:340px;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,sans-serif}
+header{padding:14px 16px 6px;font-weight:700;font-size:15px}header span{color:var(--accent)}
+form{display:flex;gap:8px;padding:8px 16px}input{flex:1;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit}
+button,a.btn{padding:9px 12px;border-radius:9px;border:0;background:var(--accent);color:#0b1020;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;text-align:center}
+button.alt,a.alt{background:var(--card);color:var(--text);border:1px solid var(--line)}
+#wx{margin:8px 16px;padding:14px;border-radius:12px;background:var(--card);border:1px solid var(--line);min-height:96px}
+#temp{font-size:40px;font-weight:700;line-height:1}#temp small{font-size:18px;color:var(--dim);font-weight:500}
+.row{display:flex;gap:14px;color:var(--dim);margin-top:8px;font-size:13px}.row b{color:var(--text);font-weight:600}
+.dim{color:var(--dim)}.err{color:#ff8a8a}
+footer{display:flex;gap:8px;padding:6px 16px 16px}footer>*{flex:1}
+</style></head><body>
+<header>Flowsearch <span>+</span> Groundcheck</header>
+<form id="f"><input id="q" placeholder="Search Flowsearch" autofocus autocomplete="off"><button>Search</button></form>
+<div id="wx"><span class="dim">Finding where you are…</span></div>
+<footer><button class="alt" id="loc">Use my location</button><a class="btn alt" id="gc" target="_blank" rel="noopener">Groundcheck</a></footer>
+<script src="lib.js"></script><script src="popup.js"></script>
+</body></html>
