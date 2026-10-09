@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Which forecast is right? - Groundcheck</title>
+<meta name="description" content="Weather models scored against what weather balloons really measured.">
+<style>
+:root{--bg:#0e1628;--card:#17203a;--line:#2a3558;--text:#ecf0ff;--dim:#8c92b0;--accent:#7c8cff;--good:#34d399;--warm:#fb923c;--cool:#60a5fa}
+@media (prefers-color-scheme: light){:root{--bg:#f4f6fc;--card:#fff;--line:#d9deef;--text:#151a2e;--dim:#5b6384;--accent:#4f5fe0}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:920px;margin:0 auto;padding:28px 16px 70px}
+h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:0 0 8px}h2{margin:34px 0 10px;font-size:22px}
+.lead{color:var(--dim);font-size:18px;margin:0 0 22px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.tabs button{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+.tabs button.on{background:var(--accent);color:#0b1020;border-color:var(--accent);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.row{display:grid;grid-template-columns:34px 1.4fr 2fr 80px 90px;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}.rank{font-size:20px;text-align:center}.name b{display:block}.name small{color:var(--dim)}
+.bar{height:14px;border-radius:8px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--good),var(--accent))}
+.num{text-align:right;font-variant-numeric:tabular-nums}.dim{color:var(--dim)}.warm{color:var(--warm)}.cool{color:var(--cool)}
+.big{display:flex;gap:26px;flex-wrap:wrap}.big div small{display:block;color:var(--dim)}.big div b{font-size:28px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 6px;text-align:right;border-top:1px solid var(--line);white-space:nowrap}th{color:var(--dim);font-weight:500}
+th:first-child,td:first-child{text-align:left}.scroll{overflow-x:auto}
+.head{display:grid;grid-template-columns:34px 1.4fr 2fr 80px 90px;gap:10px;color:var(--dim);font-size:13px;padding-bottom:6px}
+@media (max-width:640px){.row,.head{grid-template-columns:28px 1.6fr 1fr 70px}.row .bar,.head span:nth-child(3){display:none}}
+</style>
+</head>
+<body><main>
+<h1>Which forecast is right?</h1>
+<p class="lead">The big weather models, scored against what weather balloons really measured near the ground.</p>
+<div id="status" class="card dim">Loading the scoreboard…</div>
+<div id="app" hidden>
+  <div class="tabs" id="leads"></div>
+  <div class="tabs" id="vars"></div>
+  <div class="card big" id="summary"></div>
+  <div class="card"><div class="head"><span></span><span>Model</span><span>Average mistake (shorter is better)</span><span class="num">Too warm / cool</span><span class="num" id="h4"></span></div><div id="board"></div></div>
+  <h2>Latest comparisons</h2>
+  <div class="card scroll"><table id="recent"></table></div>
+</div>
+<h2>How it works</h2>
+<div class="card dim">
+  <p>Groundcheck collects readings from weather balloons (radiosondes). For every balloon, the reading closest to the ground gives the real temperature and humidity at a known place and hour.</p>
+  <p>For that place and hour, the page asks <a href="https://open-meteo.com/en/docs/previous-runs-api" style="color:var(--accent)">Open-Meteo's archive of past model runs</a> what each model had predicted: the newest forecast, the one made 1 day earlier, and the one made 2 days earlier. The difference between the forecast and the balloon's measurement is the model's mistake.</p>
+  <p><b>What the numbers mean.</b> "Average mistake" is the mean size of the error. "Too warm / cool" is the average direction of the error: a model that is +1.5° is usually too warm. "Within 1°" is the share of forecasts that missed by one degree or less.</p>
+  <p><b>Limits.</b> Balloons are launched in certain places at certain times, so this says how models do near balloon launch sites, mostly in Europe. A model's grid point is not at the balloon's height, so forecasts are corrected by 0.65° per 100 m of difference. Weather apps (Apple, Google and others) are not included: they have no public archive to check against. Updated daily.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let D=null,lead="0",variable="temp";
+const unit=()=>variable==="temp"?"°":"%";
+function bias(b){const u=unit();if(Math.abs(b)<0.05)return `<span class="dim">0${u}</span>`;return b>0?`<span class="warm">+${b.toFixed(1)}${u}</span>`:`<span class="cool">${b.toFixed(1)}${u}</span>`}
+function rows(){
+  const key=variable==="temp"?"temp":"humidity";
+  return Object.entries(D.models).map(([id,m])=>({id,label:m.label,s:m[key][lead]})).filter(r=>r.s&&r.s.n>=3).sort((a,b)=>a.s.mae-b.s.mae);
+}
+function draw(){
+  const r=rows(),medals=["🥇","🥈","🥉"];
+  document.querySelectorAll("#leads button").forEach(b=>b.classList.toggle("on",b.dataset.v===lead));
+  document.querySelectorAll("#vars button").forEach(b=>b.classList.toggle("on",b.dataset.v===variable));
+  $("h4").textContent=variable==="temp"?"Within 1°":"Balloons";
+  if(!r.length){$("board").innerHTML='<p class="dim">Not enough balloons for this view yet.</p>';$("summary").innerHTML="";return}
+  const worst=Math.max(...r.map(x=>x.s.mae));
+  $("summary").innerHTML=`<div><small>Most accurate</small><b>${r[0].label}</b></div><div><small>Its average mistake</small><b>${r[0].s.mae.toFixed(1)}${unit()}</b></div><div><small>Balloons compared</small><b>${r[0].s.n.toLocaleString()}</b></div>`;
+  $("board").innerHTML=r.map((x,i)=>`<div class="row"><div class="rank">${medals[i]||i+1}</div><div class="name"><b>${x.label}</b><small>${x.s.n.toLocaleString()} balloons</small></div><div class="bar"><i style="width:${Math.max(6,100-x.s.mae/worst*85)}%"></i></div><div class="num">${bias(x.s.bias)}</div><div class="num">${variable==="temp"?x.s.within1+"%":x.s.n}</div></div>`).join("");
+  const ids=Object.keys(D.models),pick=(f,i)=>f?(variable==="temp"?f.t:f.h)[+lead]:null;
+  $("recent").innerHTML="<tr><th>Balloon hour (UTC)</th><th>Measured</th>"+ids.map(i=>`<th>${D.models[i].label.split(" ")[0]}</th>`).join("")+"</tr>"+
+    D.recent.map(rc=>{const t=variable==="temp"?rc.temp:rc.hum;if(t==null)return"";
+      return `<tr><td>${rc.time.replace("T"," ").replace("Z","")} · ${rc.lat.toFixed(1)}, ${rc.lon.toFixed(1)}</td><td>${t.toFixed(1)}${unit()}</td>`+
+        ids.map(i=>{const v=pick(rc.models[i]);return v==null?'<td class="dim">–</td>':`<td>${v.toFixed(1)}</td>`}).join("")+"</tr>"}).join("");
+}
+fetch("accuracy-data/accuracy.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
+  D=d;$("status").hidden=true;$("app").hidden=false;
+  $("leads").innerHTML=d.leads.map((l,i)=>`<button data-v="${i}">${l}</button>`).join("");
+  $("vars").innerHTML='<button data-v="temp">Temperature</button><button data-v="humidity">Humidity</button>';
+  $("leads").onclick=e=>{if(e.target.dataset.v){lead=e.target.dataset.v;draw()}};
+  $("vars").onclick=e=>{if(e.target.dataset.v){variable=e.target.dataset.v;if(variable==="humidity")variable="hum";draw()}};
+  variable="temp";draw();
+  $("status").hidden=false;$("status").textContent=`${d.balloons.toLocaleString()} balloons from ${d.from.slice(0,10)} to ${d.to.slice(0,10)}. Updated ${d.updated.slice(0,16).replace("T"," ")} UTC.`;
+}).catch(()=>{$("status").textContent="The first results appear after the first daily run. Check back soon."});
+</script>
+</main></body></html>
