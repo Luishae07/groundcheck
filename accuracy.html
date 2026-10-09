@@ -73,9 +73,9 @@ function draw(){
 fetch("accuracy-data/accuracy.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
   D=d;$("status").hidden=true;$("app").hidden=false;
   $("leads").innerHTML=d.leads.map((l,i)=>`<button data-v="${i}">${l}</button>`).join("");
-  $("vars").innerHTML='<button data-v="temp">Temperature</button><button data-v="humidity">Humidity</button>';
+  $("vars").innerHTML='<button data-v="temp">Temperature</button><button data-v="hum">Humidity</button>';
   $("leads").onclick=e=>{if(e.target.dataset.v){lead=e.target.dataset.v;draw()}};
-  $("vars").onclick=e=>{if(e.target.dataset.v){variable=e.target.dataset.v;if(variable==="humidity")variable="hum";draw()}};
+  $("vars").onclick=e=>{if(e.target.dataset.v){variable=e.target.dataset.v;draw()}};
   variable="temp";draw();
   $("status").hidden=false;$("status").textContent=`${d.balloons.toLocaleString()} balloons from ${d.from.slice(0,10)} to ${d.to.slice(0,10)}. Updated ${d.updated.slice(0,16).replace("T"," ")} UTC.`;
 }).catch(()=>{$("status").textContent="The first results appear after the first daily run. Check back soon."});
