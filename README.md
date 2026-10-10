@@ -124,7 +124,7 @@ Follow the self-host guide in this repository (`selfhost.html` / the `selfhost/`
 <details>
 <summary><b>Can I use the data in my own app?</b></summary>
 
-Yes. The backend has a JSON API at `/api/data`. Without a key you get a lower rate limit. An API key gives you a much higher limit and lets you filter the data, for example to one country or to the newest readings only.
+Yes. The backend has a JSON API at `/api/data`. You can also use **Flowapi**, one gateway with one key for Groundcheck, Wikeutral, Flowmaps and Flowearth. Its current address is in [`api-url.txt`](api-url.txt); make a key with `curl -X POST <that address>/v1/keys/new`. Without a key you get a lower rate limit. An API key gives you a much higher limit and lets you filter the data, for example to one country or to the newest readings only.
 
 </details>
 
