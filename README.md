@@ -66,9 +66,97 @@ A native WKWebView wrapper in `macos/`, targeting macOS 13.0+. Open `Groundcheck
 
 The iOS app is MIT because AGPL/GPL-licensed code cannot be distributed through Apple's App Store under Apple's Terms of Service.
 
-### Licence FAQ
+### FAQ
 
 _Click a question to open the answer._
+
+#### General
+
+<details>
+<summary><b>What is Groundcheck?</b></summary>
+
+A weather app built on **real measurements**. It shows what weather balloons (radiosondes) actually measured in the air, with a focus on the ground-level temperature, humidity and pressure near you.
+
+</details>
+
+<details>
+<summary><b>Is it a weather forecast?</b></summary>
+
+No. Every number was measured by a sensor on a balloon. It is not the output of a forecast model, so it tells you what the air was like when the balloon was there, not what it will be later.
+
+</details>
+
+<details>
+<summary><b>Where does the data come from?</b></summary>
+
+From the open public radiosonde telemetry sites [sonde.mine.nu](https://sonde.mine.nu) and [zeesen.mine.nu](https://zeesen.mine.nu). The backend collects the readings and serves them.
+
+</details>
+
+<details>
+<summary><b>Why are there so few or old readings?</b></summary>
+
+Balloons are only launched a few times a day, and each one reports while it is flying. Groundcheck keeps readings near the ground, so you may see a handful of stations and a gap of several hours. That is the data, not a bug.
+
+</details>
+
+<details>
+<summary><b>Which devices and platforms are there?</b></summary>
+
+The web app, an Android app, an iOS app, a macOS app, a desktop build, a Firefox extension, and an MCP server so AI assistants can read the data. Look in `android/`, `ios/`, `macos/`, `desktop/`, `extension/` and `backend/`.
+
+</details>
+
+<details>
+<summary><b>Is it free?</b></summary>
+
+Yes. It costs nothing to use, and the source code is open (see the licence questions below).
+
+</details>
+
+<details>
+<summary><b>How do I run my own copy?</b></summary>
+
+Follow the self-host guide in this repository (`selfhost.html` / the `selfhost/` folder). It sets up the backend and the data collection for you.
+
+</details>
+
+<details>
+<summary><b>Can I use the data in my own app?</b></summary>
+
+Yes. The backend has a JSON API at `/api/data`. Without a key you get a lower rate limit. An API key gives you a much higher limit and lets you filter the data, for example to one country or to the newest readings only.
+
+</details>
+
+<details>
+<summary><b>How do I get an API key?</b></summary>
+
+Send a `POST` request to `/api/keys/new` on the server. It returns your key. Send it as the header `X-API-Key: YOUR_KEY` (or `?key=YOUR_KEY`) on `/api/data`. You can change a key's settings, pause it, or revoke it through the key endpoints, and read its usage at `/api/keys/YOUR_KEY/stats`.
+
+</details>
+
+<details>
+<summary><b>Can an AI assistant use it?</b></summary>
+
+Yes. `backend/mcp_server.py` is an MCP server (no extra dependencies) with tools such as `current_reading`, `nearest_station`, `station_history`, `search_readings`, `predictor` and `stats`. Point your assistant's `.mcp.json` at it.
+
+</details>
+
+<details>
+<summary><b>Does Groundcheck track me?</b></summary>
+
+The app can ask for your location so it can show the station nearest to you. Your browser or phone asks for permission first, and you can say no and still browse the data.
+
+</details>
+
+<details>
+<summary><b>I found a bug or have an idea. What now?</b></summary>
+
+Open an issue on GitHub, or send a pull request. Changes to the AGPL parts are AGPL, and changes inside `ios/` are MIT.
+
+</details>
+
+#### Licence
 
 <details>
 <summary><b>Can I use Groundcheck for free?</b></summary>
