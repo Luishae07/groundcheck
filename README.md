@@ -65,3 +65,38 @@ A native WKWebView wrapper in `macos/`, targeting macOS 13.0+. Open `Groundcheck
 - **MIT** (see `ios/LICENSE`): only the **iOS app** (`ios/`).
 
 The iOS app is MIT because AGPL/GPL-licensed code cannot be distributed through Apple's App Store under Apple's Terms of Service.
+
+### Licence FAQ
+
+**Can I use Groundcheck for free?**
+Yes. You can use it for yourself, at work, or in a business, at no cost.
+
+**Can I run my own copy?**
+Yes. That is what the self-host guide is for. Running an unmodified copy needs nothing from you.
+
+**Do I have to share my changes?**
+Only if you let other people use your modified version. If you change the AGPL parts and give the program to others, or let them use it over a network (a website or an API), you must offer them the source code of your version under the AGPL too. If you change it only for yourself, you owe no one anything.
+
+**What does "over a network" mean?**
+It is the difference between the AGPL and the plain GPL. If people use your modified version through a website or a server, that counts like handing them a copy, so they are entitled to the source.
+
+**Can I sell it or charge for it?**
+Yes. The AGPL allows selling. The source-sharing rule above still applies to whoever gets it.
+
+**Can I use the code in my own closed-source app?**
+Not the AGPL parts. If you build them into your program, your program must be AGPL too. The `ios/` folder is MIT, so that part can go into closed-source apps as long as you keep its licence notice.
+
+**Does using the Groundcheck API make my app AGPL?**
+Generally no. Calling the API or reading its data is not copying the code, so your own app can have any licence. Copying the source code is what brings the AGPL in.
+
+**Can I put the Android app on Google Play or F-Droid?**
+Yes, as long as you also make the source of your version available under the AGPL.
+
+**Why is the iOS app MIT?**
+Apple's App Store terms do not work with AGPL/GPL code, so the iOS app uses the MIT licence. See `ios/LICENSE`.
+
+**I want to contribute. Which licence does my work get?**
+Changes to the AGPL parts are AGPL. Changes inside `ios/` are MIT.
+
+**Where is the full text?**
+In `LICENSE` (AGPL-3.0) and `ios/LICENSE` (MIT). This FAQ is a plain-language summary and not legal advice. If you are unsure, read the licence itself or ask a lawyer.
