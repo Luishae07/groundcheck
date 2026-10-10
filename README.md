@@ -103,7 +103,7 @@ Balloons are only launched a few times a day, and each one reports while it is f
 <details>
 <summary><b>Which devices and platforms are there?</b></summary>
 
-The web app, an Android app, an iOS app, a macOS app, a desktop build, a Firefox extension, and an MCP server so AI assistants can read the data. Look in `android/`, `ios/`, `macos/`, `desktop/`, `extension/` and `backend/`.
+The web app, an Android app (`android/`), an iOS app (`ios/`), a macOS app (`electron/`), a Firefox extension (`extension/`), and an MCP server so AI assistants can read the data (`backend/`).
 
 </details>
 
