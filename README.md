@@ -61,4 +61,6 @@ A native WKWebView wrapper in `macos/`, targeting macOS 13.0+. Open `Groundcheck
 
 ## Licence
 
-This repository is licensed under the **GNU Affero General Public License v3.0** (see `LICENSE`).
+This repository is licensed under the **GNU Affero General Public License v3.0** (see `LICENSE`), **except the `ios/` directory** (the iOS app), which is licensed under the **MIT License** (see `ios/LICENSE`).
+
+This split exists because AGPL/GPL-licensed code cannot be distributed through Apple's App Store under Apple's Terms of Service.
