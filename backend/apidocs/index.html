@@ -62,12 +62,12 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
 
   <div class="endpoint">
     <span class="method">GET</span><span class="path">/api/data</span>
-    <div class="desc">All current non-negative-temperature radiosonde readings, sorted newest first. Without an API key, limited to 30 requests per 60 seconds per IP. With a key, 9000 requests per 10 seconds. Exceeding your limit returns <code>429</code> with a <code>Retry-After</code> header.</div>
+    <div class="desc">All current non-negative-temperature radiosonde readings, sorted newest first. Without an API key, limited to 30 requests per 60 seconds per IP. With a key, 13000 requests per 10 seconds. Exceeding your limit returns <code>429</code> with a <code>Retry-After</code> header.</div>
   </div>
 
   <div class="endpoint">
     <span class="method">POST</span><span class="path">/api/keys/new</span>
-    <div class="desc">Generates a free API key on the spot &mdash; no signup. Returns <code>{"api_key": "...", "limit": "9000 requests / 10s"}</code>.</div>
+    <div class="desc">Generates a free API key on the spot &mdash; no signup. Returns <code>{"api_key": "...", "limit": "13000 requests / 10s"}</code>.</div>
   </div>
 
   <div class="endpoint">
