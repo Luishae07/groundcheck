@@ -43,7 +43,7 @@ cd groundcheck/backend
 curl https://grants-governmental-wma-out.trycloudflare.com/api/data
 ```
 
-Rate-limited (30 req/60s by default); `POST /api/keys/new` gets you a free key raising that to 9000 req/10s. Full docs in `apidocs/`.
+Rate-limited (30 req/60s by default); `POST /api/keys/new` gets you a free key raising that to 13000 req/10s. Full docs in `apidocs/`.
 
 For comparison, Apple's WeatherKit REST API is $0 for the first 500,000 calls/month, then ~$50 per million after that — $9,999.99/month at the 200M-calls tier. Groundcheck's API has no billing at any volume.
 
