@@ -99,6 +99,18 @@ tr.ip-row:hover{background:var(--panel-2);}
 
 <div class="wrap">
   <h1>API Key Stats</h1>
+  <div id="flowapi-note" style="border:1px solid rgba(128,128,128,.4);background:rgba(128,128,128,.08);border-radius:10px;padding:10px 14px;margin:14px 0;font-size:.95rem">
+    <b>One key for all our APIs.</b> Groundcheck, Wikeutral, Flowmaps and Flowearth are also available through one address, <a id="flowapi-link" href="https://github.com/Luishae07/groundcheck/blob/main/api-url.txt">Flowapi</a>, with one API key, one set of rules and one docs page. Make a key: <code id="flowapi-cmd">curl -X POST FLOWAPI/v1/keys/new</code>
+  </div>
+  <script>
+  fetch("https://raw.githubusercontent.com/Luishae07/groundcheck/HEAD/api-url.txt?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.text(); }).then(function (t) {
+    var u = t.trim().split("\n")[0].replace(/\/$/, "");
+    if (!/^https:\/\//.test(u)) return;
+    var a = document.getElementById("flowapi-link"); a.href = u; a.textContent = u;
+    var c = document.getElementById("flowapi-cmd"); c.textContent = "curl -X POST " + u + "/v1/keys/new";
+  }).catch(function () {});
+  </script>
+
   <p class="sub">Paste your Groundcheck API key to see its own usage — total requests and which IPs have used it. No login needed; the key itself is your credential, same as using it on <code>/api/data</code>.</p>
 
   <div class="card">
