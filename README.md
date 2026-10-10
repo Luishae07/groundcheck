@@ -64,5 +64,3 @@ A native WKWebView wrapper in `macos/`, targeting macOS 13.0+. Open `Groundcheck
 This repository is licensed under the **GNU Affero General Public License v3.0** (see `LICENSE`), **except the `cap/` directory** (the Capacitor-based mobile app build), which is licensed under the **MIT License** (see `cap/LICENSE`).
 
 This split exists because AGPL/GPL-licensed code cannot be distributed through Apple's App Store under Apple's Terms of Service.
-
-The radiosonde data comes from the open public telemetry sites [sonde.mine.nu](https://sonde.mine.nu) and [zeesen.mine.nu](https://zeesen.mine.nu), used with the operator's knowledge. The licence above covers the code in this repository, not that data.
