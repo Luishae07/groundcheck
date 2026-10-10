@@ -68,35 +68,81 @@ The iOS app is MIT because AGPL/GPL-licensed code cannot be distributed through 
 
 ### Licence FAQ
 
-**Can I use Groundcheck for free?**
+_Click a question to open the answer._
+
+<details>
+<summary><b>Can I use Groundcheck for free?</b></summary>
+
 Yes. You can use it for yourself, at work, or in a business, at no cost.
 
-**Can I run my own copy?**
+</details>
+
+<details>
+<summary><b>Can I run my own copy?</b></summary>
+
 Yes. That is what the self-host guide is for. Running an unmodified copy needs nothing from you.
 
-**Do I have to share my changes?**
+</details>
+
+<details>
+<summary><b>Do I have to share my changes?</b></summary>
+
 Only if you let other people use your modified version. If you change the AGPL parts and give the program to others, or let them use it over a network (a website or an API), you must offer them the source code of your version under the AGPL too. If you change it only for yourself, you owe no one anything.
 
-**What does "over a network" mean?**
+</details>
+
+<details>
+<summary><b>What does "over a network" mean?</b></summary>
+
 It is the difference between the AGPL and the plain GPL. If people use your modified version through a website or a server, that counts like handing them a copy, so they are entitled to the source.
 
-**Can I sell it or charge for it?**
+</details>
+
+<details>
+<summary><b>Can I sell it or charge for it?</b></summary>
+
 Yes. The AGPL allows selling. The source-sharing rule above still applies to whoever gets it.
 
-**Can I use the code in my own closed-source app?**
+</details>
+
+<details>
+<summary><b>Can I use the code in my own closed-source app?</b></summary>
+
 Not the AGPL parts. If you build them into your program, your program must be AGPL too. The `ios/` folder is MIT, so that part can go into closed-source apps as long as you keep its licence notice.
 
-**Does using the Groundcheck API make my app AGPL?**
+</details>
+
+<details>
+<summary><b>Does using the Groundcheck API make my app AGPL?</b></summary>
+
 Generally no. Calling the API or reading its data is not copying the code, so your own app can have any licence. Copying the source code is what brings the AGPL in.
 
-**Can I put the Android app on Google Play or F-Droid?**
+</details>
+
+<details>
+<summary><b>Can I put the Android app on Google Play or F-Droid?</b></summary>
+
 Yes, as long as you also make the source of your version available under the AGPL.
 
-**Why is the iOS app MIT?**
+</details>
+
+<details>
+<summary><b>Why is the iOS app MIT?</b></summary>
+
 Apple's App Store terms do not work with AGPL/GPL code, so the iOS app uses the MIT licence. See `ios/LICENSE`.
 
-**I want to contribute. Which licence does my work get?**
+</details>
+
+<details>
+<summary><b>I want to contribute. Which licence does my work get?</b></summary>
+
 Changes to the AGPL parts are AGPL. Changes inside `ios/` are MIT.
 
-**Where is the full text?**
+</details>
+
+<details>
+<summary><b>Where is the full text?</b></summary>
+
 In `LICENSE` (AGPL-3.0) and `ios/LICENSE` (MIT). This FAQ is a plain-language summary and not legal advice. If you are unsure, read the licence itself or ask a lawyer.
+
+</details>
