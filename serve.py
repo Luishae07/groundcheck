@@ -31,7 +31,7 @@ DEFAULT_MAX = 30
 DEFAULT_WINDOW = 60
 
 # API key tier limit
-KEY_MAX = 9000
+KEY_MAX = 13000
 KEY_WINDOW = 10
 
 def load_keys():
