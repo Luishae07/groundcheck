@@ -61,6 +61,18 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
 
 <main>
   <h1>Groundcheck API</h1>
+  <div id="flowapi-note" style="border:1px solid rgba(128,128,128,.4);background:rgba(128,128,128,.08);border-radius:10px;padding:10px 14px;margin:14px 0;font-size:.95rem">
+    <b>One key for all our APIs.</b> Groundcheck, Wikeutral, Flowmaps and Flowearth are also available through one address, <a id="flowapi-link" href="https://github.com/Luishae07/groundcheck/blob/main/api-url.txt">Flowapi</a>, with one API key, one set of rules and one docs page. Make a key: <code id="flowapi-cmd">curl -X POST FLOWAPI/v1/keys/new</code>
+  </div>
+  <script>
+  fetch("https://raw.githubusercontent.com/Luishae07/groundcheck/HEAD/api-url.txt?" + Date.now(), {cache: "no-store"}).then(function (r) { return r.text(); }).then(function (t) {
+    var u = t.trim().split("\n")[0].replace(/\/$/, "");
+    if (!/^https:\/\//.test(u)) return;
+    var a = document.getElementById("flowapi-link"); a.href = u; a.textContent = u;
+    var c = document.getElementById("flowapi-cmd"); c.textContent = "curl -X POST " + u + "/v1/keys/new";
+  }).catch(function () {});
+  </script>
+
   <p class="sub">Read-only endpoints backing the <a href="/">Groundcheck</a> weather app — real radiosonde ground-temperature readings, with a free optional API key for a much higher rate limit.</p>
 
   <h2>Endpoints</h2>
