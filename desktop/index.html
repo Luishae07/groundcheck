@@ -419,7 +419,7 @@ footer a{color:inherit}
         <div class="faqsection">About &amp; Data</div>
         <div class="faqgrid">
           <div class="qa"><div class="q">What is Groundcheck?</div><div class="a">A weather app built on <b>real radiosonde (weather balloon) sensor readings</b> instead of a forecast model. Every number you see was actually measured by a sensor in the air, not predicted.</div></div>
-          <div class="qa"><div class="q">Where does the data come from?</div><div class="a">Live telemetry from <b>sonde.mine.nu</b> / <b>zeesen.mine.nu</b>, a public radiosonde-tracking feed. We fetch its <code>sondes.php</code> endpoint on a schedule.</div></div>
+          <div class="qa"><div class="q">Where does the data come from?</div><div class="a">Live telemetry from <b>sonde.mine.nu</b> / <b>zeesen.mine.nu</b>, a public radiosonde-tracking feed, and from <b>SondeHub</b> (sondehub.org), an open worldwide radiosonde database. We fetch its <code>sondes.php</code> endpoint on a schedule.</div></div>
           <div class="qa"><div class="q">Is this a forecast app?</div><div class="a">No. The "Next days" panel is the one exception — it is this app's own forecast, learned from the balloon readings near you (no weather model, no outside forecast service). Everything else is raw sensor history.</div></div>
           <div class="qa"><div class="q">Why only ground-level readings?</div><div class="a">Sondes spend most of a flight at altitude, where it's routinely far below freezing. Those readings aren't representative of ground weather, so we filter to a configurable altitude ceiling (currently under ~1000m) and only show near-surface readings.</div></div>
           <div class="qa"><div class="q">How often does the data refresh?</div><div class="a">A background job fetches new readings every minute, plus deeper daily/weekly sweeps to catch anything missed. The page itself polls for updates every 5 minutes.</div></div>
@@ -589,7 +589,7 @@ footer a{color:inherit}
     </div>
 
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs">API docs</a>
+      Sources: sonde.mine.nu and <a href="https://sondehub.org" style="color:inherit">SondeHub</a> ground-level telemetry &middot; readings above about 980 m excluded &middot; <a href="../apidocs">API docs</a>
       &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
       &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
