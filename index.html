@@ -724,6 +724,16 @@ footer{
   cursor:pointer;
 }
 .clearcachebtn:active{ transform:scale(.97); }
+
+/* weather-app look: a human place name, high/low, hourly strip, balloon details tucked away */
+.hilo{text-align:center;font-size:1rem;font-weight:600;opacity:.95;margin-top:.1rem;min-height:1.2em}
+.hilo:empty{display:none}
+.detailcard summary{list-style:none;cursor:pointer;padding:.7rem .95rem;font-size:.85rem;font-weight:600;color:var(--ink-dim);display:flex;justify-content:space-between;align-items:center}
+.detailcard summary::-webkit-details-marker{display:none}
+.detailcard summary::after{content:"\25BE";opacity:.6;transition:transform .2s}
+.detailcard[open] summary::after{transform:rotate(180deg)}
+.detailcard[open] summary{border-bottom:1px solid var(--line)}
+#hourlyStrip .predictchip{min-width:58px;padding:.55rem .6rem}
 </style>
 </head>
 <body>
@@ -745,14 +755,18 @@ footer{
     <div class="bigicon" id="bigicon"></div>
     <div class="bigtemp" id="bigtemp">&nbsp;</div>
     <div class="cond" id="cond">&nbsp;</div>
+    <div class="hilo" id="hilo"></div>
     <div class="stamp" id="stamp">&nbsp;</div>
   </div>
 
   <div class="sheet">
     <div id="view-today">
       <div class="livecard" id="liveCard" hidden></div>
+      <div class="listhead" id="hourlyHead" hidden>Next 24 hours<span class="n">an estimate</span></div>
+      <div class="strip" id="hourlyStrip" hidden></div>
+
       <div class="grid2" id="stats"></div>
-      <div class="detailcard" id="details"></div>
+      <details class="detailcard" id="detailsBox"><summary>About this measurement</summary><div id="details"></div></details>
 
       <div class="listhead" id="predictHead" hidden>Next days<span class="n">from our own balloon history</span></div>
       <div class="strip" id="predictStrip" hidden></div>
@@ -762,12 +776,12 @@ footer{
         Refresh location
       </button>
 
-      <div class="listhead">Last 7 days<span class="n" id="weekCount"></span></div>
+      <div class="listhead">This week<span class="n" id="weekCount"></span></div>
       <div class="feed" id="weekList"></div>
     </div>
 
     <div id="view-history" hidden>
-      <div class="listhead">Reading history<span class="n" id="historyCount"></span></div>
+      <div class="listhead">Past measurements<span class="n" id="historyCount"></span></div>
       <div class="feed" id="historyList"></div>
     </div>
 
@@ -792,10 +806,10 @@ footer{
     </div>
 
     <div id="view-map" hidden>
-      <div class="listhead">Station map<span class="n" id="mapCount"></span></div>
+      <div class="listhead">Map<span class="n" id="mapCount"></span></div>
       <div class="maptoggle">
-        <button class="maptogglebtn active" data-mapmode="stations">Stations</button>
-        <button class="maptogglebtn" data-mapmode="heat">Temperature</button>
+        <button class="maptogglebtn" data-mapmode="stations">Dots</button>
+        <button class="maptogglebtn active" data-mapmode="heat">Temperature</button>
       </div>
       <select id="mapRange" class="rangepicker">
         <option value="7" selected>Last 7 days</option>
@@ -899,7 +913,7 @@ footer{
     </button>
     <button class="tab" data-view="history">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      History
+      Past
     </button>
     <button class="tab" data-view="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -948,6 +962,36 @@ function condFor(temp, hum, pressure){
   return "Cool, cloudy";
 }
 
+function timeAgo(iso){
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 2) return 'just now';
+  if (m < 90) return m + ' min ago';
+  const h = Math.round(m / 60);
+  return h < 36 ? h + ' h ago' : Math.round(h / 24) + ' days ago';
+}
+function dewPoint(t, h){
+  if (h == null || h <= 0) return null;
+  const g = Math.log(h / 100) + 17.625 * t / (243.04 + t);
+  return 243.04 * g / (17.625 - g);
+}
+const placeCache = {};
+function lookupPlaceName(lat, lon){
+  const key = lat.toFixed(1) + ',' + lon.toFixed(1);
+  if (placeCache[key]) return Promise.resolve(placeCache[key]);
+  return fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&lat=' + lat + '&lon=' + lon)
+    .then(r => r.json())
+    .then(d => {
+      const a = d.address || {};
+      const name = a.city || a.town || a.village || a.municipality || a.county || a.state || null;
+      if (name) placeCache[key] = name;
+      return name;
+    }).catch(() => null);
+}
+function setPlaceName(name){
+  const el = document.getElementById('placeName');
+  if (el && name) el.textContent = name;
+}
+
 function fmtTime(iso){
   return new Date(iso).toLocaleString(undefined, {
     month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
@@ -972,29 +1016,31 @@ function render(p, distanceKm){
   document.getElementById('cond').textContent = condFor(p.temp, p.humidity, p.pressure);
   document.getElementById('bigtemp').textContent = p.temp.toFixed(1) + '°';
 
-  let label, sub;
+  const where = (lastLoc && (lastLoc.label || placeCache[lastLoc.lat.toFixed(1) + ',' + lastLoc.lon.toFixed(1)])) || (distanceKm != null ? 'Near you' : 'Latest measurement');
+  let sub = 'Measured ' + timeAgo(p.time) + ' by a weather balloon';
   if (distanceKm != null){
-    label = 'Nearest station: ' + p.id;
-    sub = distanceKm < 60
-      ? distanceKm.toFixed(0) + ' km from you'
-      : '⚠ ' + distanceKm.toFixed(0) + ' km away — nothing closer reported in the last 7 days';
-  } else {
-    label = 'Station ' + p.id;
-    sub = p.lat.toFixed(2) + ', ' + p.lon.toFixed(2);
+    sub += distanceKm < 60 ? ', ' + distanceKm.toFixed(0) + ' km from you'
+                           : ' \u2014 ' + distanceKm.toFixed(0) + ' km away, nothing closer in the last 7 days';
   }
-  document.getElementById('place').innerHTML =
-    label + '<span class="sub">' + sub + '</span>';
+  document.getElementById('place').innerHTML = '<span id="placeName">' + where + '</span><span class="sub">' + sub + '</span>';
+  if (lastLoc && !lastLoc.label && !placeCache[lastLoc.lat.toFixed(1) + ',' + lastLoc.lon.toFixed(1)]){
+    lookupPlaceName(lastLoc.lat, lastLoc.lon).then(setPlaceName);
+  }
   document.getElementById('stamp').textContent = fmtTime(p.time);
 
+  const dp = dewPoint(p.temp, p.humidity);
   document.getElementById('stats').innerHTML = `
-    <div class="stat"><span class="k">${svgHumidity} Humidity</span><span class="v">${p.humidity != null ? p.humidity + '%' : '—'}</span></div>
-    <div class="stat"><span class="k">${svgPressure} Pressure</span><span class="v">${p.pressure != null ? p.pressure + ' hPa' : '—'}</span></div>
+    <div class="stat"><span class="k">${svgHumidity} Humidity</span><span class="v">${p.humidity != null ? Math.round(p.humidity) + '%' : '\u2014'}</span></div>
+    <div class="stat"><span class="k">${svgPressure} Pressure</span><span class="v">${p.pressure != null ? Math.round(p.pressure) + ' hPa' : '\u2014'}</span></div>
+    <div class="stat"><span class="k">${svgHumidity} Dew point</span><span class="v">${dp != null ? dp.toFixed(0) + '\u00b0' : '\u2014'}</span></div>
+    <div class="stat"><span class="k">${svgPressure} Updated</span><span class="v">${timeAgo(p.time)}</span></div>
   `;
 
   document.getElementById('details').innerHTML = `
-    <div class="detailrow"><span class="k">${svgAlt} Sensor altitude</span><span class="v">${Math.round(p.alt)} m</span></div>
-    <div class="detailrow"><span class="k">${svgPin} Coordinates</span><span class="v">${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</span></div>
-    <div class="detailrow"><span class="k">Station ID</span><span class="v">${p.id}</span></div>
+    <div class="detailrow"><span class="k">${svgAlt} Balloon height at measurement</span><span class="v">${Math.round(p.alt)} m</span></div>
+    <div class="detailrow"><span class="k">${svgPin} Position</span><span class="v">${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</span></div>
+    <div class="detailrow"><span class="k">Balloon / station ID</span><span class="v">${p.id}</span></div>
+    <div class="detailrow"><span class="k">Measured</span><span class="v">${fmtTime(p.time)}</span></div>
   `;
 
   renderPrediction(p);
@@ -1016,6 +1062,15 @@ function renderPrediction(anchor){
         if (sub) sub.textContent = 'from our own balloon history' + (err1 != null ? ' \u00b7 tomorrow typically \u00b1' + err1.toFixed(1) + '\u00b0' : '');
         if (hd) hd.hidden = false;
         if (pn) pn.hidden = false;
+        const today = fc.days[0];
+        const hl = document.getElementById('hilo');
+        if (hl && today) hl.textContent = 'H:' + Math.round(today.high) + '\u00b0   L:' + Math.round(today.low) + '\u00b0';
+        const hs = document.getElementById('hourlyStrip'), hh = document.getElementById('hourlyHead');
+        if (hs && hh && fc.hourly && fc.hourly.length){
+          hs.innerHTML = fc.hourly.filter((h, i) => i % 2 === 0).slice(0, 13).map((h, i) => `
+            <div class="predictchip"><span class="h">${i === 0 ? 'Now' : new Date(h.t).toLocaleTimeString([], {hour: '2-digit'})}</span>${iconFor(h.temp, h.humidity, h.pressure)}<span class="t">${Math.round(h.temp)}&deg;</span></div>`).join('');
+          hs.hidden = false; hh.hidden = false;
+        }
         st.hidden = false;
         st.innerHTML = days.map(d => `
           <div class="predictchip" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
@@ -1135,10 +1190,6 @@ function renderNoFreshData(label){
   document.getElementById('stats').innerHTML = '';
   document.getElementById('details').innerHTML = '';
   selected = null;
-  if (label){
-    const sub = document.querySelector('#place .sub');
-    if (sub) sub.innerHTML = sub.innerHTML + ' &middot; approx. from ' + label;
-  }
 }
 
 function selectNearest(lat, lon, label){
@@ -1317,7 +1368,7 @@ function tempColor(t){
 
 let leafletMap = null;
 let leafletMarkerLayer = null;
-let mapMode = 'stations';
+let mapMode = 'heat';
 let lastMapList = [];
 let youAreHereMarker = null;
 
