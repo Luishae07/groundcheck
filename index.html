@@ -754,7 +754,7 @@ footer{
       <div class="grid2" id="stats"></div>
       <div class="detailcard" id="details"></div>
 
-      <div class="listhead" id="predictHead" hidden>Next days<span class="n">typical day, from 7-day pattern</span></div>
+      <div class="listhead" id="predictHead" hidden>Next days<span class="n">from our own balloon history</span></div>
       <div class="strip" id="predictStrip" hidden></div>
 
       <button class="refresh" id="refreshBtn">
@@ -1010,10 +1010,32 @@ function render(p, distanceKm){
 }
 
 const PREDICTOR_URL = 'https://constraint-approval-corrected-kept.trycloudflare.com/predict';
-let predictorCache = null;
+let predictorCache = {};
 
 function renderPrediction(anchor){
   const fetchAndRender = (data) => {
+    if (data && data.forecast && data.forecast.days && data.forecast.days.length){
+      // Groundcheck's own forecast: every day has its own value, learned from this app's balloon history (no weather model).
+      const fc = data.forecast;
+      const days = fc.days.filter(d => !d.partial).slice(0, 5);
+      const hd = document.getElementById('predictHead'), pn = document.getElementById('predictPanel'), st = document.getElementById('predictStrip');
+      if (days.length && st){
+        const err1 = (fc.accuracy && fc.accuracy[0]) ? fc.accuracy[0].mae : null;
+        const sub = (hd || pn).querySelector('.n');
+        if (sub) sub.textContent = 'from our own balloon history' + (err1 != null ? ' \u00b7 tomorrow typically \u00b1' + err1.toFixed(1) + '\u00b0' : '');
+        if (hd) hd.hidden = false;
+        if (pn) pn.hidden = false;
+        st.hidden = false;
+        st.innerHTML = days.map(d => `
+          <div class="predictchip" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
+            <span class="h">${d.label}</span>
+            ${iconFor(d.high, d.humidity, d.pressure)}
+            <span class="t">${d.high.toFixed(0)}&deg;<span style="opacity:.6">/${d.low.toFixed(0)}&deg;</span></span>
+          </div>
+        `).join('');
+        return;
+      }
+    }
     if (!data || !data.hourly_avg || !data.hourly_avg.length) {
       document.getElementById('predictHead').hidden = true;
       document.getElementById('predictStrip').hidden = true;
@@ -1084,13 +1106,15 @@ function renderPrediction(anchor){
     `).join('');
   };
 
-  if (predictorCache){
-    fetchAndRender(predictorCache);
+  const pkey = anchor.lat.toFixed(1) + ',' + anchor.lon.toFixed(1);
+  const hit = predictorCache[pkey];
+  if (hit && Date.now() - hit.at < 600000){
+    fetchAndRender(hit.data);
     return;
   }
-  fetch(PREDICTOR_URL)
+  fetch(PREDICTOR_URL + '?lat=' + anchor.lat + '&lon=' + anchor.lon + '&alt=' + Math.round(anchor.alt || 0))
     .then(r => r.json())
-    .then(data => { predictorCache = data; fetchAndRender(data); })
+    .then(data => { predictorCache[pkey] = { at: Date.now(), data: data }; fetchAndRender(data); })
     .catch(() => {
       document.getElementById('predictHead').hidden = true;
       document.getElementById('predictStrip').hidden = true;
