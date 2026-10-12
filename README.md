@@ -1,6 +1,6 @@
 # Groundcheck
 
-A weather app built on **real radiosonde (weather balloon) sensor data** — not a forecast model. Every number shown was actually measured by a sensor in the air, sourced from live [sonde.mine.nu](https://sonde.mine.nu) / [zeesen.mine.nu](https://zeesen.mine.nu) telemetry.
+A weather app built on **real radiosonde (weather balloon) sensor data** — not a forecast model. Every number shown was actually measured by a sensor in the air, sourced from live [sonde.mine.nu](https://sonde.mine.nu) / [zeesen.mine.nu](https://zeesen.mine.nu) telemetry and from [SondeHub](https://sondehub.org), an open worldwide radiosonde database (thank you to everyone who runs a receiver).
 
 - **Live app:** https://luishae07.github.io/groundcheck/
 - **Desktop view:** https://luishae07.github.io/groundcheck/desktop/
