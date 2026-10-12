@@ -833,7 +833,7 @@ footer{
         </div>
         <div class="qa">
           <div class="q">Where does this data come from?</div>
-          <div class="a">Live radiosonde (weather balloon) telemetry from <b>sonde.mine.nu</b> (its <code>sondes.php</code> feed) and from <b>SondeHub</b> (sondehub.org, an open worldwide database of radiosonde telemetry) — real sensor readings from balloons currently or recently in flight, not a forecast model.</div>
+          <div class="a">Live radiosonde (weather balloon) telemetry from <b>sonde.mine.nu</b> (its <code>sondes.php</code> feed) from <b>SondeHub</b> (sondehub.org, an open worldwide database of radiosonde telemetry) and from NOAA's <b>Integrated Global Radiosonde Archive</b> (IGRA), the official soundings of about 650 weather-service stations in more than 100 countries — real sensor readings from balloons currently or recently in flight, not a forecast model.</div>
         </div>
         <div class="qa">
           <div class="q">Why are some temperatures missing from the list?</div>
@@ -883,7 +883,7 @@ footer{
     </div>
 
     <footer>
-      Sources: sonde.mine.nu and <a href="https://sondehub.org" style="color:inherit">SondeHub</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
+      Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
       <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
@@ -1357,7 +1357,7 @@ function renderMap(list){
     }).addTo(leafletMap);
 
     L.control.attribution({ prefix: false, position: 'bottomright' })
-      .addAttribution('Tiles &copy; Esri &middot; Data: sonde.mine.nu, SondeHub')
+      .addAttribution('Tiles &copy; Esri &middot; Data: sonde.mine.nu, SondeHub, NOAA IGRA')
       .addTo(leafletMap);
   }
 
