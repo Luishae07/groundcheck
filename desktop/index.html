@@ -338,6 +338,11 @@ footer a{color:inherit}
   margin:1.6rem 0 .8rem;
 }
 .faqsection:first-child{ margin-top:0; }
+
+/* weather-app look: a human place name, high/low, hourly strip */
+.hilo{font-size:1.05rem;font-weight:600;opacity:.95;margin:.1rem 0 .25rem}
+.hilo:empty{display:none}
+#hourlyStrip .predictchip{min-width:62px}
 </style>
 </head>
 <body>
@@ -372,12 +377,16 @@ footer a{color:inherit}
     <div class="hero" id="hero"></div>
 
     <div id="view-today">
+      <div class="panel" id="hourlyPanel" hidden style="margin-bottom:1.2rem">
+        <h2>Next 24 hours <span class="n">an estimate</span></h2>
+        <div class="strip" id="hourlyStrip"></div>
+      </div>
       <div class="grid3">
         <div class="panel">
-          <h2>Station map <span class="n" id="mapCount"></span>
+          <h2>Map <span class="n" id="mapCount"></span>
             <div class="maptoggle">
-              <button class="maptogglebtn active" data-mapmode="stations">Stations</button>
-              <button class="maptogglebtn" data-mapmode="heat">Temperature</button>
+              <button class="maptogglebtn" data-mapmode="stations">Dots</button>
+              <button class="maptogglebtn active" data-mapmode="heat">Temperature</button>
             </div>
             <select id="mapRange" class="rangepicker">
               <option value="7" selected>Last 7 days</option>
@@ -401,7 +410,7 @@ footer a{color:inherit}
           </div>
         </div>
         <div class="panel">
-          <h2>Last 7 days <span class="n" id="weekCount"></span></h2>
+          <h2>This week <span class="n" id="weekCount"></span></h2>
           <div class="cardgrid" id="weekGrid"></div>
         </div>
       </div>
@@ -626,6 +635,32 @@ function condFor(temp, hum, pressure){
   if (temp >= 4) return "Partly cloudy";
   return "Cool, cloudy";
 }
+function timeAgo(iso){
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 2) return 'just now';
+  if (m < 90) return m + ' min ago';
+  const h = Math.round(m / 60);
+  return h < 36 ? h + ' h ago' : Math.round(h / 24) + ' days ago';
+}
+function dewPoint(t, h){
+  if (h == null || h <= 0) return null;
+  const g = Math.log(h / 100) + 17.625 * t / (243.04 + t);
+  return 243.04 * g / (17.625 - g);
+}
+const placeCache = {};
+function lookupPlaceName(lat, lon){
+  const key = lat.toFixed(1) + ',' + lon.toFixed(1);
+  if (placeCache[key]) return Promise.resolve(placeCache[key]);
+  return fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&lat=' + lat + '&lon=' + lon)
+    .then(r => r.json())
+    .then(d => {
+      const a = d.address || {};
+      const name = a.city || a.town || a.village || a.municipality || a.county || a.state || null;
+      if (name) placeCache[key] = name;
+      return name;
+    }).catch(() => null);
+}
+
 function fmtTime(iso){
   return new Date(iso).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 }
@@ -640,7 +675,7 @@ let points = [];
 let leafletMap = null;
 let leafletMarkerLayer = null;
 let youAreHereMarker = null;
-let mapMode = 'stations';
+let mapMode = 'heat';
 let lastMapList = [];
 
 function updateYouAreHereMarker(){
@@ -676,37 +711,38 @@ function locateByIP(){
 }
 
 function renderHero(p, distanceKm, label){
-  let locLine, sub;
+  const cached = (typeof lastLoc !== 'undefined' && lastLoc) ? placeCache[lastLoc.lat.toFixed(1) + ',' + lastLoc.lon.toFixed(1)] : null;
+  const where = label || cached || (distanceKm != null ? 'Near you' : 'Latest measurement');
+  let sub = 'Measured ' + timeAgo(p.time) + ' by a weather balloon';
   if (distanceKm != null){
-    locLine = 'Nearest station: ' + p.id;
-    sub = distanceKm < 60
-      ? distanceKm.toFixed(0) + ' km from you'
-      : '⚠ ' + distanceKm.toFixed(0) + ' km away — nothing closer reported in the last 7 days';
-    if (label) sub += ' &middot; approx. from ' + label;
-  } else {
-    locLine = 'Newest reading: station ' + p.id;
-    sub = p.lat.toFixed(2) + ', ' + p.lon.toFixed(2);
+    sub += distanceKm < 60 ? ', ' + distanceKm.toFixed(0) + ' km from you'
+                           : ' \u2014 ' + distanceKm.toFixed(0) + ' km away, nothing closer in the last 7 days';
   }
+  const dp = dewPoint(p.temp, p.humidity);
 
   document.getElementById('hero').innerHTML = `
     <div class="icon">${iconFor(p.temp, p.humidity, p.pressure)}</div>
     <div class="readout">
-      <div class="loc">${locLine}</div>
+      <div class="loc" id="placeName">${where}</div>
       <div class="temp">${p.temp.toFixed(1)}&deg;</div>
       <div class="cond">${condFor(p.temp, p.humidity, p.pressure)}</div>
-      <div class="stamp">${sub} &middot; ${fmtTime(p.time)}</div>
+      <div class="hilo" id="hilo"></div>
+      <div class="stamp" title="Balloon ${p.id}, ${Math.round(p.alt)} m, ${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}">${sub}</div>
     </div>
     <div class="metrics">
-      <div class="metric"><span class="k">Humidity</span><span class="v">${p.humidity != null ? p.humidity + '%' : '—'}</span></div>
-      <div class="metric"><span class="k">Pressure</span><span class="v">${p.pressure != null ? p.pressure + ' hPa' : '—'}</span></div>
-      <div class="metric"><span class="k">Altitude</span><span class="v">${Math.round(p.alt)} m</span></div>
-      <div class="metric"><span class="k">Stations</span><span class="v">${points.length}</span></div>
+      <div class="metric"><span class="k">Humidity</span><span class="v">${p.humidity != null ? Math.round(p.humidity) + '%' : '\u2014'}</span></div>
+      <div class="metric"><span class="k">Pressure</span><span class="v">${p.pressure != null ? Math.round(p.pressure) + ' hPa' : '\u2014'}</span></div>
+      <div class="metric"><span class="k">Dew point</span><span class="v">${dp != null ? dp.toFixed(0) + '\u00b0' : '\u2014'}</span></div>
+      <div class="metric"><span class="k">Updated</span><span class="v">${timeAgo(p.time)}</span></div>
     </div>
     <button class="locbtn" id="locBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       Use my location
     </button>
   `;
+  if (!label && typeof lastLoc !== 'undefined' && lastLoc && !cached){
+    lookupPlaceName(lastLoc.lat, lastLoc.lon).then(name => { const el = document.getElementById('placeName'); if (el && name) el.textContent = name; });
+  }
   document.getElementById('locBtn').addEventListener('click', locate);
   renderPrediction(p);
 }
@@ -727,6 +763,15 @@ function renderPrediction(anchor){
         if (sub) sub.textContent = 'from our own balloon history' + (err1 != null ? ' \u00b7 tomorrow typically \u00b1' + err1.toFixed(1) + '\u00b0' : '');
         if (hd) hd.hidden = false;
         if (pn) pn.hidden = false;
+        const today = fc.days[0];
+        const hl = document.getElementById('hilo');
+        if (hl && today) hl.textContent = 'H:' + Math.round(today.high) + '\u00b0   L:' + Math.round(today.low) + '\u00b0';
+        const hs = document.getElementById('hourlyStrip'), hp = document.getElementById('hourlyPanel');
+        if (hs && hp && fc.hourly && fc.hourly.length){
+          hs.innerHTML = fc.hourly.filter((h, i) => i % 2 === 0).slice(0, 13).map((h, i) => `
+            <div class="predictchip"><span class="h">${i === 0 ? 'Now' : new Date(h.t).toLocaleTimeString([], {hour: '2-digit'})}</span>${iconFor(h.temp, h.humidity, h.pressure)}<span class="t">${Math.round(h.temp)}&deg;</span></div>`).join('');
+          hp.hidden = false;
+        }
         st.hidden = false;
         st.innerHTML = days.map(d => `
           <div class="predictchip" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
@@ -812,13 +857,10 @@ function renderHeroNoFreshData(label){
   document.getElementById('hero').innerHTML = `
     <div class="icon"></div>
     <div class="readout">
-      <div class="loc">No station within 19h${label ? ' &middot; approx. from ' + label : ''}</div>
+      <div class="loc">${label || 'Near you'}</div>
       <div class="temp">&mdash;</div>
       <div class="cond">No recent data</div>
-      <div class="stamp">nothing reported nearby recently</div>
-    </div>
-    <div class="metrics">
-      <div class="metric"><span class="k">Stations</span><span class="v">${points.length}</span></div>
+      <div class="stamp">no weather balloon measurement nearby in the last 19 hours</div>
     </div>
     <button class="locbtn" id="locBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
@@ -880,8 +922,8 @@ function stationCard(p){
   return `
     <button class="stationcard" data-id="${p.id}">
       <div class="row1">${iconFor(p.temp, p.humidity, p.pressure)}<span class="t" style="color:${color}">${p.temp.toFixed(1)}&deg;</span></div>
-      <div class="id">${p.id}</div>
-      <div class="meta">${fmtTime(p.time)} &middot; ${Math.round(p.alt)} m alt</div>
+      <div class="id">${new Date(p.time).toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'})}</div>
+      <div class="meta">${new Date(p.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} &middot; ${p.id}</div>
     </button>
   `;
 }
