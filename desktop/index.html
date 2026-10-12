@@ -411,7 +411,7 @@ footer a{color:inherit}
       </div>
 
       <div class="panel" id="predictPanel" hidden style="margin-top:1.2rem">
-        <h2>Next days<span class="n">typical day, from 7-day pattern</span></h2>
+        <h2>Next days<span class="n">from our own balloon history</span></h2>
         <div class="strip" id="predictStrip"></div>
       </div>
     </div>
@@ -431,7 +431,7 @@ footer a{color:inherit}
         <div class="faqgrid">
           <div class="qa"><div class="q">What is Groundcheck?</div><div class="a">A weather app built on <b>real radiosonde (weather balloon) sensor readings</b> instead of a forecast model. Every number you see was actually measured by a sensor in the air, not predicted.</div></div>
           <div class="qa"><div class="q">Where does the data come from?</div><div class="a">Live telemetry from <b>sonde.mine.nu</b> / <b>zeesen.mine.nu</b>, a public radiosonde-tracking feed. We fetch its <code>sondes.php</code> endpoint on a schedule.</div></div>
-          <div class="qa"><div class="q">Is this a forecast app?</div><div class="a">No. The "Next days" panel is the one exception — it's built from this app's own 7-day historical diurnal pattern applied to each upcoming day, not an external forecast API. Everything else is raw sensor history.</div></div>
+          <div class="qa"><div class="q">Is this a forecast app?</div><div class="a">No. The "Next days" panel is the one exception — it is this app's own forecast, learned from the balloon readings near you (no weather model, no outside forecast service). Everything else is raw sensor history.</div></div>
           <div class="qa"><div class="q">Why only ground-level readings?</div><div class="a">Sondes spend most of a flight at altitude, where it's routinely far below freezing. Those readings aren't representative of ground weather, so we filter to a configurable altitude ceiling (currently under ~1000m) and only show near-surface readings.</div></div>
           <div class="qa"><div class="q">How often does the data refresh?</div><div class="a">A background job fetches new readings every minute, plus deeper daily/weekly sweeps to catch anything missed. The page itself polls for updates every 5 minutes.</div></div>
           <div class="qa"><div class="q">Why is a reading sometimes hours or days old?</div><div class="a">Radiosonde coverage is sparse by nature — it's wherever a balloon happened to fly, not a dense permanent sensor grid. No new nearby ground-level reading is normal, not a bug.</div></div>
@@ -463,7 +463,7 @@ footer a{color:inherit}
           <div class="qa"><div class="q">What's the "This day" map option?</div><div class="a">Filters the map to only readings from one specific calendar date instead of a rolling window — useful for looking back at a particular day's coverage.</div></div>
           <div class="qa"><div class="q">How does Search work?</div><div class="a">Type a station ID, a temperature, or a place name. Place names are geocoded via Nominatim (OpenStreetMap) and matched to the nearest reading, with an adjustable date range from 7 days up to all-time.</div></div>
           <div class="qa"><div class="q">Why doesn't Search find my city?</div><div class="a">The geocoder needs an unambiguous, spelled-correctly place name. Try adding a country ("Springfield, USA") if a common name returns the wrong result.</div></div>
-          <div class="qa"><div class="q">What's the "Next days" predictor based on?</div><div class="a">This app's own average hour-of-day temperature/humidity/pressure pattern computed from the last 7 days of store data, applied identically to each upcoming day and anchored to your current actual reading — not an external forecast service.</div></div>
+          <div class="qa"><div class="q">What's the "Next days" predictor based on?</div><div class="a">Years of this app's own balloon readings near you: it learns what is normal for each date and hour, how far today is from normal, and what followed similar situations before. Each day gets its own value, and the typical error is shown. Day 1-2 are reasonably good; from day 4 on it is close to the normal for the date. It is not an external forecast service.</div></div>
           <div class="qa"><div class="q">Can I clear the cache?</div><div class="a">Yes — the footer has a "Clear cache &amp; reload" button. Useful if the page seems stuck showing stale data, especially after adding it to your phone's home screen as an app.</div></div>
           <div class="qa"><div class="q">Can I switch between light and dark mode?</div><div class="a">The app follows your system's light/dark setting automatically — there's no in-app manual toggle, since it's built entirely with CSS media queries tied to your OS preference.</div></div>
           <div class="qa"><div class="q">Does the map remember my zoom/position?</div><div class="a">No — it recenters on the current selection each time you switch to the Map tab, rather than persisting a manually-panned view.</div></div>
@@ -723,10 +723,32 @@ function renderHero(p, distanceKm, label){
 }
 
 const PREDICTOR_URL = 'https://constraint-approval-corrected-kept.trycloudflare.com/predict';
-let predictorCache = null;
+let predictorCache = {};
 
 function renderPrediction(anchor){
   const fetchAndRender = (data) => {
+    if (data && data.forecast && data.forecast.days && data.forecast.days.length){
+      // Groundcheck's own forecast: every day has its own value, learned from this app's balloon history (no weather model).
+      const fc = data.forecast;
+      const days = fc.days.filter(d => !d.partial).slice(0, 5);
+      const hd = document.getElementById('predictHead'), pn = document.getElementById('predictPanel'), st = document.getElementById('predictStrip');
+      if (days.length && st){
+        const err1 = (fc.accuracy && fc.accuracy[0]) ? fc.accuracy[0].mae : null;
+        const sub = (hd || pn).querySelector('.n');
+        if (sub) sub.textContent = 'from our own balloon history' + (err1 != null ? ' \u00b7 tomorrow typically \u00b1' + err1.toFixed(1) + '\u00b0' : '');
+        if (hd) hd.hidden = false;
+        if (pn) pn.hidden = false;
+        st.hidden = false;
+        st.innerHTML = days.map(d => `
+          <div class="predictchip" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
+            <span class="h">${d.label}</span>
+            ${iconFor(d.high, d.humidity, d.pressure)}
+            <span class="t">${d.high.toFixed(0)}&deg;<span style="opacity:.6">/${d.low.toFixed(0)}&deg;</span></span>
+          </div>
+        `).join('');
+        return;
+      }
+    }
     const panel = document.getElementById('predictPanel');
     const strip = document.getElementById('predictStrip');
     if (!data || !data.hourly_avg || !data.hourly_avg.length){
@@ -783,13 +805,15 @@ function renderPrediction(anchor){
     `).join('');
   };
 
-  if (predictorCache){
-    fetchAndRender(predictorCache);
+  const pkey = anchor.lat.toFixed(1) + ',' + anchor.lon.toFixed(1);
+  const hit = predictorCache[pkey];
+  if (hit && Date.now() - hit.at < 600000){
+    fetchAndRender(hit.data);
     return;
   }
-  fetch(PREDICTOR_URL)
+  fetch(PREDICTOR_URL + '?lat=' + anchor.lat + '&lon=' + anchor.lon + '&alt=' + Math.round(anchor.alt || 0))
     .then(r => r.json())
-    .then(data => { predictorCache = data; fetchAndRender(data); })
+    .then(data => { predictorCache[pkey] = { at: Date.now(), data: data }; fetchAndRender(data); })
     .catch(() => { document.getElementById('predictPanel').hidden = true; });
 }
 
