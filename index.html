@@ -766,11 +766,6 @@ footer{
       <div class="feed" id="weekList"></div>
     </div>
 
-    <div id="view-stations" hidden>
-      <div class="listhead">All stations, newest first<span class="n" id="stationCount"></span></div>
-      <div class="feed" id="stationList"></div>
-    </div>
-
     <div id="view-history" hidden>
       <div class="listhead">Reading history<span class="n" id="historyCount"></span></div>
       <div class="feed" id="historyList"></div>
@@ -901,10 +896,6 @@ footer{
     <button class="tab" data-view="map">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg>
       Map
-    </button>
-    <button class="tab" data-view="stations">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-      Stations
     </button>
     <button class="tab" data-view="history">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -1268,24 +1259,19 @@ function renderLists(){
   document.getElementById('weekCount').textContent = days.length + ' days';
   renderFeed(document.getElementById('weekList'), days, { byDay: true });
 
-  freshViews.clear(); // new data means stations/history/map need rebuilding next time they're opened
+  freshViews.clear(); // new data means history/map need rebuilding next time they're opened
 }
 
 function renderHeavyViewsIfNeeded(view){
   if (freshViews.has(view)) return;
   freshViews.add(view);
 
-  if (view === 'stations'){
-    const byStation = new Map();
-    for (const p of points){
-      if (!byStation.has(p.id)) byStation.set(p.id, p);
-    }
-    const stations = [...byStation.values()];
-    document.getElementById('stationCount').textContent = stations.length + ' stations';
-    renderFeed(document.getElementById('stationList'), stations);
-  } else if (view === 'history'){
-    document.getElementById('historyCount').textContent = points.length + ' readings';
-    renderFeed(document.getElementById('historyList'), points);
+  if (view === 'history'){
+    const showHistory = () => {
+      document.getElementById('historyCount').textContent = points.length + ' readings';
+      renderFeed(document.getElementById('historyList'), points);
+    };
+    if (rangeLoaded(30)) showHistory(); else ensureDays(30).then(showHistory).catch(showHistory);
   } else if (view === 'map'){
     applyMapRange();
   }
@@ -1309,17 +1295,17 @@ function pointsOnDay(dateStr){
 function applyMapRange(){
   const val = document.getElementById('mapRange').value;
   const dayInput = document.getElementById('mapDay');
+  let need;
   if (val === 'day'){
     dayInput.hidden = false;
-    if (!dayInput.value){
-      const now = new Date();
-      dayInput.value = now.toISOString().slice(0,10);
-    }
-    renderMap(pointsOnDay(dayInput.value));
+    if (!dayInput.value){ dayInput.value = new Date().toISOString().slice(0,10); }
+    need = daysSince(dayInput.value);
   } else {
     dayInput.hidden = true;
-    renderMap(pointsWithinDays(parseInt(val, 10)));
+    need = parseInt(val, 10);
   }
+  const draw = () => renderMap(val === 'day' ? pointsOnDay(dayInput.value) : pointsWithinDays(need));
+  if (rangeLoaded(need)) draw(); else ensureDays(need).then(draw).catch(draw);
 }
 
 function tempColor(t){
@@ -1576,12 +1562,20 @@ function showError(msg){
     '<div class="errbanner">Data feed unreachable. Retrying automatically&hellip;</div>';
 }
 
+const DATA_BASE = 'https://grants-governmental-wma-out.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks';
+let loadedDays = 7; // the page starts with the last 7 days only (the lean endpoint); older ranges load when they are asked for
+function fetchPoints(days){
+  return fetch(DATA_BASE + '/lite?days=' + days).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+function rangeLoaded(days){ return loadedDays === 0 || (days !== 0 && days <= loadedDays); }
+function ensureDays(days){
+  if (rangeLoaded(days)) return Promise.resolve();
+  return fetchPoints(days).then(d => { points = d; loadedDays = days; if (typeof freshViews !== 'undefined') freshViews.clear(); });
+}
+function daysSince(dateStr){ return Math.max(1, Math.ceil((Date.now() - new Date(dateStr + 'T00:00:00Z').getTime()) / 86400000) + 1); }
+
 function loadData(){
-  return fetch('https://grants-governmental-wma-out.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/data')
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+  return fetchPoints(loadedDays)
     .then(data => {
       points = data;
       if (!points.length){
@@ -1679,6 +1673,12 @@ function runSearch(query){
   query = query.trim();
   if (!query){ status.textContent = ''; results.innerHTML = ''; return; }
 
+  const needDays = parseInt(document.getElementById('searchRange').value, 10);
+  if (!rangeLoaded(needDays)){
+    document.getElementById('searchStatus').textContent = 'Loading older readings\u2026';
+    ensureDays(needDays).then(() => runSearch(query)).catch(() => { document.getElementById('searchStatus').textContent = 'Could not load older readings.'; });
+    return;
+  }
   const pool = searchPool();
   const rangeLabel = document.getElementById('searchRange').selectedOptions[0].textContent.toLowerCase();
 
