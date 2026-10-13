@@ -4,6 +4,7 @@
 const API = globalThis.browser || globalThis.chrome;
 const FLOW_POINTER = "https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt";
 const GC_PAGE = "https://luishae07.github.io/groundcheck/";
+const FRESH_HOURS = 19; // only readings from the last 19 hours count, the same rule as the Groundcheck website
 
 async function cached(key, ttlMs, load) {
   const got = (await API.storage.local.get(key))[key];
@@ -37,7 +38,8 @@ async function loadReadings() {
   if (!r.ok) throw new Error("Groundcheck data answered " + r.status);
   const d = await r.json();
   if (!Array.isArray(d)) throw new Error("unexpected Groundcheck data");
-  return d.map(x => ({ id: x.id, t: x.time, T: x.temp, p: x.pressure, h: x.humidity, la: x.lat, lo: x.lon, alt: x.alt }));
+  const cutoff = Date.now() - FRESH_HOURS * 3600e3;
+  return d.filter(x => Date.parse(x.time) >= cutoff).map(x => ({ id: x.id, t: x.time, T: x.temp, p: x.pressure, h: x.humidity, la: x.lat, lo: x.lon, alt: x.alt }));
 }
 
 async function readings() {
@@ -55,11 +57,10 @@ function km(la1, lo1, la2, lo2) {
   return 12742 * Math.asin(Math.sqrt(x));
 }
 
-// the closest reading, preferring ones from the last 30 days (older ones only if there are none)
+// the closest reading from the last 19 hours (a stale reading is not a stand-in for "right now")
 function nearest(list, la, lo) {
-  const cutoff = Date.now() - 30 * 864e5;
-  let pool = list.filter(x => Date.parse(x.t) > cutoff && x.la != null && x.lo != null);
-  if (!pool.length) pool = list.filter(x => x.la != null && x.lo != null);
+  const cutoff = Date.now() - FRESH_HOURS * 3600e3;
+  const pool = list.filter(x => Date.parse(x.t) >= cutoff && x.la != null && x.lo != null);
   let best = null, bd = Infinity;
   for (const x of pool) {
     const d = km(la, lo, x.la, x.lo);
