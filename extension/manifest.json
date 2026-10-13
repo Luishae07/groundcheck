@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flowsearch + Groundcheck",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search with Flowsearch and see the weather measured near you by Groundcheck, using your location.",
   "icons": {
     "16": "icons/icon-16.png",
