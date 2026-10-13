@@ -33,7 +33,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
@@ -755,6 +755,65 @@ footer{
 #view-today>*:nth-child(2){animation-delay:.05s}#view-today>*:nth-child(3){animation-delay:.1s}#view-today>*:nth-child(4){animation-delay:.15s}
 .sky,.hero{transition:background .6s ease}
 @media (prefers-reduced-motion:reduce){.bigicon svg,.hero .icon svg,#view-today>*{animation:none}.sky,.hero{transition:none}}
+
+@keyframes gcDrift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes gcTwinkle{from{opacity:.55}to{opacity:1}}
+@keyframes gcRain{to{background-position:-20px 160px}}
+@keyframes gcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes gcFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== v3: a full-screen sky with frosted-glass cards ===== */
+:root{--panel:rgba(255,255,255,.82);--panel-2:rgba(255,255,255,.58);--line:rgba(19,36,51,.10);--glassblur:blur(22px) saturate(1.5)}
+:root[data-sky="night"]{--panel:rgba(13,24,42,.64);--panel-2:rgba(13,24,42,.46);--ink:#e9f1f9;--ink-dim:#b0c1d2;--ink-faint:#8398ad;--line:rgba(255,255,255,.13)}
+body{background:#060d19}
+.frame{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 52%,var(--sky-bot) 100%);transition:background .8s ease}
+.frame::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 38% 9% at 18% 16%,rgba(255,255,255,.55),transparent 70%),radial-gradient(ellipse 42% 10% at 78% 26%,rgba(255,255,255,.42),transparent 70%),
+             radial-gradient(ellipse 46% 9% at 36% 44%,rgba(255,255,255,.26),transparent 70%),radial-gradient(ellipse 40% 8% at 85% 62%,rgba(255,255,255,.2),transparent 70%);
+  filter:blur(4px);opacity:.5;animation:gcDrift 70s ease-in-out infinite alternate}
+:root[data-wx="clear"] .frame::before{opacity:.26}
+:root[data-wx="cloud"] .frame::before,:root[data-wx="rain"] .frame::before,:root[data-wx="storm"] .frame::before{opacity:.85;filter:blur(6px) brightness(.85)}
+:root[data-sky="night"] .frame::before{opacity:.12}
+.frame::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0}
+:root[data-sky="night"]:not([data-wx="rain"]):not([data-wx="storm"]) .frame::after{background-image:radial-gradient(1.6px 1.6px at 12% 8%,#fff,transparent),radial-gradient(1px 1px at 28% 15%,#fff,transparent),radial-gradient(1.3px 1.3px at 44% 6%,#fff,transparent),radial-gradient(1px 1px at 61% 12%,#fff,transparent),radial-gradient(1.6px 1.6px at 78% 7%,#fff,transparent),radial-gradient(1px 1px at 90% 18%,#fff,transparent),radial-gradient(1.2px 1.2px at 7% 26%,#fff,transparent),radial-gradient(1px 1px at 36% 24%,#fff,transparent),radial-gradient(1.4px 1.4px at 55% 28%,#fff,transparent),radial-gradient(1px 1px at 72% 22%,#fff,transparent),radial-gradient(1.2px 1.2px at 94% 31%,#fff,transparent),radial-gradient(1px 1px at 18% 38%,#fff,transparent),radial-gradient(1.3px 1.3px at 49% 40%,#fff,transparent),radial-gradient(1px 1px at 83% 44%,#fff,transparent);animation:gcTwinkle 5s ease-in-out infinite alternate}
+:root[data-wx="rain"] .frame::after,:root[data-wx="storm"] .frame::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cg stroke='rgba(255,255,255,.55)' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M10 10l-5 22M48 70l-5 22M86 20l-5 22M100 110l-5 22M30 120l-5 22M66 140l-5 22'/%3E%3C/g%3E%3C/svg%3E");background-size:120px 160px;opacity:.5;animation:gcRain .7s linear infinite}
+
+.sky,.sheet,.tabbar,footer{position:relative;z-index:1}
+.sky{background:none;padding:calc(.9rem + var(--safe-top)) 1.35rem 1.1rem}
+.sky::before{display:none}
+.statusrow .brand{font-weight:700;letter-spacing:.03em}
+.place{font-size:1.7rem;font-weight:600;margin-top:.9rem;text-shadow:0 2px 14px rgba(0,0,0,.25)}
+.place .sub{font-size:.78rem;opacity:.88;max-width:21rem;margin:.35rem auto 0;line-height:1.4}
+.bigicon svg{width:92px;height:92px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.25));animation:gcFloat 6s ease-in-out infinite}
+.bigtemp{font-weight:200;font-size:7.6rem;letter-spacing:-.05em;margin:.15rem 0 0;text-shadow:0 4px 30px rgba(0,0,0,.18)}
+.cond{font-size:1.2rem;font-weight:500;opacity:.97}
+.hilo{font-size:1.05rem;font-weight:600;text-shadow:0 1px 8px rgba(0,0,0,.2)}
+.stamp{font-size:.72rem;opacity:.7}
+.sheet{background:none;margin-top:0;padding:.3rem 1rem 1.2rem;flex:1 1 auto}
+.sheet::before{display:none}
+#view-today>*{animation:gcFadeUp .5s ease both}
+#view-today>*:nth-child(2){animation-delay:.05s}#view-today>*:nth-child(3){animation-delay:.1s}#view-today>*:nth-child(4){animation-delay:.15s}#view-today>*:nth-child(5){animation-delay:.2s}
+.stat,.detailcard,.acctcard,.qa,.feedrow,.refresh,.predictchip,.daylist{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-radius:22px}
+.grid2{gap:.75rem;margin-top:.75rem}
+.stat{padding:1rem 1.1rem;gap:.45rem}
+.stat .v{font-weight:600;font-size:1.55rem}
+.refresh{color:var(--ink);margin-top:1rem}
+.listhead{color:#fff;text-transform:uppercase;letter-spacing:.09em;font-size:.72rem;font-weight:700;margin:1.35rem .35rem .55rem;text-shadow:0 1px 8px rgba(0,0,0,.28)}
+.listhead .n{color:rgba(255,255,255,.78);text-transform:none;letter-spacing:0;font-weight:500}
+.daylist{padding:.3rem 1rem;margin-top:.2rem}
+#hourlySpark{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-bottom:0;border-radius:22px 22px 0 0;padding:.9rem 1rem 0;margin:.4rem 0 0}
+#hourlyStrip{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-top:0;border-radius:0 0 22px 22px;padding:.2rem .6rem .7rem}
+#hourlyStrip:first-of-type{border-top:1px solid var(--line);border-radius:22px}
+#hourlyStrip .predictchip{background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:14px}
+#mapbox{border-radius:22px;overflow:hidden;border:1px solid var(--line)}
+footer{color:rgba(255,255,255,.82);padding-bottom:6.2rem}
+footer a{color:#fff}
+.tabbar{order:99;position:sticky;bottom:calc(.7rem + var(--safe-bot));z-index:50;margin:0 .9rem calc(.7rem + var(--safe-bot));padding:.3rem;
+  border:1px solid rgba(255,255,255,.28);border-radius:26px;background:rgba(255,255,255,.18);backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);box-shadow:0 12px 36px rgba(0,0,0,.3)}
+:root[data-sky="night"] .tabbar{background:rgba(13,24,42,.5)}
+.tab{color:rgba(255,255,255,.78);border-radius:20px;transition:background .2s,color .2s}
+.tab.active{color:#fff;background:rgba(255,255,255,.26)}
 </style>
 </head>
 <body>
@@ -797,8 +856,6 @@ footer{
         Refresh location
       </button>
 
-      <div class="listhead">This week<span class="n" id="weekCount"></span></div>
-      <div class="feed" id="weekList"></div>
     </div>
 
     <div id="view-history" hidden>
@@ -1030,22 +1087,24 @@ function hexMix(a, b, t){
 function applySky(lat, lon, temp, hum, pres){
   const stormy = hum != null && hum > 90 && pres != null && pres < 985;
   const rainy = hum != null && hum > 92, showery = hum != null && hum > 85;
-  let c;
-  if (stormy) c = ['#2c3340', '#464f5e', '#68727f'];
-  else if (rainy) c = ['#4a5766', '#69798a', '#8d9cab'];
-  else if (showery) c = ['#5f7388', '#8497ab', '#aab9c8'];
-  else if (temp >= 11) c = ['#2f78c4', '#5aa0dd', '#8fc3ea'];
-  else if (temp >= 4) c = ['#4a7fb5', '#6ea0c8', '#a9cbe3'];
-  else c = ['#6f8aa3', '#93aac0', '#bccbd8'];
-  const night = ['#070d1a', '#0e1b30', '#1a2f4a'];
+  let c, wx;
+  if (stormy){ c = ['#232a35', '#363f4d', '#4d5766']; wx = 'storm'; }
+  else if (rainy){ c = ['#3c4856', '#546270', '#6b7b8a']; wx = 'rain'; }
+  else if (showery){ c = ['#4a5d70', '#65798d', '#8093a6']; wx = 'cloud'; }
+  else if (temp >= 11){ c = ['#1f64b5', '#3f88d4', '#6aa8e0']; wx = 'clear'; }
+  else if (temp >= 4){ c = ['#3b6fa3', '#5a8fbf', '#7fa9cc']; wx = 'mild'; }
+  else { c = ['#566f87', '#7088a0', '#8aa0b5']; wx = 'cool'; }
+  const night = ['#050a14', '#0b1730', '#16294a'];
   const elev = solarElevation(lat, lon, new Date());
   let t = elev >= 6 ? 0 : elev <= -6 ? 1 : (6 - elev) / 12;
   const th = document.documentElement.dataset.theme;
   const dark = th === 'dark' || (th !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
-  if (dark) t = Math.max(t, 0.6);
+  if (dark) t = Math.max(t, 0.75);
   const out = c.map((x, i) => hexMix(x, night[i], t * 0.94));
-  const r = document.documentElement.style;
-  r.setProperty('--sky-top', out[0]); r.setProperty('--sky-mid', out[1]); r.setProperty('--sky-bot', out[2]);
+  const r = document.documentElement;
+  r.style.setProperty('--sky-top', out[0]); r.style.setProperty('--sky-mid', out[1]); r.style.setProperty('--sky-bot', out[2]);
+  r.dataset.sky = t > 0.55 ? 'night' : 'day';
+  r.dataset.wx = wx;
 }
 function sparkSvg(vals){
   if (!vals || vals.length < 3) return '';
@@ -1387,8 +1446,6 @@ function renderLists(){
     if (!cur || p.temp > cur.temp) byDay.set(day, p); // warmest reading represents the day
   }
   const days = [...byDay.values()].sort((a, b) => b.tsunix - a.tsunix).slice(0, 7);
-  document.getElementById('weekCount').textContent = days.length + ' days';
-  renderFeed(document.getElementById('weekList'), days, { byDay: true });
 
   freshViews.clear(); // new data means history/map need rebuilding next time they're opened
 }
