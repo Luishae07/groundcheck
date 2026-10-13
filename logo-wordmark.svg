@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 256" role="img" aria-label="Groundcheck">
+  <title>Groundcheck</title>
+  <defs>
+    <linearGradient id="w-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f64b5"/><stop offset="1" stop-color="#8fc3ea"/></linearGradient>
+    <linearGradient id="w-balloon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb43c"/><stop offset="1" stop-color="#e8702c"/></linearGradient>
+    <clipPath id="w-clip"><rect width="256" height="256" rx="58"/></clipPath>
+  </defs>
+  <g clip-path="url(#w-clip)">
+    <rect width="256" height="256" fill="url(#w-sky)"/>
+    <path d="M0 206 Q64 184 128 198 T256 192 V256 H0Z" fill="#2f9e6f"/>
+    <path d="M0 226 Q80 206 150 220 T256 214 V256 H0Z" fill="#1b6b4c"/>
+    <line x1="128" y1="170" x2="128" y2="194" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <rect x="117" y="193" width="22" height="15" rx="3.5" fill="#fff"/>
+    <circle cx="128" cy="200.5" r="3" fill="#1f64b5"/>
+    <path d="M128 38C170 38 192 69 192 100C192 131 161 157 128 172C95 157 64 131 64 100C64 69 86 38 128 38Z" fill="url(#w-balloon)"/>
+    <path d="M120 174h16l-8 9z" fill="#e8702c"/>
+    <ellipse cx="98" cy="78" rx="9" ry="22" transform="rotate(24 98 78)" fill="#fff" opacity=".28"/>
+    <path d="M102 102L123 123L158 80" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="288" y="164" font-family="Sora, Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="76" letter-spacing="-2" fill="#132433">Groundcheck</text>
+</svg>
