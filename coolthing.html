@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Every balloon, everywhere · Groundcheck</title>
+<meta name="description" content="Every weather balloon reading Groundcheck has ever collected, on a 3D Earth.">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#e9f2fb;--dim:#9db3c8;--line:rgba(255,255,255,.14);--glass:rgba(10,20,38,.62);--acc:#ffb43c}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#040a16;color:var(--ink);font:15px/1.45 Inter,system-ui,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}canvas.drag{cursor:grabbing}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:20px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.top{position:fixed;left:18px;top:16px;display:flex;align-items:center;gap:12px;pointer-events:none}
+.top img{width:42px;height:42px;border-radius:12px}
+.top h1{margin:0;font:300 1.5rem Sora,sans-serif;letter-spacing:-.02em}.top h1 b{font-weight:800}
+.top p{margin:0;color:var(--dim);font-size:.82rem}
+.stats{position:fixed;right:18px;top:16px;width:min(300px,calc(100vw - 36px));padding:14px 16px}
+.stats .big{font:200 2.6rem/1 Sora,sans-serif;letter-spacing:-.03em}.stats .big small{font:500 .8rem Inter,sans-serif;color:var(--dim);letter-spacing:0;margin-left:6px}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;color:var(--dim);margin-top:6px}.row b{color:var(--ink);font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.years{display:flex;align-items:flex-end;gap:3px;height:46px;margin-top:12px}.years i{flex:1;background:linear-gradient(#ffb43c,#e8702c);border-radius:3px 3px 0 0;min-height:2px;opacity:.9}
+.yl{display:flex;justify-content:space-between;font-size:.7rem;color:var(--dim);margin-top:3px}
+.bar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:min(760px,calc(100vw - 28px));padding:12px 16px;display:grid;gap:10px}
+.line{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+button,label.chip{font:600 .82rem Inter,sans-serif;border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);border-radius:999px;padding:.45rem .95rem;cursor:pointer;user-select:none}
+button:hover,label.chip:hover{background:rgba(255,255,255,.16)}button.on{background:var(--acc);color:#1a1205;border-color:transparent}
+label.chip input{display:none}label.chip.off{opacity:.45}
+input[type=range]{flex:1;min-width:140px;accent-color:#ffb43c}
+.date{font:600 .95rem Sora,sans-serif;min-width:8.5rem;text-align:right;font-variant-numeric:tabular-nums}
+.pop{position:fixed;left:50%;top:90px;transform:translateX(-50%);padding:12px 16px;min-width:230px}.pop[hidden]{display:none}
+.pop b{font:600 1.5rem Sora,sans-serif}.pop span{display:block;color:var(--dim);font-size:.82rem}
+.foot{position:fixed;left:18px;bottom:96px;font-size:.7rem;color:var(--dim);max-width:260px;line-height:1.35;pointer-events:none}
+.foot a{color:var(--dim);pointer-events:auto}
+.loading{position:fixed;inset:0;display:grid;place-items:center;font:300 1.4rem Sora,sans-serif;color:var(--dim);background:#040a16;z-index:9;transition:opacity .6s}
+.loading.gone{opacity:0;pointer-events:none}
+@media (max-width:700px){.stats{top:auto;bottom:150px;right:10px;left:10px;width:auto}.foot{display:none}.top h1{font-size:1.15rem}}
+</style>
+</head>
+<body>
+<div class="loading" id="loading">Gathering every balloon…</div>
+<canvas id="c"></canvas>
+<div class="top"><img src="logo.svg" alt=""><div><h1><b>Every balloon,</b> everywhere</h1><p>All weather-balloon readings Groundcheck has collected</p></div></div>
+<div class="stats glass" id="stats">
+  <div class="big"><span id="n-all">0</span><small>readings</small></div>
+  <div class="row"><span>Balloons &amp; stations</span><b id="n-ids">–</b></div>
+  <div class="row"><span>From</span><b id="n-range">–</b></div>
+  <div class="row"><span><i class="dot" style="background:#4aa3e8"></i>Live feed</span><b id="n-live">–</b></div>
+  <div class="row"><span><i class="dot" style="background:#3ec28f"></i>SondeHub</span><b id="n-sh">–</b></div>
+  <div class="row"><span><i class="dot" style="background:#ffb43c"></i>NOAA IGRA</span><b id="n-igra">–</b></div>
+  <div class="years" id="years"></div><div class="yl"><span id="y0"></span><span id="y1"></span></div>
+</div>
+<div class="pop glass" id="pop" hidden></div>
+<div class="foot">Map: <a href="https://www.naturalearthdata.com">Natural Earth</a> (public domain). Data: sonde.mine.nu, <a href="https://sondehub.org">SondeHub</a>, NOAA IGRA. Ground-level readings, 0 °C and up. <a href="./">Back to the app</a></div>
+<div class="bar glass">
+  <div class="line">
+    <button id="play">▶ Play history</button><button id="all" class="on">All time</button><button id="spin" class="on">Spin</button>
+    <label class="chip" id="f0"><input type="checkbox" checked>Live feed</label><label class="chip" id="f1"><input type="checkbox" checked>SondeHub</label><label class="chip" id="f2"><input type="checkbox" checked>NOAA</label>
+  </div>
+  <div class="line"><input type="range" id="slider" min="0" max="1000" value="1000"><span class="date" id="date">–</span></div>
+</div>
+<script>
+// ---- where the data lives: this server, or the data server's address when this page is on GitHub Pages
+var BASE = /github\.io$/.test(location.hostname) ? "https://grants-governmental-wma-out.trycloudflare.com" : location.origin;
+var DATA_URL = BASE + "/apiinternel/dont/json/microsftwindowssucks/lite?days=0";
+var $ = function (id) { return document.getElementById(id); };
+var cv = $("c"), ctx = cv.getContext("2d");
+var W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 0;
+var RAD = Math.PI / 180;
+var lon0 = 12, lat0 = 24, zoom = 1, spinning = true, vLon = 0, vLat = 0;
+var land = [], pts = null, N = 0, tMin = 0, tMax = 1, T = 1, playing = false, showAll = true, srcOn = [true, true, true];
+var stars = null, glow = null;
+
+// ---- temperature colours: cold blue to warm orange
+var PAL = ["#5ab0ff", "#52c7e6", "#4fd6b8", "#7fe08a", "#c8e36b", "#ffd24a", "#ffa63c", "#ff7a3c"];
+function bucket(t) { return Math.max(0, Math.min(7, Math.floor(t / 4.4))); }
+
+// ---- load the map and the readings
+Promise.all([
+  fetch("land.json").then(function (r) { return r.json(); }),
+  fetch(DATA_URL).then(function (r) { return r.json(); })
+]).then(function (res) {
+  land = res[0].map(function (flat) { var a = []; for (var i = 0; i < flat.length; i += 2) a.push([flat[i] / 10, flat[i + 1] / 10]); return a; });
+  prepare(res[1]);
+  $("loading").classList.add("gone");
+  requestAnimationFrame(frame);
+}).catch(function (e) { $("loading").textContent = "Could not load the readings. Try again in a moment."; console.error(e); });
+
+function prepare(d) {
+  d.sort(function (a, b) { return a.tsunix - b.tsunix; });
+  N = d.length;
+  pts = { sinP: new Float32Array(N), cosP: new Float32Array(N), lam: new Float32Array(N), t: new Float64Array(N), temp: new Float32Array(N), src: new Uint8Array(N), idx: d };
+  var ids = {}, counts = [0, 0, 0], perYear = {};
+  for (var i = 0; i < N; i++) {
+    var r = d[i], s = r.source || [], k = s.indexOf("IGRA") >= 0 ? 2 : s.indexOf("SondeHub") >= 0 ? 1 : 0;
+    pts.sinP[i] = Math.sin(r.lat * RAD); pts.cosP[i] = Math.cos(r.lat * RAD); pts.lam[i] = r.lon * RAD;
+    pts.t[i] = r.tsunix; pts.temp[i] = r.temp; pts.src[i] = k; ids[r.id] = 1; counts[k]++;
+    var y = new Date(r.tsunix * 1000).getUTCFullYear(); perYear[y] = (perYear[y] || 0) + 1;
+  }
+  tMin = pts.t[0]; tMax = pts.t[N - 1]; T = tMax;
+  var f = function (n) { return n.toLocaleString(); };
+  $("n-all").textContent = f(N); $("n-ids").textContent = f(Object.keys(ids).length);
+  $("n-live").textContent = f(counts[0]); $("n-sh").textContent = f(counts[1]); $("n-igra").textContent = f(counts[2]);
+  var d0 = new Date(tMin * 1000), d1 = new Date(tMax * 1000);
+  $("n-range").textContent = d0.toLocaleDateString(undefined, { month: "short", year: "numeric" }) + " → now";
+  var ys = Object.keys(perYear).map(Number).sort(), max = Math.max.apply(null, ys.map(function (y) { return perYear[y]; }));
+  $("years").innerHTML = ys.map(function (y) { return '<i title="' + y + ": " + f(perYear[y]) + '" style="height:' + Math.max(4, perYear[y] / max * 46) + 'px"></i>'; }).join("");
+  $("y0").textContent = ys[0]; $("y1").textContent = ys[ys.length - 1];
+  setDate();
+}
+
+// ---- sizing, stars and the glow sprite
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  CX = W / 2; CY = H / 2 - (W < 700 ? 40 : 10);
+  R = Math.min(W, H) * 0.36 * zoom;
+  var s = document.createElement("canvas"); s.width = W * DPR; s.height = H * DPR;
+  var g = s.getContext("2d"); g.scale(DPR, DPR);
+  var grd = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.75);
+  grd.addColorStop(0, "#0a1a35"); grd.addColorStop(1, "#02060d"); g.fillStyle = grd; g.fillRect(0, 0, W, H);
+  for (var i = 0; i < 220; i++) { g.globalAlpha = 0.25 + Math.random() * 0.7; g.fillStyle = "#fff"; var r = Math.random() * 1.3; g.beginPath(); g.arc(Math.random() * W, Math.random() * H, r, 0, 7); g.fill(); }
+  stars = s;
+}
+addEventListener("resize", resize); resize();
+(function () {
+  var g = document.createElement("canvas"); g.width = g.height = 48; var x = g.getContext("2d");
+  var gr = x.createRadialGradient(24, 24, 0, 24, 24, 24); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(.25, "rgba(255,255,255,.55)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+  x.fillStyle = gr; x.fillRect(0, 0, 48, 48); glow = g;
+})();
+
+// ---- the sphere
+function project(lat, lon) {
+  var p = lat * RAD, l = lon * RAD, p0 = lat0 * RAD, l0 = lon0 * RAD, dl = l - l0;
+  var cp = Math.cos(p);
+  return [cp * Math.sin(dl), Math.cos(p0) * Math.sin(p) - Math.sin(p0) * cp * Math.cos(dl), Math.sin(p0) * Math.sin(p) + Math.cos(p0) * cp * Math.cos(dl)];
+}
+function drawGlobe() {
+  // atmosphere
+  var a = ctx.createRadialGradient(CX, CY, R * 0.96, CX, CY, R * 1.28);
+  a.addColorStop(0, "rgba(90,170,255,.55)"); a.addColorStop(.35, "rgba(60,130,230,.16)"); a.addColorStop(1, "rgba(60,130,230,0)");
+  ctx.fillStyle = a; ctx.beginPath(); ctx.arc(CX, CY, R * 1.28, 0, 7); ctx.fill();
+  // ocean
+  var o = ctx.createRadialGradient(CX - R * .35, CY - R * .4, R * .1, CX, CY, R);
+  o.addColorStop(0, "#1f5fa8"); o.addColorStop(.55, "#0f3a73"); o.addColorStop(1, "#071c3c");
+  ctx.fillStyle = o; ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.clip();
+  // graticule
+  ctx.strokeStyle = "rgba(140,200,255,.13)"; ctx.lineWidth = 1; ctx.beginPath();
+  var lo, la, q, started;
+  for (lo = -180; lo < 180; lo += 30) { started = false; for (la = -90; la <= 90; la += 4) { q = project(la, lo); if (q[2] > 0) { var X = CX + R * q[0], Y = CY - R * q[1]; started ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); started = true; } else started = false; } }
+  for (la = -60; la <= 60; la += 30) { started = false; for (lo = -180; lo <= 180; lo += 4) { q = project(la, lo); if (q[2] > 0) { var X2 = CX + R * q[0], Y2 = CY - R * q[1]; started ? ctx.lineTo(X2, Y2) : ctx.moveTo(X2, Y2); started = true; } else started = false; } }
+  ctx.stroke();
+  // land: filled, with a glowing coast
+  ctx.beginPath();
+  for (var i = 0; i < land.length; i++) {
+    var ring = land[i], proj = [], any = false;
+    for (var j = 0; j < ring.length; j++) { var p = project(ring[j][1], ring[j][0]); proj.push(p); if (p[2] > 0) any = true; }
+    if (!any) continue;                                    // the far side: nothing to draw
+    for (j = 0; j < proj.length; j++) {
+      var x = proj[j][0], y = proj[j][1];
+      if (proj[j][2] <= 0) { var n = Math.hypot(x, y) || 1; x /= n; y /= n; }   // hidden points slide to the edge of the disc
+      var px = CX + R * x, py = CY - R * y;
+      j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+  var lg = ctx.createLinearGradient(CX - R, CY - R, CX + R, CY + R);
+  lg.addColorStop(0, "#1c6b70"); lg.addColorStop(1, "#103a52");
+  ctx.fillStyle = lg; ctx.fill();
+  ctx.shadowColor = "rgba(90,230,210,.8)"; ctx.shadowBlur = 6; ctx.strokeStyle = "rgba(120,240,225,.75)"; ctx.lineWidth = 1; ctx.stroke(); ctx.shadowBlur = 0;
+  ctx.restore();
+}
+function drawShade() {
+  var s = ctx.createRadialGradient(CX - R * .45, CY - R * .5, R * .2, CX, CY, R * 1.05);
+  s.addColorStop(0, "rgba(255,255,255,.10)"); s.addColorStop(.55, "rgba(0,0,0,0)"); s.addColorStop(1, "rgba(0,8,24,.62)");
+  ctx.fillStyle = s; ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.fill();
+  ctx.strokeStyle = "rgba(160,215,255,.5)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(CX, CY, R, 0, 7); ctx.stroke();
+}
+
+// ---- the balloons
+var bx = null, by = null, bb = null, vis = 0;
+function drawPoints() {
+  if (!pts) return;
+  if (!bx || bx.length < N) { bx = new Float32Array(N); by = new Float32Array(N); bb = new Uint8Array(N); }
+  // how many readings are older than T (the list is sorted by time)
+  var lo = 0, hi = N;
+  while (lo < hi) { var m = (lo + hi) >> 1; if (pts.t[m] <= T) lo = m + 1; else hi = m; }
+  var last = lo, s0 = Math.sin(lat0 * RAD), c0 = Math.cos(lat0 * RAD), l0 = lon0 * RAD, n = 0;
+  var win = playing ? 86400 * 25 : 86400 * 2;
+  var recent = [];
+  for (var i = 0; i < last; i++) {
+    if (!srcOn[pts.src[i]]) continue;
+    var dl = pts.lam[i] - l0, cdl = Math.cos(dl), cc = s0 * pts.sinP[i] + c0 * pts.cosP[i] * cdl;
+    if (cc < 0.03) continue;
+    var x = pts.cosP[i] * Math.sin(dl), y = c0 * pts.sinP[i] - s0 * pts.cosP[i] * cdl;
+    bx[n] = CX + R * x; by[n] = CY - R * y; bb[n] = bucket(pts.temp[i]); n++;
+    if (T - pts.t[i] < win) recent.push(n - 1);
+  }
+  vis = n;
+  var size = Math.max(1.3, R / 260 * 1.7);
+  ctx.globalCompositeOperation = "lighter";
+  for (var k = 0; k < 8; k++) {
+    ctx.fillStyle = PAL[k]; ctx.globalAlpha = showAll ? 0.62 : 0.5; ctx.beginPath();
+    for (var j = 0; j < n; j++) if (bb[j] === k) ctx.rect(bx[j] - size / 2, by[j] - size / 2, size, size);
+    ctx.fill();
+  }
+  // the newest ones glow (and pulse a little)
+  var pulse = 0.75 + 0.25 * Math.sin(performance.now() / 380), gs = size * 7 * pulse;
+  ctx.globalAlpha = 0.8;
+  for (var r = 0; r < recent.length && r < 900; r++) { var q = recent[r]; ctx.drawImage(glow, bx[q] - gs / 2, by[q] - gs / 2, gs, gs); }
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+}
+
+// ---- the loop
+var lastT = 0;
+function frame(now) {
+  var dt = Math.min(50, now - lastT) / 1000; lastT = now;
+  if (playing) {
+    T += (tMax - tMin) / 26 * dt;
+    if (T >= tMax) { T = tMax; playing = false; $("play").textContent = "▶ Play history"; $("play").classList.remove("on"); }
+    $("slider").value = Math.round((T - tMin) / (tMax - tMin) * 1000); setDate();
+  }
+  if (!dragging) {
+    if (Math.abs(vLon) > 0.002 || Math.abs(vLat) > 0.002) { lon0 -= vLon; lat0 = Math.max(-85, Math.min(85, lat0 + vLat)); vLon *= 0.94; vLat *= 0.94; }
+    else if (spinning) lon0 += 4 * dt;
+  }
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.drawImage(stars, 0, 0, W, H);
+  R = Math.min(W, H) * 0.36 * zoom;
+  drawGlobe(); drawPoints(); drawShade();
+  requestAnimationFrame(frame);
+}
+
+// ---- touch and mouse
+var dragging = false, moved = false, px0 = 0, py0 = 0, plx = 0, ply = 0;
+cv.addEventListener("pointerdown", function (e) { dragging = true; moved = false; px0 = plx = e.clientX; py0 = ply = e.clientY; vLon = vLat = 0; cv.classList.add("drag"); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener("pointermove", function (e) {
+  if (!dragging) return;
+  var dx = e.clientX - plx, dy = e.clientY - ply; plx = e.clientX; ply = e.clientY;
+  if (Math.abs(e.clientX - px0) + Math.abs(e.clientY - py0) > 4) moved = true;
+  var k = 60 / R; lon0 -= dx * k; lat0 = Math.max(-85, Math.min(85, lat0 + dy * k)); vLon = dx * k; vLat = -dy * k * -1;
+});
+cv.addEventListener("pointerup", function (e) { dragging = false; cv.classList.remove("drag"); if (!moved) pick(e.clientX, e.clientY); });
+cv.addEventListener("wheel", function (e) { e.preventDefault(); zoom = Math.max(0.6, Math.min(3.2, zoom * (e.deltaY < 0 ? 1.1 : 0.9))); }, { passive: false });
+
+// ---- click a dot: show that reading
+function pick(mx, my) {
+  $("pop").hidden = true;
+  if (!pts) return;
+  var best = -1, bd = 14 * 14, n = 0;
+  for (var i = 0; i < N; i++) {
+    if (pts.t[i] > T || !srcOn[pts.src[i]]) continue;
+    var dl = pts.lam[i] - lon0 * RAD, cc = Math.sin(lat0 * RAD) * pts.sinP[i] + Math.cos(lat0 * RAD) * pts.cosP[i] * Math.cos(dl);
+    if (cc < 0.03) continue;
+    var x = CX + R * pts.cosP[i] * Math.sin(dl), y = CY - R * (Math.cos(lat0 * RAD) * pts.sinP[i] - Math.sin(lat0 * RAD) * pts.cosP[i] * Math.cos(dl));
+    var d = (x - mx) * (x - mx) + (y - my) * (y - my);
+    if (d < bd) { bd = d; best = i; }
+  }
+  if (best < 0) return;
+  var r = pts.idx[best], src = r.source || [], name = src.indexOf("IGRA") >= 0 ? "NOAA IGRA station" : src.indexOf("SondeHub") >= 0 ? "SondeHub balloon" : "Live balloon feed";
+  var when = new Date(r.tsunix * 1000);
+  $("pop").innerHTML = "<b>" + r.temp.toFixed(1) + " °C</b><span>" + name + " " + String(r.id).replace(/[<>&]/g, "") + "</span><span>" + when.toLocaleString() + "</span><span>" + (r.humidity != null ? Math.round(r.humidity) + " % humidity · " : "") + (r.pressure != null ? Math.round(r.pressure) + " hPa · " : "") + Math.round(r.alt) + " m · " + r.lat.toFixed(2) + ", " + r.lon.toFixed(2) + "</span>";
+  $("pop").hidden = false;
+}
+
+// ---- controls
+function setDate() { $("date").textContent = new Date(T * 1000).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }); }
+$("slider").addEventListener("input", function () { playing = false; showAll = false; $("all").classList.remove("on"); $("play").textContent = "▶ Play history"; $("play").classList.remove("on"); T = tMin + (tMax - tMin) * this.value / 1000; setDate(); });
+$("play").onclick = function () {
+  if (playing) { playing = false; this.textContent = "▶ Play history"; this.classList.remove("on"); return; }
+  if (T >= tMax - 1) T = tMin;
+  playing = true; showAll = false; $("all").classList.remove("on"); this.textContent = "❚❚ Pause"; this.classList.add("on");
+};
+$("all").onclick = function () { playing = false; showAll = true; T = tMax; $("slider").value = 1000; setDate(); $("play").textContent = "▶ Play history"; $("play").classList.remove("on"); this.classList.add("on"); };
+$("spin").onclick = function () { spinning = !spinning; this.classList.toggle("on", spinning); };
+[0, 1, 2].forEach(function (k) { var l = $("f" + k); l.querySelector("input").onchange = function () { srcOn[k] = this.checked; l.classList.toggle("off", !this.checked); }; });
+</script>
+</body>
+</html>
