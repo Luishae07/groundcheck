@@ -70,7 +70,7 @@ var cv = $("c"), ctx = cv.getContext("2d");
 var W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 0;
 var RAD = Math.PI / 180;
 var lon0 = 12, lat0 = 24, zoom = 1, spinning = true, vLon = 0, vLat = 0;
-var land = [], pts = null, N = 0, tMin = 0, tMax = 1, T = 1, playing = false, showAll = true, srcOn = [true, true, true];
+var land = [], land3 = [], pts = null, N = 0, tMin = 0, tMax = 1, T = 1, playing = false, showAll = true, srcOn = [true, true, true];
 var stars = null, glow = null;
 
 // ---- temperature colours: cold blue to warm orange
@@ -83,6 +83,11 @@ Promise.all([
   fetch(DATA_URL).then(function (r) { return r.json(); })
 ]).then(function (res) {
   land = res[0].map(function (flat) { var a = []; for (var i = 0; i < flat.length; i += 2) a.push([flat[i] / 10, flat[i + 1] / 10]); return a; });
+  land3 = land.map(function (r) {
+    var a = new Float64Array(r.length * 3);
+    for (var i = 0; i < r.length; i++) { var la = r[i][1] * RAD, lo = r[i][0] * RAD; a[i * 3] = Math.cos(la) * Math.cos(lo); a[i * 3 + 1] = Math.cos(la) * Math.sin(lo); a[i * 3 + 2] = Math.sin(la); }
+    return a;
+  });
   prepare(res[1]);
   $("loading").classList.add("gone");
   requestAnimationFrame(frame);
@@ -154,23 +159,58 @@ function drawGlobe() {
   for (lo = -180; lo < 180; lo += 30) { started = false; for (la = -90; la <= 90; la += 4) { q = project(la, lo); if (q[2] > 0) { var X = CX + R * q[0], Y = CY - R * q[1]; started ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); started = true; } else started = false; } }
   for (la = -60; la <= 60; la += 30) { started = false; for (lo = -180; lo <= 180; lo += 4) { q = project(la, lo); if (q[2] > 0) { var X2 = CX + R * q[0], Y2 = CY - R * q[1]; started ? ctx.lineTo(X2, Y2) : ctx.moveTo(X2, Y2); started = true; } else started = false; } }
   ctx.stroke();
-  // land: filled, with a glowing coast
+  // land: every coastline is cut exactly where it crosses the horizon and closed along the edge of the disc
+  var p0 = lat0 * RAD, l0 = lon0 * RAD;
+  var cx3 = Math.cos(p0) * Math.cos(l0), cy3 = Math.cos(p0) * Math.sin(l0), cz3 = Math.sin(p0);     // towards the viewer
+  var ex = -Math.sin(l0), ey = Math.cos(l0);                                                         // screen right
+  var ux = -Math.sin(p0) * Math.cos(l0), uy = -Math.sin(p0) * Math.sin(l0), uz = Math.cos(p0);       // screen up
+  var strokeRuns = [];
   ctx.beginPath();
-  for (var i = 0; i < land.length; i++) {
-    var ring = land[i], proj = [], any = false;
-    for (var j = 0; j < ring.length; j++) { var p = project(ring[j][1], ring[j][0]); proj.push(p); if (p[2] > 0) any = true; }
-    if (!any) continue;                                    // the far side: nothing to draw
-    for (j = 0; j < proj.length; j++) {
-      var x = proj[j][0], y = proj[j][1];
-      if (proj[j][2] <= 0) { var n = Math.hypot(x, y) || 1; x /= n; y /= n; }   // hidden points slide to the edge of the disc
-      var px = CX + R * x, py = CY - R * y;
-      j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  for (var i = 0; i < land3.length; i++) {
+    var v = land3[i], n = v.length / 3, L = [], crossings = 0, k;
+    var d = new Float64Array(n);
+    for (k = 0; k < n; k++) d[k] = v[k * 3] * cx3 + v[k * 3 + 1] * cy3 + v[k * 3 + 2] * cz3;
+    for (k = 0; k < n; k++) {
+      var k2 = (k + 1) % n, dp = d[k], dq = d[k2];
+      if (dp > 0) L.push([v[k * 3] * ex + v[k * 3 + 1] * ey, v[k * 3] * ux + v[k * 3 + 1] * uy + v[k * 3 + 2] * uz, 0]);
+      if ((dp > 0) !== (dq > 0)) {
+        var t = dp / (dp - dq), X = v[k * 3] + t * (v[k2 * 3] - v[k * 3]), Y = v[k * 3 + 1] + t * (v[k2 * 3 + 1] - v[k * 3 + 1]), Z = v[k * 3 + 2] + t * (v[k2 * 3 + 2] - v[k * 3 + 2]);
+        var m = Math.hypot(X, Y, Z) || 1; X /= m; Y /= m; Z /= m;
+        L.push([X * ex + Y * ey, X * ux + Y * uy + Z * uz, dp > 0 ? 1 : 2]);   // 1 = leaves the visible side, 2 = comes back
+        crossings++;
+      }
+    }
+    if (!L.length) continue;                                  // all on the far side
+    if (!crossings) {                                         // all on the near side: a plain shape
+      for (k = 0; k < L.length; k++) { var qx = CX + R * L[k][0], qy = CY - R * L[k][1]; k ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy); }
+      ctx.closePath(); strokeRuns.push(L); continue;
+    }
+    // start at a point where the coast comes back into view, then cut the ring into runs: enter ... exit
+    var s0 = 0; while (s0 < L.length && L[s0][2] !== 2) s0++;
+    if (s0 === L.length) continue;
+    var runs = [], cur = null;
+    for (k = 0; k < L.length; k++) {
+      var P = L[(s0 + k) % L.length];
+      if (P[2] === 2) cur = [P]; else if (cur) { cur.push(P); if (P[2] === 1) { runs.push(cur); cur = null; } }
+    }
+    for (var r = 0; r < runs.length; r++) {
+      var run = runs[r], nxt = runs[(r + 1) % runs.length];
+      for (k = 0; k < run.length; k++) { var rx = CX + R * run[k][0], ry = CY - R * run[k][1]; (r === 0 && k === 0) ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry); }
+      // along the edge of the disc, anticlockwise, from where this run leaves to where the next one comes back
+      var ea = Math.atan2(run[run.length - 1][1], run[run.length - 1][0]), na = Math.atan2(nxt[0][1], nxt[0][0]);
+      var dA = na - ea; while (dA < 0) dA += 2 * Math.PI; while (dA >= 2 * Math.PI) dA -= 2 * Math.PI;
+      var steps = Math.max(1, Math.ceil(dA / (Math.PI / 45)));
+      for (var st = 1; st < steps; st++) { var an = ea + dA * st / steps; ctx.lineTo(CX + R * Math.cos(an), CY - R * Math.sin(an)); }
+      strokeRuns.push(run);
     }
     ctx.closePath();
   }
   var lg = ctx.createLinearGradient(CX - R, CY - R, CX + R, CY + R);
   lg.addColorStop(0, "#1c6b70"); lg.addColorStop(1, "#103a52");
   ctx.fillStyle = lg; ctx.fill();
+  // the glowing coast: only the real coastline, never the edge of the disc
+  ctx.beginPath();
+  for (var q = 0; q < strokeRuns.length; q++) { var rr = strokeRuns[q]; for (k = 0; k < rr.length; k++) { var sx = CX + R * rr[k][0], sy = CY - R * rr[k][1]; k ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); } if (rr.length > 2 && rr[0][2] === 0) ctx.closePath(); }
   ctx.shadowColor = "rgba(90,230,210,.8)"; ctx.shadowBlur = 6; ctx.strokeStyle = "rgba(120,240,225,.75)"; ctx.lineWidth = 1; ctx.stroke(); ctx.shadowBlur = 0;
   ctx.restore();
 }
