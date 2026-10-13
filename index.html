@@ -827,6 +827,12 @@ footer a{color:#fff}
 :root[data-sky="night"]{--panel:rgba(13,24,42,.82)}
 .bigicon svg{filter:none!important}
 .bigtemp,.place{text-shadow:0 2px 8px rgba(0,0,0,.16)!important}
+
+/* tiles: small rings and dials */
+.stat{min-height:158px;justify-content:space-between}
+.stat .g{align-self:center;margin:.2rem 0;color:var(--ink);display:flex;justify-content:center}
+.stat .d{font-size:.8rem;color:var(--ink-dim);line-height:1.3}
+.stat .d b{color:var(--ink);font-weight:700}
 </style>
 </head>
 <body>
@@ -858,6 +864,7 @@ footer a{color:#fff}
       <div class="listhead" id="hourlyHead" hidden>Next 24 hours<span class="n">an estimate</span></div>
       <div class="strip" id="hourlyStrip" hidden></div>
 
+      <div class="listhead">Conditions</div>
       <div class="grid2" id="stats"></div>
       <details class="detailcard" id="detailsBox"><summary>About this measurement</summary><div id="details"></div></details>
 
@@ -1053,6 +1060,42 @@ function condFor(temp, hum, pressure){
   return "Cool, cloudy";
 }
 
+
+// ---- condition tiles with small rings and dials ---------------------------------------------------
+function ringSvg(pct){
+  const c = 2 * Math.PI * 26, p = Math.max(0, Math.min(100, pct));
+  return `<svg width="76" height="76" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="6"/>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#4aa3e8" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(c * p / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor">${Math.round(p)}%</text></svg>`;
+}
+function dialSvg(hpa){
+  const p = Math.max(960, Math.min(1050, hpa)), ang = (p - 960) / 90 * 180 - 90;
+  return `<svg width="86" height="58" viewBox="0 0 64 44"><defs><linearGradient id="gcdial" x1="0" x2="1"><stop offset="0" stop-color="#4aa3e8"/><stop offset=".5" stop-color="#3ec28f"/><stop offset="1" stop-color="#f0a030"/></linearGradient></defs>
+    <path d="M8 38 A24 24 0 0 1 56 38" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="6" stroke-linecap="round"/>
+    <path d="M8 38 A24 24 0 0 1 56 38" fill="none" stroke="url(#gcdial)" stroke-width="6" stroke-linecap="round" stroke-dasharray="75.4" stroke-dashoffset="0"/>
+    <line x1="32" y1="38" x2="32" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" transform="rotate(${ang.toFixed(1)} 32 38)"/><circle cx="32" cy="38" r="3.2" fill="currentColor"/></svg>`;
+}
+function comfortWord(dp){
+  return dp < 5 ? 'Dry' : dp < 12 ? 'Comfortable' : dp < 16 ? 'A bit humid' : dp < 20 ? 'Humid' : 'Muggy';
+}
+function dewBar(dp){
+  const pos = Math.max(0, Math.min(100, (dp + 5) / 30 * 100));
+  return `<div style="position:relative;width:86px;height:8px;border-radius:99px;background:linear-gradient(90deg,#8fd3f4,#3ec28f 45%,#f0a030 80%,#e0533c)"><i style="position:absolute;top:-3px;left:calc(${pos}% - 7px);width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid currentColor;box-sizing:border-box"></i></div>`;
+}
+function humWord(h){ return h < 30 ? 'Very dry air' : h < 60 ? 'Comfortable' : h < 85 ? 'Humid' : 'Very humid'; }
+function presWord(p){ return p < 1000 ? 'Low pressure' : p < 1020 ? 'Steady' : 'High pressure'; }
+
+function statTiles(p, dp){
+  const hum = p.humidity != null ? `<div class="g">${ringSvg(p.humidity)}</div><div class="d">${humWord(p.humidity)}</div>` : `<div class="v">—</div>`;
+  const pres = p.pressure != null ? `<div class="g">${dialSvg(p.pressure)}</div><div class="d"><b>${Math.round(p.pressure)} hPa</b> · ${presWord(p.pressure)}</div>` : `<div class="v">—</div>`;
+  const dew = dp != null ? `<div class="g">${dewBar(dp)}</div><div class="d"><b>${dp.toFixed(0)}°</b> · ${comfortWord(dp)}</div>` : `<div class="v">—</div>`;
+  const upd = `<div class="g"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity=".35"/><path d="M12 7v5l3 2"/></svg></div><div class="d"><b>${timeAgo(p.time)}</b> · by a weather balloon</div>`;
+  return `<div class="stat"><span class="k">Humidity</span>${hum}</div>
+    <div class="stat"><span class="k">Pressure</span>${pres}</div>
+    <div class="stat"><span class="k">Dew point</span>${dew}</div>
+    <div class="stat"><span class="k">Measured</span>${upd}</div>`;
+}
+
 function timeAgo(iso){
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 2) return 'just now';
@@ -1172,12 +1215,7 @@ function render(p, distanceKm){
   document.getElementById('stamp').textContent = fmtTime(p.time);
 
   const dp = dewPoint(p.temp, p.humidity);
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><span class="k">${svgHumidity} Humidity</span><span class="v">${p.humidity != null ? Math.round(p.humidity) + '%' : '\u2014'}</span></div>
-    <div class="stat"><span class="k">${svgPressure} Pressure</span><span class="v">${p.pressure != null ? Math.round(p.pressure) + ' hPa' : '\u2014'}</span></div>
-    <div class="stat"><span class="k">${svgHumidity} Dew point</span><span class="v">${dp != null ? dp.toFixed(0) + '\u00b0' : '\u2014'}</span></div>
-    <div class="stat"><span class="k">${svgPressure} Updated</span><span class="v">${timeAgo(p.time)}</span></div>
-  `;
+  document.getElementById('stats').innerHTML = statTiles(p, dp);
 
   document.getElementById('details').innerHTML = `
     <div class="detailrow"><span class="k">${svgAlt} Balloon height at measurement</span><span class="v">${Math.round(p.alt)} m</span></div>
