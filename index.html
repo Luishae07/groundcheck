@@ -814,6 +814,19 @@ footer a{color:#fff}
 :root[data-sky="night"] .tabbar{background:rgba(13,24,42,.5)}
 .tab{color:rgba(255,255,255,.78);border-radius:20px;transition:background .2s,color .2s}
 .tab.active{color:#fff;background:rgba(255,255,255,.26)}
+
+/* perf: no blur filters, backdrop blur only on the tab bar */
+@keyframes gcRainT{to{transform:translate(-20px,160px)}}
+
+.frame{transition:none}
+.frame::before{filter:none!important;will-change:transform}
+:root[data-wx="cloud"] .frame::before,:root[data-wx="rain"] .frame::before,:root[data-wx="storm"] .frame::before{filter:none!important}
+:root[data-wx="rain"] .frame::after,:root[data-wx="storm"] .frame::after{inset:-160px 0 0 0!important;will-change:transform;background-position:0 0!important;animation:gcRainT .7s linear infinite!important}
+.stat,.detailcard,.acctcard,.qa,.feedrow,.refresh,.predictchip,.daylist,#hourlySpark,#hourlyStrip{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+:root{--panel:rgba(255,255,255,.88)}
+:root[data-sky="night"]{--panel:rgba(13,24,42,.82)}
+.bigicon svg{filter:none!important}
+.bigtemp,.place{text-shadow:0 2px 8px rgba(0,0,0,.16)!important}
 </style>
 </head>
 <body>
