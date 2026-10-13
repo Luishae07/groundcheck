@@ -428,6 +428,45 @@ html[data-wx="rain"]::after,html[data-wx="storm"]::after{inset:-160px 0 0 0!impo
 .hero .icon svg{filter:none!important;animation:none!important}
 .hero .temp,.hero .loc{text-shadow:0 2px 8px rgba(0,0,0,.16)!important}
 .panel{box-shadow:0 4px 16px rgba(0,0,0,.1)!important}
+
+/* app: a floating pill navigation, a centred hero, and a card grid like a real desktop weather app */
+body{grid-template-columns:1fr!important;grid-template-rows:1fr!important;grid-template-areas:"main"!important}
+.topbar{position:fixed!important;top:0;left:0;right:0;height:64px;z-index:20;background:none!important;border:0!important;padding:0 1.6rem}
+.topbar .brand{font-size:1.1rem;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+.topbar .live,.topbar a.mobilelink{color:#fff;border-color:rgba(255,255,255,.35)}
+.sidebar{position:fixed!important;top:10px;left:50%;transform:translateX(-50%);z-index:30;flex-direction:row!important;align-items:center!important;gap:.2rem!important;
+  padding:.3rem!important;border-radius:999px;border:1px solid var(--line)!important;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.navbtn{flex-direction:row!important;gap:.45rem!important;padding:.5rem 1.15rem!important;margin:0!important;border-radius:999px!important;font-size:.85rem!important;font-weight:600}
+.navbtn svg{width:17px!important;height:17px!important}
+.navbtn.active{background:var(--accent)!important;color:#fff!important}
+main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
+.wrap{max-width:1240px!important}
+.hero{flex-direction:column!important;align-items:center!important;text-align:center;gap:.3rem!important;padding:1.2rem 0 1.4rem!important;margin-bottom:.4rem!important}
+.hero .readout{align-items:center}
+.hero .icon svg{width:96px!important;height:96px!important}
+.hero .temp{font-size:9.5rem!important;line-height:.95}
+.hero .loc{font-size:2rem!important}
+.hero .cond{font-size:1.3rem!important}
+.hero .hilo{font-size:1.15rem!important}
+.hero .stamp{max-width:34rem}
+.hero .metrics{margin:1.4rem 0 0!important;width:100%;justify-content:center;gap:.9rem!important}
+.hero .metric{min-width:150px!important;align-items:center;padding:1rem 1.2rem!important}
+.hero .metric .v{font-size:1.7rem!important}
+.hero .locbtn{position:absolute!important;top:.6rem;right:0}
+#view-today:not([hidden]){display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-areas:"hourly hourly" "days map";gap:1.3rem;align-items:stretch}
+#hourlyPanel{grid-area:hourly;margin:0!important}
+#predictPanel{grid-area:days;margin:0!important}
+.grid3{grid-area:map;display:flex!important}
+.grid3 .panel{flex:1;display:flex;flex-direction:column}
+.grid3 #mapbox{flex:1;min-height:420px}
+#predictPanel .dayrow{padding:.8rem .4rem;grid-template-columns:3.6rem 2.4rem 2.6rem 1fr 2.6rem}
+#predictPanel .dayrow .dn{font-size:1.02rem}
+#hourlyStrip{justify-content:space-between}
+@media (max-width:1000px){
+  #view-today:not([hidden]){grid-template-columns:1fr;grid-template-areas:"hourly" "days" "map"}
+  .hero .temp{font-size:7rem!important}
+  .hero .locbtn{position:static!important;margin-top:.6rem}
+}
 </style>
 </head>
 <body>
