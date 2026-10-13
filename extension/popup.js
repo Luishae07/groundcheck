@@ -43,7 +43,10 @@ async function update(force) {
   show('<span class="dim">Looking up the nearest Groundcheck reading…</span>');
   try {
     const n = nearest(await readings(), l.la, l.lo);
-    if (!n) throw new Error("no readings");
+    if (!n) {
+      show('<span class="err">No weather balloon reading in the last ' + FRESH_HOURS + ' hours.</span><p class="dim">Groundcheck only shows fresh readings. Try again later.</p>');
+      return;
+    }
     const f = v => (v == null ? "–" : esc(v));
     show(`<div id="temp">${f(n.T)}<small> °C</small></div>
       <div class="row"><span>Humidity <b>${f(n.h)} %</b></span><span>Pressure <b>${f(n.p)} hPa</b></span></div>
