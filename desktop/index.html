@@ -503,6 +503,10 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
     Account
   </button>
+  <button class="navbtn" data-view="credits">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+    Credits
+  </button>
 </nav>
 
 <main>
@@ -547,6 +551,35 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
       <div class="panel" id="predictPanel" hidden style="margin-top:1.2rem">
         <h2>Next days<span class="n">from our own balloon history</span></h2>
         <div class="strip" id="predictStrip"></div>
+      </div>
+    </div>
+
+    <div id="view-credits" hidden>
+      <div class="panel">
+        <h2>Credits</h2>
+        <div class="faqsection">Weather data</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">sonde.mine.nu / zeesen.mine.nu</div><div class="a">Live radiosonde telemetry from a public tracking network run by volunteers with their own receivers. <a href="https://sonde.mine.nu" target="_blank" rel="noopener noreferrer">sonde.mine.nu</a></div></div>
+          <div class="qa"><div class="q">SondeHub</div><div class="a">An open, worldwide database of radiosonde telemetry, fed by hundreds of volunteer receivers. It gives Groundcheck readings from North and South America, Asia, Australia and more. <a href="https://sondehub.org" target="_blank" rel="noopener noreferrer">sondehub.org</a></div></div>
+          <div class="qa"><div class="q">NOAA IGRA</div><div class="a">The Integrated Global Radiosonde Archive of NOAA's National Centers for Environmental Information: the official soundings of about 650 weather-service stations in more than 100 countries (public domain). <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" target="_blank" rel="noopener noreferrer">NOAA NCEI</a></div></div>
+        </div>
+        <div class="faqsection">Maps &amp; places</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Esri</div><div class="a">Map imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS user community. <a href="https://www.esri.com" target="_blank" rel="noopener noreferrer">esri.com</a></div></div>
+          <div class="qa"><div class="q">OpenStreetMap</div><div class="a">Place search and place names come from Nominatim, using &copy; OpenStreetMap contributors data. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">openstreetmap.org/copyright</a></div></div>
+          <div class="qa"><div class="q">Leaflet</div><div class="a">The map is drawn with Leaflet (BSD-2-Clause) and Leaflet.markercluster (MIT). <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a></div></div>
+          <div class="qa"><div class="q">ipwho.is</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address. <a href="https://ipwho.is" target="_blank" rel="noopener noreferrer">ipwho.is</a></div></div>
+        </div>
+        <div class="faqsection">Design &amp; code</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Fonts</div><div class="a">Sora and Inter, from Google Fonts, under the SIL Open Font License.</div></div>
+          <div class="qa"><div class="q">Open source</div><div class="a">Groundcheck is free software under the AGPL-3.0 licence. The source code is on <a href="https://github.com/Luishae07/groundcheck" target="_blank" rel="noopener noreferrer">GitHub</a>.</div></div>
+        </div>
+        <div class="faqsection">Good to know</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Forecasts can be wrong</div><div class="a">Measurements come straight from weather balloon sensors. The Next days forecast is an estimate that Groundcheck calculates from collected readings, with no weather model, and it can be wrong. Its typical error is shown next to it.</div></div>
+          <div class="qa"><div class="q">Thank you</div><div class="a">To everyone who builds, launches, hosts and runs radiosondes and receivers. Without them there would be nothing to show.</div></div>
+        </div>
       </div>
     </div>
 
