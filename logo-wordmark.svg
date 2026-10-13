@@ -1,21 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 256" role="img" aria-label="Groundcheck">
   <title>Groundcheck</title>
   <defs>
-    <linearGradient id="w-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f64b5"/><stop offset="1" stop-color="#8fc3ea"/></linearGradient>
+    <linearGradient id="w-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d2547"/><stop offset="1" stop-color="#1a4b8c"/></linearGradient>
+    <radialGradient id="w-globe" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#6cc0ff"/><stop offset=".6" stop-color="#2b7fd0"/><stop offset="1" stop-color="#14498f"/></radialGradient>
     <linearGradient id="w-balloon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb43c"/><stop offset="1" stop-color="#e8702c"/></linearGradient>
     <clipPath id="w-clip"><rect width="256" height="256" rx="58"/></clipPath>
+    <clipPath id="w-sphere"><circle cx="110" cy="152" r="80"/></clipPath>
   </defs>
   <g clip-path="url(#w-clip)">
-    <rect width="256" height="256" fill="url(#w-sky)"/>
-    <path d="M0 206 Q64 184 128 198 T256 192 V256 H0Z" fill="#2f9e6f"/>
-    <path d="M0 226 Q80 206 150 220 T256 214 V256 H0Z" fill="#1b6b4c"/>
-    <line x1="128" y1="170" x2="128" y2="194" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-    <rect x="117" y="193" width="22" height="15" rx="3.5" fill="#fff"/>
-    <circle cx="128" cy="200.5" r="3" fill="#1f64b5"/>
-    <path d="M128 38C170 38 192 69 192 100C192 131 161 157 128 172C95 157 64 131 64 100C64 69 86 38 128 38Z" fill="url(#w-balloon)"/>
-    <path d="M120 174h16l-8 9z" fill="#e8702c"/>
-    <ellipse cx="98" cy="78" rx="9" ry="22" transform="rotate(24 98 78)" fill="#fff" opacity=".28"/>
-    <path d="M102 102L123 123L158 80" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect width="256" height="256" fill="url(#w-bg)"/>
+    <circle cx="40" cy="40" r="2.2" fill="#fff" opacity=".7"/><circle cx="92" cy="26" r="1.6" fill="#fff" opacity=".55"/><circle cx="226" cy="30" r="2" fill="#fff" opacity=".6"/><circle cx="238" cy="120" r="1.5" fill="#fff" opacity=".5"/>
+    <circle cx="110" cy="152" r="80" fill="url(#w-globe)"/>
+    <g clip-path="url(#w-sphere)">
+      <path d="M52 124C70 104 96 108 104 128C110 144 96 154 90 174C84 188 64 180 58 162C52 148 44 138 52 124Z" fill="#43c08a"/>
+      <path d="M128 100C148 94 172 108 170 130C168 150 152 154 148 172C144 190 126 192 122 174C118 158 126 148 120 132C116 118 118 104 128 100Z" fill="#43c08a"/>
+      <g fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2">
+        <ellipse cx="110" cy="152" rx="36" ry="80"/><line x1="110" y1="72" x2="110" y2="232"/>
+        <line x1="30" y1="152" x2="190" y2="152"/><path d="M36 118H184M36 188H184"/>
+      </g>
+      <ellipse cx="82" cy="104" rx="38" ry="22" transform="rotate(-28 82 104)" fill="#fff" opacity=".16"/>
+    </g>
+    <circle cx="110" cy="152" r="80" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="2.5"/>
+    <line x1="186" y1="101" x2="186" y2="124" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <rect x="175" y="123" width="22" height="15" rx="3.5" fill="#fff"/>
+    <circle cx="186" cy="130.5" r="3" fill="#e8702c"/>
+    <path d="M186 44C201 44 211 58 211 73C211 88 199 98 186 104C173 98 161 88 161 73C161 58 171 44 186 44Z" fill="url(#w-balloon)"/>
+    <path d="M180 104h12l-6 8z" fill="#e8702c"/>
+    <ellipse cx="174" cy="62" rx="5" ry="12" transform="rotate(24 174 62)" fill="#fff" opacity=".3"/>
+    <rect x="46" y="176" width="116" height="48" rx="24" fill="#fff"/>
+    <text x="104" y="212" text-anchor="middle" textLength="92" lengthAdjust="spacingAndGlyphs" font-family="Sora, Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="34" fill="#0d2547">13°C</text>
   </g>
 
   <text x="288" y="164" font-family="Sora, Inter, 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="76" letter-spacing="-2" fill="#132433">Groundcheck</text>
