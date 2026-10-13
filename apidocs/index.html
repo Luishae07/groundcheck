@@ -118,7 +118,7 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <h2>Where the readings come from</h2>
   <div class="src">
     <div><b>sonde.mine.nu / zeesen.mine.nu</b><p>Live radiosonde telemetry from a volunteer receiver network, mostly in central Europe. Updated every minute. <code>source</code> is the sonde type, such as <code>["RS41"]</code>.</p></div>
-    <div><b>SondeHub</b><p>An open worldwide database of radiosonde telemetry. Groundcheck keeps the ground-level frame of each sonde once a day, so it covers many more countries, with a delay of up to a day. <code>source</code> ends with <code>"SondeHub"</code>. Thank you to the volunteers who run the receivers. <a href="https://sondehub.org">sondehub.org</a></p></div>
+    <div><b>SondeHub</b><p>An open worldwide database of radiosonde telemetry. Groundcheck keeps the ground-level frame of each sonde every 5 hours, so it covers many more countries, with a delay of about 5 hours. <code>source</code> ends with <code>"SondeHub"</code>. Thank you to the volunteers who run the receivers. <a href="https://sondehub.org">sondehub.org</a></p></div>
     <div><b>NOAA IGRA</b><p>The Integrated Global Radiosonde Archive: the official soundings of about 650 weather-service stations in more than 100 countries, one reading per station per day (the sounding nearest 12:00 UTC). Public domain, from NOAA NCEI. Each station is refreshed about once a week, so readings can be up to a week late. <code>source</code> is <code>["IGRA"]</code>. <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a></p></div>
   </div>
   <p>If you use the data, please credit sonde.mine.nu, SondeHub and NOAA NCEI.</p>
