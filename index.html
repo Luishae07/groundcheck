@@ -734,6 +734,27 @@ footer{
 .detailcard[open] summary::after{transform:rotate(180deg)}
 .detailcard[open] summary{border-bottom:1px solid var(--line)}
 #hourlyStrip .predictchip{min-width:58px;padding:.55rem .6rem}
+
+/* a sky that follows the weather and the sun, day rows with range bars, an hourly curve, gentle motion */
+.daylist{display:flex;flex-direction:column;padding:.4rem 0 0}
+.dayrow{display:grid;grid-template-columns:3.2rem 2rem 2.4rem 1fr 2.4rem;align-items:center;gap:.6rem;padding:.55rem .3rem;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.dayrow:first-child{border-top:0}
+.dayrow .dn{font-weight:600;font-size:.92rem}
+.dayrow .di svg{width:26px;height:26px;display:block}
+.dayrow .lo{color:var(--ink-faint);text-align:right;font-size:.92rem}
+.dayrow .hi{font-weight:700;font-size:.92rem}
+.dayrow .bar{position:relative;height:6px;border-radius:99px;background:var(--panel-2)}
+.dayrow .bar i{position:absolute;top:0;bottom:0;border-radius:99px}
+#hourlySpark{margin:.5rem 0 .2rem}
+#hourlySpark svg{display:block;width:100%;height:64px;overflow:visible}
+#hourlySpark .lab{font:600 10px Inter,system-ui,sans-serif;fill:var(--ink-dim)}
+@keyframes gcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes gcFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.bigicon svg,.hero .icon svg{animation:gcFloat 6s ease-in-out infinite}
+#view-today>*{animation:gcFadeUp .45s ease both}
+#view-today>*:nth-child(2){animation-delay:.05s}#view-today>*:nth-child(3){animation-delay:.1s}#view-today>*:nth-child(4){animation-delay:.15s}
+.sky,.hero{transition:background .6s ease}
+@media (prefers-reduced-motion:reduce){.bigicon svg,.hero .icon svg,#view-today>*{animation:none}.sky,.hero{transition:none}}
 </style>
 </head>
 <body>
@@ -992,6 +1013,55 @@ function setPlaceName(name){
   if (el && name) el.textContent = name;
 }
 
+
+// ---- a sky that follows the weather and the sun --------------------------------------------------
+function solarElevation(lat, lon, d){
+  const rad = Math.PI / 180, day = (d - Date.UTC(d.getUTCFullYear(), 0, 0)) / 86400000;
+  const decl = 23.44 * rad * Math.sin(2 * Math.PI * (284 + day) / 365);
+  const solarH = (d.getUTCHours() + d.getUTCMinutes() / 60 + lon / 15 + 24) % 24;
+  const H = (solarH - 12) * 15 * rad;
+  return Math.asin(Math.sin(lat * rad) * Math.sin(decl) + Math.cos(lat * rad) * Math.cos(decl) * Math.cos(H)) / rad;
+}
+function hexMix(a, b, t){
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const x = p(a), y = p(b);
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function applySky(lat, lon, temp, hum, pres){
+  const stormy = hum != null && hum > 90 && pres != null && pres < 985;
+  const rainy = hum != null && hum > 92, showery = hum != null && hum > 85;
+  let c;
+  if (stormy) c = ['#2c3340', '#464f5e', '#68727f'];
+  else if (rainy) c = ['#4a5766', '#69798a', '#8d9cab'];
+  else if (showery) c = ['#5f7388', '#8497ab', '#aab9c8'];
+  else if (temp >= 11) c = ['#2f78c4', '#5aa0dd', '#8fc3ea'];
+  else if (temp >= 4) c = ['#4a7fb5', '#6ea0c8', '#a9cbe3'];
+  else c = ['#6f8aa3', '#93aac0', '#bccbd8'];
+  const night = ['#070d1a', '#0e1b30', '#1a2f4a'];
+  const elev = solarElevation(lat, lon, new Date());
+  let t = elev >= 6 ? 0 : elev <= -6 ? 1 : (6 - elev) / 12;
+  const th = document.documentElement.dataset.theme;
+  const dark = th === 'dark' || (th !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  if (dark) t = Math.max(t, 0.6);
+  const out = c.map((x, i) => hexMix(x, night[i], t * 0.94));
+  const r = document.documentElement.style;
+  r.setProperty('--sky-top', out[0]); r.setProperty('--sky-mid', out[1]); r.setProperty('--sky-bot', out[2]);
+}
+function sparkSvg(vals){
+  if (!vals || vals.length < 3) return '';
+  const W = 300, H = 64, pad = 6, lo = Math.min(...vals), hi = Math.max(...vals), span = Math.max(1, hi - lo);
+  const X = i => pad + i * (W - 2 * pad) / (vals.length - 1), Y = v => H - 14 - (v - lo) / span * (H - 28);
+  let d = 'M' + X(0) + ' ' + Y(vals[0]);
+  for (let i = 1; i < vals.length; i++){
+    const mx = (X(i - 1) + X(i)) / 2;
+    d += ' C' + mx + ' ' + Y(vals[i - 1]) + ' ' + mx + ' ' + Y(vals[i]) + ' ' + X(i) + ' ' + Y(vals[i]);
+  }
+  const hiI = vals.indexOf(hi), loI = vals.indexOf(lo);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="gcsp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e08a2c" stop-opacity=".35"/><stop offset="1" stop-color="#e08a2c" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L${X(vals.length - 1)} ${H} L${X(0)} ${H} Z" fill="url(#gcsp)"/><path d="${d}" fill="none" stroke="#e08a2c" stroke-width="2.5" stroke-linecap="round"/>
+    <text class="lab" x="${X(hiI)}" y="${Y(hi) - 5}" text-anchor="middle">${Math.round(hi)}\u00b0</text><text class="lab" x="${X(loI)}" y="${Y(lo) + 12}" text-anchor="middle">${Math.round(lo)}\u00b0</text></svg>`;
+}
+
 function fmtTime(iso){
   return new Date(iso).toLocaleString(undefined, {
     month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
@@ -1012,6 +1082,7 @@ const svgAlt = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 const svgPin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>`;
 
 function render(p, distanceKm){
+  applySky(p.lat, p.lon, p.temp, p.humidity, p.pressure);
   document.getElementById('bigicon').innerHTML = iconFor(p.temp, p.humidity, p.pressure);
   document.getElementById('cond').textContent = condFor(p.temp, p.humidity, p.pressure);
   document.getElementById('bigtemp').textContent = p.temp.toFixed(1) + '°';
@@ -1069,16 +1140,25 @@ function renderPrediction(anchor){
         if (hs && hh && fc.hourly && fc.hourly.length){
           hs.innerHTML = fc.hourly.filter((h, i) => i % 2 === 0).slice(0, 13).map((h, i) => `
             <div class="predictchip"><span class="h">${i === 0 ? 'Now' : new Date(h.t).toLocaleTimeString([], {hour: '2-digit'})}</span>${iconFor(h.temp, h.humidity, h.pressure)}<span class="t">${Math.round(h.temp)}&deg;</span></div>`).join('');
+          let sp = document.getElementById('hourlySpark');
+          if (!sp){ sp = document.createElement('div'); sp.id = 'hourlySpark'; hs.parentNode.insertBefore(sp, hs); }
+          sp.innerHTML = sparkSvg(fc.hourly.slice(0, 25).map(h => h.temp));
           hs.hidden = false; hh.hidden = false;
         }
         st.hidden = false;
-        st.innerHTML = days.map(d => `
-          <div class="predictchip" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
-            <span class="h">${d.label}</span>
-            ${iconFor(d.high, d.humidity, d.pressure)}
-            <span class="t">${d.high.toFixed(0)}&deg;<span style="opacity:.6">/${d.low.toFixed(0)}&deg;</span></span>
-          </div>
-        `).join('');
+        const lowAll = Math.min(...days.map(d => d.low)), highAll = Math.max(...days.map(d => d.high)), spanAll = Math.max(1, highAll - lowAll);
+        st.className = 'daylist';
+        st.innerHTML = days.map(d => {
+          const l = (d.low - lowAll) / spanAll * 100, w = Math.max(6, (d.high - d.low) / spanAll * 100);
+          return `
+          <div class="dayrow" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
+            <span class="dn">${d.label}</span>
+            <span class="di">${iconFor(d.high, d.humidity, d.pressure)}</span>
+            <span class="lo">${Math.round(d.low)}\u00b0</span>
+            <span class="bar"><i style="left:${l}%;width:${w}%;background:linear-gradient(90deg,${tempColor(d.low)},${tempColor(d.high)})"></i></span>
+            <span class="hi">${Math.round(d.high)}\u00b0</span>
+          </div>`;
+        }).join('');
         return;
       }
     }
