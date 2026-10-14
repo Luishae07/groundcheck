@@ -259,7 +259,7 @@ function resolveLocationOnce(){
 }
 
 function loadData(){
-  fetch('/apiinternel/dont/json/microsftwindowssucks/data')
+  fetch('https://grants-governmental-wma-out.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/lite?days=2')
     .then(r => r.json())
     .then(d => {
       points = d;
