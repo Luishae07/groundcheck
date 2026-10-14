@@ -876,7 +876,7 @@ footer a{color:#fff}
       <div class="grid2" id="stats"></div>
       <details class="detailcard" id="detailsBox"><summary>About this measurement</summary><div id="details"></div></details>
 
-      <div class="listhead" id="predictHead" hidden>Next days<span class="n">from our own balloon history</span></div>
+      <div class="listhead" id="predictHead" hidden>Next days<span class="n">typical day, from 7-day pattern</span></div>
       <div class="strip" id="predictStrip" hidden></div>
 
       <button class="refresh" id="refreshBtn">
@@ -951,7 +951,7 @@ footer a{color:#fff}
       <div class="qa"><div class="q">Esri</div><div class="a">Map imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS user community. <a href="https://www.esri.com" target="_blank" rel="noopener noreferrer">esri.com</a></div></div>
       <div class="qa"><div class="q">OpenStreetMap</div><div class="a">Place search and place names come from Nominatim, using &copy; OpenStreetMap contributors data. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">openstreetmap.org/copyright</a></div></div>
       <div class="qa"><div class="q">Leaflet</div><div class="a">The map is drawn with Leaflet (BSD-2-Clause) and Leaflet.markercluster (MIT). <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a></div></div>
-      <div class="qa"><div class="q">ipwho.is</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address. <a href="https://ipwho.is" target="_blank" rel="noopener noreferrer">ipwho.is</a></div></div>
+      <div class="qa"><div class="q">DB-IP</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address on our own server with the free IP to City Lite database. Your IP is not stored. <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">IP Geolocation by DB-IP</a></div></div>
       <div class="listhead">Design &amp; code</div>
       <div class="qa"><div class="q">Fonts</div><div class="a">Sora and Inter, from Google Fonts, under the SIL Open Font License.</div></div>
       <div class="qa"><div class="q">Open source</div><div class="a">Groundcheck is free software under the AGPL-3.0 licence. The source code is on <a href="https://github.com/Luishae07/groundcheck" target="_blank" rel="noopener noreferrer">GitHub</a>.</div></div>
@@ -1386,7 +1386,7 @@ let selected = null;
 let lastLoc = null; // {lat, lon, label} — remembered so refreshes keep picking nearest-by-distance
 
 function locateByIP(){
-  return fetch('https://ipwho.is/')
+  return fetch(DATA_BASE.split('/apiinternel')[0] + '/api/whereami')
     .then(r => r.json())
     .then(d => {
       if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
