@@ -557,7 +557,7 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
       </div>
 
       <div class="panel" id="predictPanel" hidden style="margin-top:1.2rem">
-        <h2>Next days<span class="n">from our own balloon history</span></h2>
+        <h2>Next days<span class="n">typical day, from 7-day pattern</span></h2>
         <div class="strip" id="predictStrip"></div>
       </div>
       <div class="addoncard"><a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/" target="_blank" rel="noopener noreferrer" aria-label="Get the Groundcheck add-on for Firefox"><img src="../firefox-addon.svg" alt="Get the add-on for Firefox"></a><div><b>Groundcheck in Firefox</b><span>See the nearest weather balloon reading from your toolbar, and search Flowsearch from the address bar. Free.</span></div></div>
@@ -577,7 +577,7 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
           <div class="qa"><div class="q">Esri</div><div class="a">Map imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS user community. <a href="https://www.esri.com" target="_blank" rel="noopener noreferrer">esri.com</a></div></div>
           <div class="qa"><div class="q">OpenStreetMap</div><div class="a">Place search and place names come from Nominatim, using &copy; OpenStreetMap contributors data. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">openstreetmap.org/copyright</a></div></div>
           <div class="qa"><div class="q">Leaflet</div><div class="a">The map is drawn with Leaflet (BSD-2-Clause) and Leaflet.markercluster (MIT). <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a></div></div>
-          <div class="qa"><div class="q">ipwho.is</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address. <a href="https://ipwho.is" target="_blank" rel="noopener noreferrer">ipwho.is</a></div></div>
+          <div class="qa"><div class="q">DB-IP</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address on our own server with the free IP to City Lite database. Your IP is not stored. <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">IP Geolocation by DB-IP</a></div></div>
         </div>
         <div class="faqsection">Design &amp; code</div>
         <div class="faqgrid">
@@ -960,7 +960,7 @@ function haversine(lat1, lon1, lat2, lon2){
 }
 
 function locateByIP(){
-  return fetch('https://ipwho.is/')
+  return fetch(DATA_BASE.split('/apiinternel')[0] + '/api/whereami')
     .then(r => r.json())
     .then(d => {
       if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
