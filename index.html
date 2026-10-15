@@ -1044,7 +1044,7 @@ footer a{color:#fff}
     </section>
     <footer>
       Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
-      <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
+      <br><span id="visitCount"></span> &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
 
@@ -2140,6 +2140,23 @@ function connectLiveFeed(){
 }
 
 connectLiveFeed();
+</script>
+<script>
+// all-time visit counter: tell the live-feed server once per page load, and show the total
+(function(){
+  try{
+    var u = (typeof LIVE_WS_URL !== 'undefined') ? LIVE_WS_URL : 'wss://def-sound-frozen-essex.trycloudflare.com';
+    var w = new WebSocket(u);
+    w.onopen = function(){ try{ w.send('visit'); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 800); };
+  }catch(e){}
+  try{
+    var base = DATA_BASE.split('/apiinternel')[0];
+    fetch(base + '/api/visits').then(function(r){return r.json()}).then(function(d){
+      var el = document.getElementById('visitCount');
+      if (el && typeof d.visits === 'number') el.textContent = d.visits.toLocaleString() + ' visits since counting started';
+    }).catch(function(){});
+  }catch(e){}
+})();
 </script>
 <script>
 // the Flowsearch site runs on a tunnel whose address changes now and then; the current one is kept in a file in the Flowsearch repo
