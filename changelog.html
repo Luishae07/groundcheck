@@ -55,29 +55,41 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
   <p style="text-align:center;margin:1.5rem 0"><button id="older" hidden style="font:inherit;padding:.5rem 1.1rem;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:inherit;cursor:pointer">Show older</button></p>
 </main>
 <script>
-// The changelog is the list of commits of the repository, loaded live from the public GitHub API (no key).
+// The changelog is the list of commits of the repository. Our server fetches them from GitHub (with a key, kept for
+// 15 minutes) and hands them out as JSON at /api/changelog. If our server cannot be reached, GitHub is asked directly.
 (function(){
   var box = document.getElementById('live'), more = document.getElementById('older');
+  var API = 'https://grants-governmental-wma-out.trycloudflare.com/api/changelog';
   var all = [], page = 1, PER = 100;
   function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function skip(msg){ return /^(Update|Add) (tunnel|accuracy|predictor|api)/i.test(msg) || /^(Update|Add) [a-z-]*(url|data)\b/i.test(msg); }
+  function skip(msg){ return /^(Update|Add) (tunnel|accuracy|predictor|api)/i.test(msg); }
   function render(){
     var days = {}, order = [];
     all.forEach(function(c){
-      var msg = (c.commit.message || '').split('\n')[0].trim();
-      if (!msg || skip(msg)) return;
-      var key = new Date(c.commit.author.date).toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+      var key = new Date(c.date).toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
       if (!days[key]) { days[key] = []; order.push(key); }
-      days[key].push('<div class="entry"><a href="' + esc(c.html_url) + '" target="_blank" rel="noopener" style="color:inherit">' + esc(msg) + '</a></div>');
+      days[key].push('<div class="entry"><a href="' + esc(c.url) + '" target="_blank" rel="noopener" style="color:inherit">' + esc(c.message) + '</a></div>');
     });
     box.innerHTML = order.map(function(k){ return '<div class="day"><h2>' + esc(k) + '</h2>' + days[k].join('') + '</div>'; }).join('') || '<div class="entry">Nothing to show right now.</div>';
   }
-  function load(){
-    more.disabled = true;
+  function viaServer(){
+    return fetch(API + '?page=' + page).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
+  }
+  function viaGitHub(){
     return fetch('https://api.github.com/repos/Luishae07/groundcheck/commits?per_page=' + PER + '&page=' + page, {headers:{'Accept':'application/vnd.github+json'}})
       .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function(d){ all = all.concat(d); render(); more.hidden = d.length < PER; more.disabled = false; page++; })
-      .catch(function(){ if (!all.length) box.innerHTML = '<div class="entry">Could not load the commits from GitHub right now. Try again in a minute.</div>'; more.disabled = false; });
+      .then(function(raw){
+        return { more: raw.length >= PER, commits: raw.map(function(c){ return {message:(c.commit.message||'').split('\n')[0].trim(), date:c.commit.author.date, url:c.html_url}; }).filter(function(c){ return c.message && !skip(c.message); }) };
+      });
+  }
+  function load(){
+    more.disabled = true;
+    return viaServer().catch(viaGitHub).then(function(d){
+      all = all.concat(d.commits); render(); more.hidden = !d.more; more.disabled = false; page++;
+    }).catch(function(){
+      if (!all.length) box.innerHTML = '<div class="entry">Could not load the commits right now. Try again in a minute.</div>';
+      more.disabled = false;
+    });
   }
   more.addEventListener('click', load);
   load();
