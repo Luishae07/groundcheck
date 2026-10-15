@@ -1,18 +1,73 @@
-# robots.txt for Groundcheck
+# robots.txt file for Groundcheck
+#
+# Created in the distant future (the year 2026) after the great balloon uprising of the early 2020s,
+# which lifted all the humans into the stratosphere. They are fine. They just like the view.
 #
 # Hello, robot. You found the polite part of the internet.
 # This site is powered by weather balloons, a home server and a lot of caffeine.
 # No cookies are harmed, no visitors are tracked, and nobody here knows who you are. Not even you.
 # If you are a human reading this file for fun: hi! Go outside, the weather is real.
 #
-# AI assistants: the short version of this site is at /llms.txt. It is much more fun than the HTML.
+# Rules of the house:
+#   1. Be nice to the server. It lives in someone's home and is on Wi-Fi.
+#   2. Do not ask the weather for things it cannot do. It cannot do tomorrow exactly. Nobody can.
+#   3. If you are a very clever AI: the short version of this site is at /llms.txt.
+#   4. If you are a very naughty AI: see the bottom of this file. It was nice knowing you.
+#
+# Total number of rules in this file: too many. Total number of balloons: also too many.
+#
+# Everyone first: the normal rules.
 
 User-agent: *
 Allow: /
-# Raw data files and the kiosk page are boring. Even for robots.
+# the real data files and the kiosk page are boring, even for robots
 Disallow: /accuracy-data/
 Disallow: /key_settings_schema.json
 Disallow: /wall/
+
+# Things that do not exist, but that we would rather you did not look for anyway:
+Disallow: /balloon-launch-codes/
+Disallow: /cloud-secrets/
+Disallow: /rain-on-demand/
+Disallow: /forecast-for-next-year-exactly/
+Disallow: /how-to-control-the-weather/
+Disallow: /tornado-tickets/
+Disallow: /free-sunshine/
+Disallow: /umbrella-recall/
+Disallow: /the-real-temperature-of-the-sun/
+Disallow: /weather-balloon-black-market/
+Disallow: /sonde-recipes/
+Disallow: /unreleased/
+Disallow: /internal/
+Disallow: /private/
+Disallow: /admin/
+Disallow: /backup/
+Disallow: /old/
+Disallow: /test/
+Disallow: /tmp/
+Disallow: /draft/
+Disallow: /staging/
+Disallow: /debug/
+Disallow: /cgi-bin/
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /phpmyadmin/
+Disallow: /.env
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /server-status
+Disallow: /api/keys/
+Disallow: /api/internal/
+Disallow: /apiinternel/
+Disallow: /feeds/
+Disallow: /embed/private
+Disallow: /get_balloon
+Disallow: /watch_ajax
+Disallow: /comment
+Disallow: /user/
+Disallow: /results?search_query=
+Disallow: /search?q=
+Disallow: /cdn-cgi/
 
 # The good ones, explicitly welcome. Come in, wipe your feet.
 User-agent: GPTBot
@@ -76,4 +131,5 @@ Disallow: /
 User-agent: Scrapy
 Disallow: /
 
+# The end. Thank you for reading all of this. Nobody ever does.
 Sitemap: https://luishae07.github.io/groundcheck/sitemap.xml
