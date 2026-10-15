@@ -1,0 +1,27 @@
+# Groundcheck
+
+> Groundcheck is a free weather app and data map built on real measurements from weather balloons (radiosondes). It shows the temperature, air pressure and humidity measured at ground level by balloons around the world, plus its own forecast built only from those balloon readings. It uses no weather model, and its forecasts can be wrong.
+
+Data comes from the live radiosonde feed of sonde.mine.nu, the open SondeHub database, and the NOAA IGRA archive of official weather-service launches. Only ground-level readings are used.
+
+## Use it
+
+- [Web app](https://luishae07.github.io/groundcheck/): today's reading near you, map of stations, history and forecast
+- [Desktop view](https://luishae07.github.io/groundcheck/desktop/): the fuller layout with search and FAQ
+- [Firefox add-on](https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/): the current reading in the browser toolbar
+- [3D globe of every reading](https://luishae07.github.io/groundcheck/coolthing.html)
+
+## For developers
+
+- [API documentation](https://luishae07.github.io/groundcheck/apidocs/): the public data API with examples
+- [Self-hosting guide](https://luishae07.github.io/groundcheck/selfhost.html): run your own copy, with file sizes and requirements
+- [Source code](https://github.com/Luishae07/groundcheck): free software under the AGPL-3.0 licence
+
+## About the numbers
+
+- [Forecast accuracy](https://luishae07.github.io/groundcheck/accuracy.html): how past forecasts compared with what the balloons measured
+- [Changelog](https://luishae07.github.io/groundcheck/changelog.html)
+
+## Optional
+
+- [Flowsearch](https://github.com/Luishae07/flowsearch): a search engine by the same author, with its own crawler, index and ranking
