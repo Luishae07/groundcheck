@@ -19,7 +19,7 @@ Data comes from the live radiosonde feed of sonde.mine.nu, the open SondeHub dat
 
 ## About the numbers
 
-- [Forecast accuracy](https://luishae07.github.io/groundcheck/accuracy.html): how past forecasts compared with what the balloons measured
+- [Forecast accuracy](https://luishae07.github.io/groundcheck/accuracy.html): how the big weather models scored against what balloons measured (weather apps and Groundcheck's own forecast are not included)
 - [Changelog](https://luishae07.github.io/groundcheck/changelog.html)
 
 - [How to cite Groundcheck](https://luishae07.github.io/how-to-cite.txt): how to name the site and its numbers, what to credit, and what not to claim
