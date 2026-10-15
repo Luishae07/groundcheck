@@ -1,14 +1,20 @@
-# Groundcheck - everyone is welcome to read the pages, search engines and AI assistants included.
-# More about the site for AI tools: /llms.txt
+# robots.txt for Groundcheck
+#
+# Hello, robot. You found the polite part of the internet.
+# This site is powered by weather balloons, a home server and a lot of caffeine.
+# No cookies are harmed, no visitors are tracked, and nobody here knows who you are. Not even you.
+# If you are a human reading this file for fun: hi! Go outside, the weather is real.
+#
+# AI assistants: the short version of this site is at /llms.txt. It is much more fun than the HTML.
 
 User-agent: *
 Allow: /
-# raw data files and kiosk pages are not worth crawling
+# Raw data files and the kiosk page are boring. Even for robots.
 Disallow: /accuracy-data/
 Disallow: /key_settings_schema.json
 Disallow: /wall/
 
-# AI search and assistants: explicitly allowed
+# The good ones, explicitly welcome. Come in, wipe your feet.
 User-agent: GPTBot
 Allow: /
 User-agent: OAI-SearchBot
@@ -23,5 +29,50 @@ User-agent: PerplexityBot
 Allow: /
 User-agent: Google-Extended
 Allow: /
+
+# The bad ones. We know what you did.
+# (Yes, this is only a polite request, and they will probably ignore it. We feel better anyway.)
+User-agent: Bytespider
+Disallow: /
+User-agent: Amazonbot
+Disallow: /
+User-agent: Meta-ExternalAgent
+Disallow: /
+User-agent: Meta-ExternalFetcher
+Disallow: /
+User-agent: FacebookBot
+Disallow: /
+User-agent: Diffbot
+Disallow: /
+User-agent: ImagesiftBot
+Disallow: /
+User-agent: Omgilibot
+Disallow: /
+User-agent: Omgili
+Disallow: /
+User-agent: Timpibot
+Disallow: /
+User-agent: PetalBot
+Disallow: /
+User-agent: cohere-ai
+Disallow: /
+User-agent: cohere-training-data-crawler
+Disallow: /
+User-agent: AI2Bot
+Disallow: /
+User-agent: Ai2Bot-Dolma
+Disallow: /
+User-agent: img2dataset
+Disallow: /
+User-agent: DataForSeoBot
+Disallow: /
+User-agent: SemrushBot
+Disallow: /
+User-agent: AhrefsBot
+Disallow: /
+User-agent: MJ12bot
+Disallow: /
+User-agent: Scrapy
+Disallow: /
 
 Sitemap: https://luishae07.github.io/groundcheck/sitemap.xml
