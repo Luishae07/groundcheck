@@ -1,38 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap.xml for Groundcheck
+
+  Created in the distant future (the year 2026), after the great balloon uprising of the early 2020s.
+  If you are a crawler: welcome. This is the map of the whole site. It is a short map. We like it that way.
+  If you are a human: why are you reading a sitemap? Go outside. The weather is real.
+
+  Every page below really exists. We checked. Some of us even visited.
+  Pages that are not listed (the kiosk page, the raw data files) are not secret. They are just boring.
+
+  Last updated: 2026-10-15, give or take a balloon.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- The main page. Today's temperature, measured by a real balloon. Not a guess, not a model, a balloon. -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- The same thing, but for people with big screens and strong opinions about window sizes. -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/desktop/</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
+  <!-- For robots that want weather data and ask nicely. Rate limits apply. We are watching. Politely. -->
   <url>
-    <loc>https://luishae07.github.io/groundcheck/wall/</loc>
+    <loc>https://luishae07.github.io/groundcheck/apidocs/</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <!-- How often the forecast is right. Spoiler: more often than a coin, less often than we would like. -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/accuracy.html</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
+  <!-- How to run your own Groundcheck. Please do not run it on a toaster. -->
   <url>
-    <loc>https://luishae07.github.io/groundcheck/apidocs/</loc>
-    <changefreq>weekly</changefreq>
+    <loc>https://luishae07.github.io/groundcheck/selfhost.html</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <!-- A 3D globe of every reading ever. Spin it. Everybody does. Nobody can stop. -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/coolthing.html</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+  <!-- Apps for things that have screens. -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/download.html</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <!-- Everything we changed, and a few things we regret. -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/changelog.html</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
+  <!-- API keys. Like house keys, but for weather. -->
   <url>
-    <loc>https://luishae07.github.io/groundcheck/basemap.html</loc>
+    <loc>https://luishae07.github.io/groundcheck/keys.html</loc>
+    <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+  <!-- A map. It has places on it. That is all we promise. -->
   <url>
-    <loc>https://luishae07.github.io/groundcheck/keys.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://luishae07.github.io/groundcheck/basemap.html</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
+  <!-- The end. Thank you for reading the whole map. It was a short one. -->
 </urlset>
