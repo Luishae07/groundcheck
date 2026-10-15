@@ -2,18 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Groundcheck</title>
-<meta name="description" content="Groundcheck is a live weather and radiosonde data map — real-time readings from weather stations and balloon soundings worldwide, free to browse and query via a public API.">
+<title>Groundcheck: live weather from radiosonde balloons, worldwide</title>
+<meta name="description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free web app, Firefox add-on and API.">
 <link rel="canonical" href="https://luishae07.github.io/groundcheck/">
 <meta name="robots" content="index, follow">
 <meta name="google-site-verification" content="OTs62Z9zd_G5ePEIKb6HW5YzWWF3UlNFyBRKrTvTxjM" />
 <meta property="og:type" content="website">
-<meta property="og:title" content="Groundcheck">
-<meta property="og:description" content="Live weather and radiosonde data map — real-time readings from weather stations and balloon soundings worldwide.">
+<meta property="og:title" content="Groundcheck: live weather from radiosonde balloons, worldwide">
+<meta property="og:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free web app, Firefox add-on and API.">
 <meta property="og:url" content="https://luishae07.github.io/groundcheck/">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Groundcheck">
-<meta name="twitter:description" content="Live weather and radiosonde data map — real-time readings from weather stations and balloon soundings worldwide.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
+<meta property="og:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
+<meta property="og:site_name" content="Groundcheck">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:title" content="Groundcheck: live weather from radiosonde balloons, worldwide">
+<meta name="twitter:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free web app, Firefox add-on and API.">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -22,6 +26,13 @@
   "url": "https://luishae07.github.io/groundcheck/",
   "description": "Live weather and radiosonde data map with real-time readings from weather stations and balloon soundings worldwide, plus a public API for querying the data.",
   "applicationCategory": "Weather",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "screenshot": "https://luishae07.github.io/groundcheck/dl_screenshot_today.png",
+  "image": "https://luishae07.github.io/groundcheck/logo.svg",
+  "softwareHelp": "https://luishae07.github.io/groundcheck/apidocs/",
+  "sameAs": ["https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/", "https://github.com/Luishae07/groundcheck"],
+  "featureList": ["Ground-level temperature, pressure and humidity from radiosondes", "Forecast built only from balloon readings", "Map of every station", "Public data API", "Firefox add-on"],
   "operatingSystem": "Any",
   "offers": {
     "@type": "Offer",
@@ -707,6 +718,10 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   gap:.5rem;
 }
 
+.about{max-width:42rem;margin:1.4rem auto 0;padding:0 1.2rem;font-size:.78rem;line-height:1.55;color:var(--ink-dim)}
+.about h2{font-size:.95rem;font-weight:600;margin:0 0 .5rem;color:var(--ink)}
+.about p{margin:.45rem 0}
+.about a{color:inherit;text-decoration:underline}
 footer{
   text-align:center;
   font-size:.68rem;
@@ -1018,6 +1033,13 @@ footer a{color:#fff}
       </div>
     </div>
 
+    <section class="about" aria-labelledby="about-h">
+      <h2 id="about-h">Live weather from radiosonde balloons</h2>
+      <p>Groundcheck shows the temperature, air pressure and humidity measured at ground level by weather balloons (radiosondes) around the world, as a map and as a weather app. Radiosondes are launched from stations every day, and the first reading each one sends from the ground is a real measurement taken at that spot.</p>
+      <p><b>Where the data comes from:</b> the live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a>, amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a>, and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches. Readings come from several hundred stations across Europe, North and South America, Asia, Africa, Australia and the Pacific islands.</p>
+      <p><b>The forecast:</b> Groundcheck's own forecast for the next hours and days is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong; the <a href="accuracy.html">accuracy page</a> shows how past forecasts did.</p>
+      <p><b>Free to use:</b> the web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="apidocs/">public data API</a>, and a <a href="selfhost.html">self-host package</a> to run your own copy. See also the <a href="coolthing.html">3D globe of every reading</a>.</p>
+    </section>
     <footer>
       Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
       <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
