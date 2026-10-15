@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Atom feed of the changes to Groundcheck. Built from the commits of its GitHub repository. -->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Groundcheck changes</title>
+  <subtitle>Every change to Groundcheck, a weather app built on real weather balloon measurements.</subtitle>
+  <link href="https://luishae07.github.io/feed.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://luishae07.github.io/changelog.html" rel="alternate" type="text/html"/>
+  <id>https://luishae07.github.io/</id>
+  <updated>2026-10-15T17:57:47Z</updated>
+  <author><name>Groundcheck</name><uri>https://luishae07.github.io/</uri></author>
+  <icon>https://luishae07.github.io/logo.svg</icon>
+  <entry>
+    <title>sitemap.xml: add credits.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/8ae7871eaaa7cb2ad02c8581f3426672a5edae93"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/8ae7871eaaa7cb2ad02c8581f3426672a5edae93</id>
+    <updated>2026-10-15T17:57:47Z</updated>
+    <summary>sitemap.xml: add credits.txt</summary>
+  </entry>
+  <entry>
+    <title>llms.txt: add credits.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/94fe78c9fb8182a454665185e829a1b5f769d81e"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/94fe78c9fb8182a454665185e829a1b5f769d81e</id>
+    <updated>2026-10-15T17:57:45Z</updated>
+    <summary>llms.txt: add credits.txt</summary>
+  </entry>
+  <entry>
+    <title>credits.txt: everyone Groundcheck builds on, as plain text</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/892bbcb53d403b484fc6bde1176078dfd0938fcf"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/892bbcb53d403b484fc6bde1176078dfd0938fcf</id>
+    <updated>2026-10-15T17:57:44Z</updated>
+    <summary>credits.txt: everyone Groundcheck builds on, as plain text</summary>
+  </entry>
+  <entry>
+    <title>sitemap.xml: add ai-policy.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/79d8a7e8c23cd44948f7d139a80a6bd8d43b56e0"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/79d8a7e8c23cd44948f7d139a80a6bd8d43b56e0</id>
+    <updated>2026-10-15T17:53:38Z</updated>
+    <summary>sitemap.xml: add ai-policy.txt</summary>
+  </entry>
+  <entry>
+    <title>llms.txt: add ai-policy.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/77ba7aaa77248a3f4b488c828fbdbea5f209e7d3"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/77ba7aaa77248a3f4b488c828fbdbea5f209e7d3</id>
+    <updated>2026-10-15T17:53:35Z</updated>
+    <summary>llms.txt: add ai-policy.txt</summary>
+  </entry>
+  <entry>
+    <title>ai-policy.txt: what AI systems may do with the site</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/7e4620fc22ee6755a9105a5f859467b9ce501c77"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/7e4620fc22ee6755a9105a5f859467b9ce501c77</id>
+    <updated>2026-10-15T17:53:34Z</updated>
+    <summary>ai-policy.txt: what AI systems may do with the site</summary>
+  </entry>
+  <entry>
+    <title>sitemap: describe the accuracy page correctly</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/6ef570dc3e7fedfd23748347b7ed2c99211624f2"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/6ef570dc3e7fedfd23748347b7ed2c99211624f2</id>
+    <updated>2026-10-15T17:49:00Z</updated>
+    <summary>sitemap: describe the accuracy page correctly</summary>
+  </entry>
+  <entry>
+    <title>About text: describe the accuracy page correctly</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/b25714d5ea1ce431794dcae35aea20db14e467ad"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/b25714d5ea1ce431794dcae35aea20db14e467ad</id>
+    <updated>2026-10-15T17:48:58Z</updated>
+    <summary>About text: describe the accuracy page correctly</summary>
+  </entry>
+  <entry>
+    <title>About text: describe the accuracy page correctly</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/65407bf70fab0acfac66c6e2a66b70c199e46562"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/65407bf70fab0acfac66c6e2a66b70c199e46562</id>
+    <updated>2026-10-15T17:48:57Z</updated>
+    <summary>About text: describe the accuracy page correctly</summary>
+  </entry>
+  <entry>
+    <title>llms.txt: describe the accuracy page correctly</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/0efedd96417bf155692e00fc96688c57ec9b9fb9"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/0efedd96417bf155692e00fc96688c57ec9b9fb9</id>
+    <updated>2026-10-15T17:48:55Z</updated>
+    <summary>llms.txt: describe the accuracy page correctly</summary>
+  </entry>
+  <entry>
+    <title>how-to-cite: the accuracy page scores the models, not Groundcheck</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/26ad543296152b994986ae1d2ed23ec11d98003b"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/26ad543296152b994986ae1d2ed23ec11d98003b</id>
+    <updated>2026-10-15T17:48:54Z</updated>
+    <summary>how-to-cite: the accuracy page scores the models, not Groundcheck</summary>
+  </entry>
+  <entry>
+    <title>sitemap: llms.txt, llms-full.txt and how-to-cite.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/a0a4bbb39330b249c007674e9c6e2d24c1922a7c"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/a0a4bbb39330b249c007674e9c6e2d24c1922a7c</id>
+    <updated>2026-10-15T17:44:46Z</updated>
+    <summary>sitemap: llms.txt, llms-full.txt and how-to-cite.txt</summary>
+  </entry>
+  <entry>
+    <title>llms.txt: link to how-to-cite.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/9b3260083f4e69c2d9d72ff33fd23b2064f195e1"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/9b3260083f4e69c2d9d72ff33fd23b2064f195e1</id>
+    <updated>2026-10-15T17:43:17Z</updated>
+    <summary>llms.txt: link to how-to-cite.txt</summary>
+  </entry>
+  <entry>
+    <title>how-to-cite.txt: how AI assistants should name Groundcheck and its numbers</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/56968043ba7f33f524329a9b76802738e3de8e9a"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/56968043ba7f33f524329a9b76802738e3de8e9a</id>
+    <updated>2026-10-15T17:43:16Z</updated>
+    <summary>how-to-cite.txt: how AI assistants should name Groundcheck and its numbers</summary>
+  </entry>
+  <entry>
+    <title>llms.txt: link to llms-full.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/e5cb6505d7625807f7d0e44f62b3c0bd871b8c67"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/e5cb6505d7625807f7d0e44f62b3c0bd871b8c67</id>
+    <updated>2026-10-15T17:41:20Z</updated>
+    <summary>llms.txt: link to llms-full.txt</summary>
+  </entry>
+  <entry>
+    <title>llms-full.txt: the readable text of the site in one file</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/0bba3646a70c0a6e64c14b5064d4d913e19c3592"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/0bba3646a70c0a6e64c14b5064d4d913e19c3592</id>
+    <updated>2026-10-15T17:41:18Z</updated>
+    <summary>llms-full.txt: the readable text of the site in one file</summary>
+  </entry>
+  <entry>
+    <title>Changelog loads the commits from our own /api/changelog (cached 15 minutes)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/64f89ab2ed626d41fc51d2da7f8fc8afc2325c24"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/64f89ab2ed626d41fc51d2da7f8fc8afc2325c24</id>
+    <updated>2026-10-15T17:38:40Z</updated>
+    <summary>Changelog loads the commits from our own /api/changelog (cached 15 minutes)</summary>
+  </entry>
+  <entry>
+    <title>Changelog: only the live GitHub commits</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/0fc0f12852fa03a990fd8fa4a1aa77b7521bf4de"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/0fc0f12852fa03a990fd8fa4a1aa77b7521bf4de</id>
+    <updated>2026-10-15T17:36:59Z</updated>
+    <summary>Changelog: only the live GitHub commits</summary>
+  </entry>
+  <entry>
+    <title>Changelog: live section from GitHub commits</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/b02b267a5930ed4b781b99bfcc9511ec32b54b4f"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/b02b267a5930ed4b781b99bfcc9511ec32b54b4f</id>
+    <updated>2026-10-15T17:36:20Z</updated>
+    <summary>Changelog: live section from GitHub commits</summary>
+  </entry>
+  <entry>
+    <title>Changelog: September 11 to October 15</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/1ff63edf1eae3fd2b4fce8973c362067eda9d52a"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/1ff63edf1eae3fd2b4fce8973c362067eda9d52a</id>
+    <updated>2026-10-15T17:35:46Z</updated>
+    <summary>Changelog: September 11 to October 15</summary>
+  </entry>
+  <entry>
+    <title>sitemap with a lot of comments</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/67e014aaf1ac2621c20db0f73fab0ea3d0ad6f1b"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/67e014aaf1ac2621c20db0f73fab0ea3d0ad6f1b</id>
+    <updated>2026-10-15T17:30:33Z</updated>
+    <summary>sitemap with a lot of comments</summary>
+  </entry>
+  <entry>
+    <title>A funnier sitemap with all real pages</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/28b53aac2c41d399fb0d7f900f5fb03a9731223a"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/28b53aac2c41d399fb0d7f900f5fb03a9731223a</id>
+    <updated>2026-10-15T17:28:04Z</updated>
+    <summary>A funnier sitemap with all real pages</summary>
+  </entry>
+  <entry>
+    <title>A long robots.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/85cb26f6378c45feed136e5fddbd67930b97f60b"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/85cb26f6378c45feed136e5fddbd67930b97f60b</id>
+    <updated>2026-10-15T17:25:41Z</updated>
+    <summary>A long robots.txt</summary>
+  </entry>
+  <entry>
+    <title>robots.txt: the bad bots get a 402</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/caca58578cf65696491ae0506bba0b065db0e688"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/caca58578cf65696491ae0506bba0b065db0e688</id>
+    <updated>2026-10-15T17:23:44Z</updated>
+    <summary>robots.txt: the bad bots get a 402</summary>
+  </entry>
+  <entry>
+    <title>robots.txt: funnier, and block the bad AI scrapers</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/9b2cfcb738d2a6730141bea775846dd8e738b045"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/9b2cfcb738d2a6730141bea775846dd8e738b045</id>
+    <updated>2026-10-15T17:19:57Z</updated>
+    <summary>robots.txt: funnier, and block the bad AI scrapers</summary>
+  </entry>
+  <entry>
+    <title>Better robots.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/bc22d0f3ccf9da71f4fef34bd7004604c9797e7e"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/bc22d0f3ccf9da71f4fef34bd7004604c9797e7e</id>
+    <updated>2026-10-15T17:19:06Z</updated>
+    <summary>Better robots.txt</summary>
+  </entry>
+  <entry>
+    <title>Better robots.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/619fddaaf2ff57ab331bc2a5d21ade88776c253b"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/619fddaaf2ff57ab331bc2a5d21ade88776c253b</id>
+    <updated>2026-10-15T17:18:12Z</updated>
+    <summary>Better robots.txt</summary>
+  </entry>
+  <entry>
+    <title>canonical link points at the root site</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/5c5515fcd2e71093770dbc7d7946736525571df2"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/5c5515fcd2e71093770dbc7d7946736525571df2</id>
+    <updated>2026-10-15T17:15:08Z</updated>
+    <summary>canonical link points at the root site</summary>
+  </entry>
+  <entry>
+    <title>canonical link points at the root site</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/f95ce8f052899ec3d52aed60aaad1aaaa3e8e2f6"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/f95ce8f052899ec3d52aed60aaad1aaaa3e8e2f6</id>
+    <updated>2026-10-15T17:15:06Z</updated>
+    <summary>canonical link points at the root site</summary>
+  </entry>
+  <entry>
+    <title>Add llms.txt</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/7bb14769d5e857809e0c6caf09f6d6e4965975bd"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/7bb14769d5e857809e0c6caf09f6d6e4965975bd</id>
+    <updated>2026-10-15T17:13:03Z</updated>
+    <summary>Add llms.txt</summary>
+  </entry>
+  <entry>
+    <title>All-time visit counter (counted through the live-feed WebSocket, kept in a text file)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/a5d5a0fbdcbc5e39f23647319cb389b27063c387"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/a5d5a0fbdcbc5e39f23647319cb389b27063c387</id>
+    <updated>2026-10-15T16:59:07Z</updated>
+    <summary>All-time visit counter (counted through the live-feed WebSocket, kept in a text file)</summary>
+  </entry>
+  <entry>
+    <title>All-time visit counter (counted through the live-feed WebSocket, kept in a text file)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/3ca2c82146ba4535ddbe86eab34d4521c4a6ea51"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/3ca2c82146ba4535ddbe86eab34d4521c4a6ea51</id>
+    <updated>2026-10-15T16:59:05Z</updated>
+    <summary>All-time visit counter (counted through the live-feed WebSocket, kept in a text file)</summary>
+  </entry>
+  <entry>
+    <title>Flowsearch links use the current tunnel address (read from the Flowsearch repo)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/3469fd9eaaabcd95ba5ee2df7d045e382abec24c"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/3469fd9eaaabcd95ba5ee2df7d045e382abec24c</id>
+    <updated>2026-10-15T14:18:43Z</updated>
+    <summary>Flowsearch links use the current tunnel address (read from the Flowsearch repo)</summary>
+  </entry>
+  <entry>
+    <title>Flowsearch links use the current tunnel address (read from the Flowsearch repo)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/e351bbcebfdac56ddc74e64baf8ec1249cc0c436"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/e351bbcebfdac56ddc74e64baf8ec1249cc0c436</id>
+    <updated>2026-10-15T14:18:41Z</updated>
+    <summary>Flowsearch links use the current tunnel address (read from the Flowsearch repo)</summary>
+  </entry>
+  <entry>
+    <title>Credits: Projects we make (Flowsearch)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/a34d46d262187f9535921b749913a26e5cb71e99"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/a34d46d262187f9535921b749913a26e5cb71e99</id>
+    <updated>2026-10-15T14:16:10Z</updated>
+    <summary>Credits: Projects we make (Flowsearch)</summary>
+  </entry>
+  <entry>
+    <title>Credits: Projects we make (Flowsearch)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/3149ef7e458696152b3b436db3c8e45ba6d54e10"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/3149ef7e458696152b3b436db3c8e45ba6d54e10</id>
+    <updated>2026-10-15T14:16:08Z</updated>
+    <summary>Credits: Projects we make (Flowsearch)</summary>
+  </entry>
+  <entry>
+    <title>SEO: one real h1 heading</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/8b0503c4998c345af7ec589eb53ac6d21b2883fa"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/8b0503c4998c345af7ec589eb53ac6d21b2883fa</id>
+    <updated>2026-10-15T13:55:27Z</updated>
+    <summary>SEO: one real h1 heading</summary>
+  </entry>
+  <entry>
+    <title>SEO: one real h1 heading</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/f62934d18fa8ba92ad1531256ae16b68e3cbf967"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/f62934d18fa8ba92ad1531256ae16b68e3cbf967</id>
+    <updated>2026-10-15T13:55:25Z</updated>
+    <summary>SEO: one real h1 heading</summary>
+  </entry>
+  <entry>
+    <title>README: links to the add-on, accuracy page, globe and self-host guide</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/67ff9b85c8d98b8fe4b6f7c4be51bc42793bdc39"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/67ff9b85c8d98b8fe4b6f7c4be51bc42793bdc39</id>
+    <updated>2026-10-15T13:54:20Z</updated>
+    <summary>README: links to the add-on, accuracy page, globe and self-host guide</summary>
+  </entry>
+  <entry>
+    <title>SEO: better title/description/social tags, structured data and an About text in the HTML</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/49b899486eaf6d42d933843aa34215abc7b8696a"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/49b899486eaf6d42d933843aa34215abc7b8696a</id>
+    <updated>2026-10-15T13:53:56Z</updated>
+    <summary>SEO: better title/description/social tags, structured data and an About text in the HTML</summary>
+  </entry>
+  <entry>
+    <title>SEO: better title/description/social tags, structured data and an About text in the HTML</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/07b655c2cbb2776ea0c898079626abe60dcecae8"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/07b655c2cbb2776ea0c898079626abe60dcecae8</id>
+    <updated>2026-10-15T13:53:53Z</updated>
+    <summary>SEO: better title/description/social tags, structured data and an About text in the HTML</summary>
+  </entry>
+  <entry>
+    <title>Forecast accuracy: new balloons scored</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/e8b0de11c6e1257c632c6b4597c2561e7c8de1ee"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/e8b0de11c6e1257c632c6b4597c2561e7c8de1ee</id>
+    <updated>2026-10-15T10:06:28Z</updated>
+    <summary>Forecast accuracy: new balloons scored</summary>
+  </entry>
+  <entry>
+    <title>wall: load readings from the tunnel (lean endpoint, 2 days)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/d31a8cf42ca6b4814ba7256870b26d40055dc6be"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/d31a8cf42ca6b4814ba7256870b26d40055dc6be</id>
+    <updated>2026-10-14T13:21:07Z</updated>
+    <summary>wall: load readings from the tunnel (lean endpoint, 2 days)</summary>
+  </entry>
+  <entry>
+    <title>wall: look up approximate location on our own server</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/076ae569386a98ce481abc437f51a6755dee35fd"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/076ae569386a98ce481abc437f51a6755dee35fd</id>
+    <updated>2026-10-14T13:20:20Z</updated>
+    <summary>wall: look up approximate location on our own server</summary>
+  </entry>
+  <entry>
+    <title>Look up approximate location on our own server (DB-IP) instead of ipwho.is</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/7148429ed31b91f7a5c90acf1372b9a56d242ea5"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/7148429ed31b91f7a5c90acf1372b9a56d242ea5</id>
+    <updated>2026-10-14T13:19:03Z</updated>
+    <summary>Look up approximate location on our own server (DB-IP) instead of ipwho.is</summary>
+  </entry>
+  <entry>
+    <title>Look up approximate location on our own server (DB-IP) instead of ipwho.is</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/854c29e365b298077854a0c72378f6eed363e79d"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/854c29e365b298077854a0c72378f6eed363e79d</id>
+    <updated>2026-10-14T13:19:02Z</updated>
+    <summary>Look up approximate location on our own server (DB-IP) instead of ipwho.is</summary>
+  </entry>
+  <entry>
+    <title>Forecast accuracy: new balloons scored</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/19d077f7de4cf4b66c5d5aa39b3099d0460c482c"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/19d077f7de4cf4b66c5d5aa39b3099d0460c482c</id>
+    <updated>2026-10-14T10:22:03Z</updated>
+    <summary>Forecast accuracy: new balloons scored</summary>
+  </entry>
+  <entry>
+    <title>Self-host page: the new design and the real file sizes (three feeds, logs, backup, download)</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/01928bf2c914a85c0282d009f3781e375f934a5c"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/01928bf2c914a85c0282d009f3781e375f934a5c</id>
+    <updated>2026-10-13T13:46:15Z</updated>
+    <summary>Self-host page: the new design and the real file sizes (three feeds, logs, backup, download)</summary>
+  </entry>
+  <entry>
+    <title>Forecast accuracy: new balloons scored</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/6e84e0776e4253f3ff2632bdbe935f25dfb34a85"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/6e84e0776e4253f3ff2632bdbe935f25dfb34a85</id>
+    <updated>2026-10-13T12:50:22Z</updated>
+    <summary>Forecast accuracy: new balloons scored</summary>
+  </entry>
+  <entry>
+    <title>Globe: cut coastlines exactly at the horizon so land and water no longer swap while spinning</title>
+    <link href="https://github.com/Luishae07/groundcheck/commit/3b9816076e5467dd17046333c9172a49eda157c8"/>
+    <id>https://github.com/Luishae07/groundcheck/commit/3b9816076e5467dd17046333c9172a49eda157c8</id>
+    <updated>2026-10-13T12:25:56Z</updated>
+    <summary>Globe: cut coastlines exactly at the horizon so land and water no longer swap while spinning</summary>
+  </entry>
+</feed>
