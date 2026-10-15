@@ -22,6 +22,8 @@ Data comes from the live radiosonde feed of sonde.mine.nu, the open SondeHub dat
 - [Forecast accuracy](https://luishae07.github.io/groundcheck/accuracy.html): how past forecasts compared with what the balloons measured
 - [Changelog](https://luishae07.github.io/groundcheck/changelog.html)
 
+- [Full text of this site](https://luishae07.github.io/llms-full.txt): the FAQ, the API documentation and the self-hosting guide in one plain-text file
+
 ## Optional
 
 - [Flowsearch](https://github.com/Luishae07/flowsearch): a search engine by the same author, with its own crawler, index and ranking
