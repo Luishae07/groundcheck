@@ -5,6 +5,10 @@ A weather app built on **real radiosonde (weather balloon) sensor data** — not
 - **Live app:** https://luishae07.github.io/groundcheck/
 - **Desktop view:** https://luishae07.github.io/groundcheck/desktop/
 - **API docs:** https://luishae07.github.io/groundcheck/apidocs/
+- **Firefox add-on:** https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/
+- **Forecast accuracy:** https://luishae07.github.io/groundcheck/accuracy.html
+- **3D globe of every reading:** https://luishae07.github.io/groundcheck/coolthing.html
+- **Self-host guide:** https://luishae07.github.io/groundcheck/selfhost.html
 
 ## What makes this different
 
