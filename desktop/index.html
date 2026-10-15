@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Groundcheck — Desktop</title>
-<meta name="description" content="Desktop view of Groundcheck's live weather and radiosonde data map — real-time readings from weather stations and balloon soundings worldwide.">
+<title>Groundcheck for desktop: live weather from radiosonde balloons</title>
+<meta name="description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free web app, Firefox add-on and API.">
+<link rel="canonical" href="https://luishae07.github.io/groundcheck/desktop/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Groundcheck for desktop: live weather from radiosonde balloons">
+<meta property="og:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free web app, Firefox add-on and API.">
+<meta property="og:url" content="https://luishae07.github.io/groundcheck/desktop/">
+<meta property="og:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="../logo.svg">
 <link rel="icon" href="../favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -267,6 +274,10 @@ main{
 .leaflet-popup-content-wrapper{background:var(--panel); color:var(--ink); border-radius:12px}
 .leaflet-popup-tip{background:var(--panel)}
 
+.about{max-width:42rem;margin:1.4rem auto 0;padding:0 1.2rem;font-size:.78rem;line-height:1.55;color:var(--ink-dim)}
+.about h2{font-size:.95rem;font-weight:600;margin:0 0 .5rem;color:var(--ink)}
+.about p{margin:.45rem 0}
+.about a{color:inherit;text-decoration:underline}
 footer{margin-top:2rem; font-size:.78rem; color:var(--ink-faint); text-align:center}
 footer a{color:inherit}
 .clearcachebtn{
@@ -768,6 +779,13 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
       </div>
     </div>
 
+    <section class="about" aria-labelledby="about-h">
+      <h2 id="about-h">Live weather from radiosonde balloons</h2>
+      <p>Groundcheck shows the temperature, air pressure and humidity measured at ground level by weather balloons (radiosondes) around the world, as a map and as a weather app. Radiosondes are launched from stations every day, and the first reading each one sends from the ground is a real measurement taken at that spot.</p>
+      <p><b>Where the data comes from:</b> the live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a>, amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a>, and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches. Readings come from several hundred stations across Europe, North and South America, Asia, Africa, Australia and the Pacific islands.</p>
+      <p><b>The forecast:</b> Groundcheck's own forecast for the next hours and days is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong; the <a href="../accuracy.html">accuracy page</a> shows how past forecasts did.</p>
+      <p><b>Free to use:</b> the web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="../apidocs/">public data API</a>, and a <a href="../selfhost.html">self-host package</a> to run your own copy. See also the <a href="../coolthing.html">3D globe of every reading</a>.</p>
+    </section>
     <footer>
       Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs">API docs</a>
       &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
