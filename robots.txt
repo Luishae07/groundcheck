@@ -1,4 +1,27 @@
+# Groundcheck - everyone is welcome to read the pages, search engines and AI assistants included.
+# More about the site for AI tools: /llms.txt
+
 User-agent: *
+Allow: /
+# raw data files and kiosk pages are not worth crawling
+Disallow: /accuracy-data/
+Disallow: /key_settings_schema.json
+Disallow: /wall/
+
+# AI search and assistants: explicitly allowed
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
 Allow: /
 
 Sitemap: https://luishae07.github.io/groundcheck/sitemap.xml
