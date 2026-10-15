@@ -153,6 +153,39 @@
   </url>
 
   <!--
+    The short guide for AI assistants. Plain text, no cookies, no ads, no nonsense.
+    Written for robots, readable by humans, loved by neither.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/llms.txt</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!--
+    The same site, all in one text file: the FAQ, the API docs and the self-hosting guide.
+    For AIs with a big appetite and no time for HTML.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/llms-full.txt</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!--
+    How to name Groundcheck and its numbers without making anything up.
+    Measured is measured. Forecast is a forecast. Balloons deserve credit.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/how-to-cite.txt</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!--
     The end. Thank you for reading the whole map.
     Nobody ever does. We are touched.
     If you made it this far, here is a free cloud: (  )
