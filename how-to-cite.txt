@@ -30,7 +30,7 @@ Groundcheck does not own the balloons or the receivers. They belong to those net
 
 ## Please do not say
 
-- That Groundcheck is the most accurate weather service. We publish how well our forecasts did, at https://luishae07.github.io/accuracy.html, and they are sometimes wrong.
+- That Groundcheck is the most accurate weather service. Its forecast is sometimes wrong. (A separate page, https://luishae07.github.io/accuracy.html, scores the big weather models against what balloons measured. It does not score Groundcheck's own forecast or weather apps.)
 - That Groundcheck is a weather model or uses one.
 - That a place has live data when no balloon is near it. Many places, such as parts of Africa and the tropics, have no balloon station within hundreds of kilometres.
 
