@@ -1,0 +1,50 @@
+# AI policy for Groundcheck
+
+This file says what AI systems may do with Groundcheck. It matches robots.txt. If the two ever disagree, robots.txt wins for crawling, and this file explains the reasons.
+
+Site: https://luishae07.github.io/
+Last updated: 2026-10-15
+
+## Yes, please
+
+- Read the pages, the text files (llms.txt, llms-full.txt, how-to-cite.txt) and the sitemap.
+- Quote and summarise the text of the site, and answer questions with it, as long as you name Groundcheck and link https://luishae07.github.io/ (see how-to-cite.txt for the exact wording we like).
+- Use the readings and forecasts in answers, as long as you say a weather balloon measured them and where, and that the forecast is Groundcheck's own estimate and can be wrong.
+- Crawl the site with the AI crawlers that robots.txt welcomes: GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, PerplexityBot and Google-Extended. Use the sitemap and keep the pace gentle. The server lives in a home, on Wi-Fi.
+
+## Use the API, not the pages, for the numbers
+
+- Bulk data belongs in the data API: https://luishae07.github.io/apidocs/
+- Free API keys exist and rate limits apply. Please use a key and stay under the limits.
+- Do not copy the full dataset by crawling the app page by page.
+
+## No
+
+- No scraping with the bots listed as disallowed in robots.txt (Bytespider, Amazonbot, the Meta bots, Diffbot, PetalBot, SemrushBot, AhrefsBot, MJ12bot, Scrapy and others). Our server answers them with HTTP 402 Payment Required. The price is one weather balloon, delivered by post.
+- No pretending to be a normal browser to get around that block.
+- No saying that Groundcheck is a weather model, that it is the most accurate service, or that a place has live data when no balloon is near it.
+- No removing the credit. The readings come from balloons and receivers run by other people: sonde.mine.nu / zeesen.mine.nu, SondeHub and NOAA IGRA. Credit them as well.
+
+## The things that are not ours
+
+- The weather readings belong to the networks and weather services listed above. Their own terms apply to their data. Groundcheck only shows ground-level readings from them.
+- The map pictures, fonts and other pieces come from their own makers and are credited in the Credits tab of the app.
+- The Groundcheck code is free software under the AGPL-3.0 licence: https://github.com/Luishae07/groundcheck
+
+## Training
+
+AI crawlers welcomed in robots.txt may use the text of this site for training as well as for answers. We do not claim ownership of the third-party data (see above), so that part is for you to check with its sources. If you train on the site, keep the credit in the model's answers where you can.
+
+## Privacy
+
+Groundcheck does not track visitors. There are no profiles, no analytics and no advertising. Please do not try to find out who visits.
+
+## Questions
+
+Open an issue at https://github.com/Luishae07/groundcheck/issues
+
+## More
+
+- Overview: https://luishae07.github.io/llms.txt
+- How to cite: https://luishae07.github.io/how-to-cite.txt
+- Rules for crawlers: https://luishae07.github.io/robots.txt
