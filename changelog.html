@@ -51,6 +51,11 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
   <h1>Changelog</h1>
   <p class="sub">What's changed in <a href="index.html">Groundcheck</a>, most recent first.</p>
 
+  <h2 style="margin-top:1.6rem">Live from GitHub</h2>
+  <p class="sub">The latest changes to the Groundcheck repository, loaded straight from GitHub each time you open this page.</p>
+  <div id="live"><div class="entry">Loading the latest commits&hellip;</div></div>
+
+  <h2 style="margin-top:2.2rem">Release notes</h2>
   <div id="log">
     <div class="day">
       <h2>October 15, 2026</h2>
@@ -129,5 +134,32 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
     </div>
   </div>
 </main>
+<script>
+// Live changelog: the newest commits of the repository, from the public GitHub API (no key, nothing sent about you).
+(function(){
+  var box = document.getElementById('live');
+  function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function skip(msg){ return /^(Update|Add) (tunnel|accuracy|predictor|api)/i.test(msg) || /^(Update|Add) [a-z-]*(url|data)\b/i.test(msg); }
+  function render(commits){
+    var days = {}, order = [];
+    commits.forEach(function(c){
+      var msg = (c.commit.message || '').split('\n')[0].trim();
+      if (!msg || skip(msg)) return;
+      var d = new Date(c.commit.author.date);
+      var key = d.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+      if (!days[key]) { days[key] = []; order.push(key); }
+      days[key].push('<div class="entry"><a href="' + esc(c.html_url) + '" target="_blank" rel="noopener" style="color:inherit">' + esc(msg) + '</a></div>');
+    });
+    box.innerHTML = order.map(function(k){ return '<div class="day"><h2>' + esc(k) + '</h2>' + days[k].join('') + '</div>'; }).join('') || '<div class="entry">Nothing to show right now.</div>';
+  }
+  var cached = null;
+  try { cached = JSON.parse(sessionStorage.getItem('gc_commits') || 'null'); } catch(e) {}
+  if (cached && Date.now() - cached.t < 5*60*1000) { render(cached.d); return; }
+  fetch('https://api.github.com/repos/Luishae07/groundcheck/commits?per_page=60', {headers:{'Accept':'application/vnd.github+json'}})
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){ try { sessionStorage.setItem('gc_commits', JSON.stringify({t:Date.now(), d:d})); } catch(e) {} render(d); })
+    .catch(function(){ box.innerHTML = '<div class="entry">Could not load the latest commits right now. The release notes below still work.</div>'; });
+})();
+</script>
 </body>
 </html>
