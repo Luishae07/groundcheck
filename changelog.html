@@ -49,116 +49,38 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
 
 <main>
   <h1>Changelog</h1>
-  <p class="sub">What's changed in <a href="index.html">Groundcheck</a>, most recent first.</p>
+  <p class="sub">Every change to <a href="index.html">Groundcheck</a>, most recent first, loaded live from its GitHub commits.</p>
 
-  <h2 style="margin-top:1.6rem">Live from GitHub</h2>
-  <p class="sub">The latest changes to the Groundcheck repository, loaded straight from GitHub each time you open this page.</p>
   <div id="live"><div class="entry">Loading the latest commits&hellip;</div></div>
-
-  <h2 style="margin-top:2.2rem">Release notes</h2>
-  <div id="log">
-    <div class="day">
-      <h2>October 15, 2026</h2>
-      <div class="entry">Added an all-time visit counter to the footer. A page announces itself once over the live-feed WebSocket and the total is kept in a plain text file. No IP address or ID is stored</div>
-      <div class="entry">Added "Projects we make" to the Credits tab, with a link to Flowsearch</div>
-      <div class="entry">The site is now also served at the root, luishae07.github.io</div>
-      <div class="entry">Search engines and AI assistants: better title, description and social tags, a real heading, an About text in the page itself, and new llms.txt, robots.txt and sitemap files</div>
-      <div class="entry">Unwanted scrapers now get HTTP 402 Payment Required on our server</div>
-    </div>
-    <div class="day">
-      <h2>October 14, 2026</h2>
-      <div class="entry">An approximate location from your IP address is now looked up on our own server with the DB-IP database, instead of an outside service</div>
-      <div class="entry">Much faster data loading: the common time ranges are kept ready in server memory, and a half-written data file can no longer break the site</div>
-      <div class="entry">The MCP forecast tool now takes a latitude and longitude and returns the full forecast, and says so when there is no balloon data nearby</div>
-      <div class="entry">Firefox add-on 1.0.1 is live: it only shows readings from the last 19 hours</div>
-      <div class="entry">Removed the status page. The Wall display now loads its readings through the tunnel</div>
-    </div>
-    <div class="day">
-      <h2>October 13, 2026</h2>
-      <div class="entry">The forecast now works worldwide: more history, a model for places with few readings, and a search radius that widens up to 900 km</div>
-      <div class="entry">NOAA data now covers the last 300 days</div>
-    </div>
-    <div class="day">
-      <h2>October 12, 2026</h2>
-      <div class="entry">Added NOAA IGRA data: ground-level readings from about 750 weather-service stations around the world</div>
-    </div>
-    <div class="day">
-      <h2>Early October 2026</h2>
-      <div class="entry">New design in the style of Apple Weather, for mobile and desktop, with tiles that show dials and rings</div>
-      <div class="entry">Added a Credits tab, a new logo and the official Get the add-on card for Firefox</div>
-      <div class="entry">SondeHub data is now fetched every 5 hours, gently</div>
-      <div class="entry">Added a lean data API, so pages load only the days they show</div>
-      <div class="entry">New standalone API documentation for Groundcheck</div>
-      <div class="entry">Added a 3D globe of every reading ever (coolthing.html)</div>
-      <div class="entry">Forecasts are built only from balloon readings, with no outside forecast service</div>
-    </div>
-    <div class="day">
-      <h2>September 10, 2026</h2>
-      <div class="entry">Native SwiftUI iOS app, built via GitHub Actions</div>
-      <div class="entry">Fixed temperature heatmap: was rendering invisibly under the map, and extrapolating full color into areas with no real station coverage</div>
-      <div class="entry">Replaced blob-style heatmap with a true full-coverage interpolated surface, matching the Apple Weather map style</div>
-    </div>
-    <div class="day">
-      <h2>September 9, 2026</h2>
-      <div class="entry">Added temperature heatmap map mode</div>
-      <div class="entry">Added Go-based status page checking every live component</div>
-      <div class="entry">Added Wall display — a fullscreen kiosk mode with GPS-aware location and auto-cycling slides</div>
-      <div class="entry">Added Search to mobile view</div>
-      <div class="entry">Renamed "Next hours" predictor to "Next days," added it to desktop</div>
-      <div class="entry">Added native macOS app (Swift/WebKit wrapper)</div>
-      <div class="entry">Added MCP server to the self-host backend package</div>
-    </div>
-    <div class="day">
-      <h2>September 8, 2026</h2>
-      <div class="entry">Self-host backend package now interactively bootstraps data and schedules updates</div>
-      <div class="entry">start.ps1 detects WSL and offers to delegate to start.sh</div>
-    </div>
-    <div class="day">
-      <h2>September 7, 2026</h2>
-      <div class="entry">Added standalone self-host backend package with cross-platform start scripts</div>
-    </div>
-    <div class="day">
-      <h2>September 6, 2026</h2>
-      <div class="entry">Added "This day" map filter option</div>
-      <div class="entry">Added date-range control to Search (7/30/90 days, or all time)</div>
-      <div class="entry">Search results now show on their own satellite map</div>
-      <div class="entry">Added universal Search: station ID, temperature value, or place name</div>
-      <div class="entry">Added Account tab — local nickname + token, device-only, no server accounts</div>
-      <div class="entry">Added a pulsing "you are here" marker once your location is known</div>
-      <div class="entry">Added native Kotlin/Compose Android app with a real map, predictor, and live feed</div>
-      <div class="entry">Added next-hours predictor (from a 7-day diurnal pattern)</div>
-    </div>
-    <div class="day">
-      <h2>September 5, 2026</h2>
-      <div class="entry">Deployed the static site to GitHub Pages</div>
-    </div>
-  </div>
+  <p style="text-align:center;margin:1.5rem 0"><button id="older" hidden style="font:inherit;padding:.5rem 1.1rem;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:inherit;cursor:pointer">Show older</button></p>
 </main>
 <script>
-// Live changelog: the newest commits of the repository, from the public GitHub API (no key, nothing sent about you).
+// The changelog is the list of commits of the repository, loaded live from the public GitHub API (no key).
 (function(){
-  var box = document.getElementById('live');
+  var box = document.getElementById('live'), more = document.getElementById('older');
+  var all = [], page = 1, PER = 100;
   function esc(t){ return String(t).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function skip(msg){ return /^(Update|Add) (tunnel|accuracy|predictor|api)/i.test(msg) || /^(Update|Add) [a-z-]*(url|data)\b/i.test(msg); }
-  function render(commits){
+  function render(){
     var days = {}, order = [];
-    commits.forEach(function(c){
+    all.forEach(function(c){
       var msg = (c.commit.message || '').split('\n')[0].trim();
       if (!msg || skip(msg)) return;
-      var d = new Date(c.commit.author.date);
-      var key = d.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+      var key = new Date(c.commit.author.date).toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
       if (!days[key]) { days[key] = []; order.push(key); }
       days[key].push('<div class="entry"><a href="' + esc(c.html_url) + '" target="_blank" rel="noopener" style="color:inherit">' + esc(msg) + '</a></div>');
     });
     box.innerHTML = order.map(function(k){ return '<div class="day"><h2>' + esc(k) + '</h2>' + days[k].join('') + '</div>'; }).join('') || '<div class="entry">Nothing to show right now.</div>';
   }
-  var cached = null;
-  try { cached = JSON.parse(sessionStorage.getItem('gc_commits') || 'null'); } catch(e) {}
-  if (cached && Date.now() - cached.t < 5*60*1000) { render(cached.d); return; }
-  fetch('https://api.github.com/repos/Luishae07/groundcheck/commits?per_page=60', {headers:{'Accept':'application/vnd.github+json'}})
-    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function(d){ try { sessionStorage.setItem('gc_commits', JSON.stringify({t:Date.now(), d:d})); } catch(e) {} render(d); })
-    .catch(function(){ box.innerHTML = '<div class="entry">Could not load the latest commits right now. The release notes below still work.</div>'; });
+  function load(){
+    more.disabled = true;
+    return fetch('https://api.github.com/repos/Luishae07/groundcheck/commits?per_page=' + PER + '&page=' + page, {headers:{'Accept':'application/vnd.github+json'}})
+      .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(d){ all = all.concat(d); render(); more.hidden = d.length < PER; more.disabled = false; page++; })
+      .catch(function(){ if (!all.length) box.innerHTML = '<div class="entry">Could not load the commits from GitHub right now. Try again in a minute.</div>'; more.disabled = false; });
+  }
+  more.addEventListener('click', load);
+  load();
 })();
 </script>
 </body>
