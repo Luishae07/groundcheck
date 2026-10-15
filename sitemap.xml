@@ -2,85 +2,159 @@
 <!--
   sitemap.xml for Groundcheck
 
-  Created in the distant future (the year 2026), after the great balloon uprising of the early 2020s.
-  If you are a crawler: welcome. This is the map of the whole site. It is a short map. We like it that way.
-  If you are a human: why are you reading a sitemap? Go outside. The weather is real.
+  Created in the distant future (the year 2026), after the great balloon uprising of the early 2020s,
+  which lifted all the humans into the stratosphere. They are fine. They just like the view.
 
-  Every page below really exists. We checked. Some of us even visited.
-  Pages that are not listed (the kiosk page, the raw data files) are not secret. They are just boring.
+  Hello, crawler. This is the map of the whole site.
+  It is a short map. We like it that way. Short maps are easy to read and hard to get lost in.
+
+  If you are a human: why are you reading a sitemap? Go outside. The weather is real.
+  If you are a search engine: hello, please be kind, and please index everything in order.
+  If you are an AI assistant: the short version of this whole site is at /llms.txt.
+  If you are a bad scraper: see robots.txt. There is a price. It is one weather balloon.
+
+  Rules of the map:
+    1. Every page listed below really exists. We checked. Some of us even visited.
+    2. Pages that are not listed (the kiosk page, the raw data files) are not secret. They are just boring.
+    3. The dates are real. The priorities are opinions. Do not take them personally.
+    4. The comments in this file do nothing. Search engines ignore them. We do not.
+
+  Fun facts about this file:
+    The numbers on the site come from balloons that rose about thirty kilometres and then came back down.
+    A balloon sensor measures the air about once a second, all the way up.
+    We only keep the lowest reading, the one near the ground. That is the one you can feel.
+    The data comes from volunteers with antennas on their roofs. They deserve a medal. Several medals.
+    The server lives in a home, on Wi-Fi, between a shelf and a window. It is doing its best.
 
   Last updated: 2026-10-15, give or take a balloon.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- The main page. Today's temperature, measured by a real balloon. Not a guess, not a model, a balloon. -->
+
+  <!--
+    The main page. Today's temperature, measured by a real balloon.
+    Not a guess. Not a model. A balloon.
+    It went up. It came down. It sent us a number on the way.
+    Please be gentle, it has been through a lot.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-  <!-- The same thing, but for people with big screens and strong opinions about window sizes. -->
+
+  <!--
+    The same thing, but for people with big screens and strong opinions about window sizes.
+    Has a search box. Has an FAQ. Has more FAQ than anyone asked for.
+    Forty five questions. We counted. Twice.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/desktop/</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- For robots that want weather data and ask nicely. Rate limits apply. We are watching. Politely. -->
+
+  <!--
+    For robots that want weather data and ask nicely.
+    Rate limits apply. We are watching. Politely.
+    If you ask too fast, the server will say no. If you ask even faster, it will say it louder.
+    Free keys exist. They are not magic keys, but they are free.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/apidocs/</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-  <!-- How often the forecast is right. Spoiler: more often than a coin, less often than we would like. -->
+
+  <!--
+    How often the forecast is right.
+    Spoiler: more often than a coin, less often than we would like.
+    We publish this page on purpose. Hiding the misses would be cheating.
+    Weather is hard. Atmospheres do not read documentation.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/accuracy.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
-  <!-- How to run your own Groundcheck. Please do not run it on a toaster. -->
+
+  <!--
+    How to run your own Groundcheck.
+    Please do not run it on a toaster. Or do, and tell us how it went.
+    Needs about as much memory as a polite web browser tab.
+    The file sizes on that page are measured, not guessed. We are very proud.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/selfhost.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-  <!-- A 3D globe of every reading ever. Spin it. Everybody does. Nobody can stop. -->
+
+  <!--
+    A 3D globe of every reading ever.
+    Spin it. Everybody does. Nobody can stop.
+    Land stays land and water stays water when you spin it now. That was a whole bug.
+    Made with free map data and a lot of trigonometry.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/coolthing.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-  <!-- Apps for things that have screens. -->
+
+  <!--
+    Apps for things that have screens.
+    If it has a screen and an opinion, there is probably a way.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/download.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-  <!-- Everything we changed, and a few things we regret. -->
+
+  <!--
+    Everything we changed, and a few things we regret.
+    Read it from the bottom for the full origin story.
+    Contains at least one apology to a Mac.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/changelog.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
-  <!-- API keys. Like house keys, but for weather. -->
+
+  <!--
+    API keys. Like house keys, but for weather.
+    Do not post your key on the internet. The internet is not your roommate.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/keys.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
-  <!-- A map. It has places on it. That is all we promise. -->
+
+  <!--
+    A map. It has places on it. That is all we promise.
+    Zoom in and the places get bigger. Zoom out and they get smaller. Science.
+  -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/basemap.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
-  <!-- The end. Thank you for reading the whole map. It was a short one. -->
+
+  <!--
+    The end. Thank you for reading the whole map.
+    Nobody ever does. We are touched.
+    If you made it this far, here is a free cloud: (  )
+  -->
 </urlset>
