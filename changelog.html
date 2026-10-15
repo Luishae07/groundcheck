@@ -53,6 +53,41 @@ footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
 
   <div id="log">
     <div class="day">
+      <h2>October 15, 2026</h2>
+      <div class="entry">Added an all-time visit counter to the footer. A page announces itself once over the live-feed WebSocket and the total is kept in a plain text file. No IP address or ID is stored</div>
+      <div class="entry">Added "Projects we make" to the Credits tab, with a link to Flowsearch</div>
+      <div class="entry">The site is now also served at the root, luishae07.github.io</div>
+      <div class="entry">Search engines and AI assistants: better title, description and social tags, a real heading, an About text in the page itself, and new llms.txt, robots.txt and sitemap files</div>
+      <div class="entry">Unwanted scrapers now get HTTP 402 Payment Required on our server</div>
+    </div>
+    <div class="day">
+      <h2>October 14, 2026</h2>
+      <div class="entry">An approximate location from your IP address is now looked up on our own server with the DB-IP database, instead of an outside service</div>
+      <div class="entry">Much faster data loading: the common time ranges are kept ready in server memory, and a half-written data file can no longer break the site</div>
+      <div class="entry">The MCP forecast tool now takes a latitude and longitude and returns the full forecast, and says so when there is no balloon data nearby</div>
+      <div class="entry">Firefox add-on 1.0.1 is live: it only shows readings from the last 19 hours</div>
+      <div class="entry">Removed the status page. The Wall display now loads its readings through the tunnel</div>
+    </div>
+    <div class="day">
+      <h2>October 13, 2026</h2>
+      <div class="entry">The forecast now works worldwide: more history, a model for places with few readings, and a search radius that widens up to 900 km</div>
+      <div class="entry">NOAA data now covers the last 300 days</div>
+    </div>
+    <div class="day">
+      <h2>October 12, 2026</h2>
+      <div class="entry">Added NOAA IGRA data: ground-level readings from about 750 weather-service stations around the world</div>
+    </div>
+    <div class="day">
+      <h2>Early October 2026</h2>
+      <div class="entry">New design in the style of Apple Weather, for mobile and desktop, with tiles that show dials and rings</div>
+      <div class="entry">Added a Credits tab, a new logo and the official Get the add-on card for Firefox</div>
+      <div class="entry">SondeHub data is now fetched every 5 hours, gently</div>
+      <div class="entry">Added a lean data API, so pages load only the days they show</div>
+      <div class="entry">New standalone API documentation for Groundcheck</div>
+      <div class="entry">Added a 3D globe of every reading ever (coolthing.html)</div>
+      <div class="entry">Forecasts are built only from balloon readings, with no outside forecast service</div>
+    </div>
+    <div class="day">
       <h2>September 10, 2026</h2>
       <div class="entry">Native SwiftUI iOS app, built via GitHub Actions</div>
       <div class="entry">Fixed temperature heatmap: was rendering invisibly under the map, and extrapolating full color into areas with no real station coverage</div>
