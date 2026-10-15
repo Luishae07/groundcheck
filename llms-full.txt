@@ -1,0 +1,704 @@
+# Groundcheck - full text
+
+> Groundcheck is a free weather app and data map built on real measurements from weather balloons (radiosondes). It shows the temperature, air pressure and humidity measured at ground level by balloons around the world, plus its own forecast built only from those balloon readings. It uses no weather model, and its forecasts can be wrong.
+
+This file holds the readable text of the Groundcheck site in one place: the frequently asked questions, the data API and the self-hosting guide. A shorter overview with links is in /llms.txt. Live site: https://luishae07.github.io/
+
+Where the data comes from: the live radiosonde feed of sonde.mine.nu, the open SondeHub database, and the NOAA IGRA archive of official weather-service launches. Only ground-level readings are used. The site stores no visitor profiles: there is no tracking, and the only counter is a plain total of page loads.
+
+
+
+---
+
+## Frequently asked questions
+
+About & Data
+
+### What is Groundcheck?
+
+A weather app built on real radiosonde (weather balloon) sensor readings instead of a forecast model. Every number you see was actually measured by a sensor in the air, not predicted.
+
+### Where does the data come from?
+
+Live telemetry from sonde.mine.nu / zeesen.mine.nu, a public radiosonde-tracking feed, from SondeHub (sondehub.org), an open worldwide radiosonde database, and from NOAA's Integrated Global Radiosonde Archive (IGRA), the official soundings of about 650 weather-service stations in more than 100 countries. We fetch its sondes.php endpoint on a schedule.
+
+### Is this a forecast app?
+
+No. The "Next days" panel is the one exception — it is this app's own forecast, learned from the balloon readings near you (no weather model, no outside forecast service). Everything else is raw sensor history.
+
+### Why only ground-level readings?
+
+Sondes spend most of a flight at altitude, where it's routinely far below freezing. Those readings aren't representative of ground weather, so we filter to a configurable altitude ceiling (currently under ~1000m) and only show near-surface readings.
+
+### How often does the data refresh?
+
+A background job fetches new readings every minute, plus deeper daily/weekly sweeps to catch anything missed. The page itself polls for updates every 5 minutes.
+
+### Why is a reading sometimes hours or days old?
+
+Radiosonde coverage is sparse by nature — it's wherever a balloon happened to fly, not a dense permanent sensor grid. No new nearby ground-level reading is normal, not a bug.
+
+### What's a radiosonde?
+
+A small instrument package carried aloft by a weather balloon, measuring temperature, humidity, and pressure as it ascends (and sometimes descends) through the atmosphere, transmitting data back by radio.
+
+### Why do Humidity or Pressure sometimes show "—"?
+
+Not every sonde model carries a working humidity or pressure sensor — some report temperature only. A dash means that sensor had no data, not an app error.
+
+### What does "ground-level" actually mean here?
+
+Any reading at or below the app's altitude ceiling (currently ~980-1000m depending on config) — usually captured near a sonde's launch site or during its final descent, not mid-flight.
+
+### Why zeesen.mine.nu instead of sonde.mine.nu?
+
+They're mirrors of the same underlying project; zeesen.mine.nu responds faster for large historical fetches, so it's preferred for bulk backfills while both serve the same live data.
+
+### Do radiosondes get reused?
+
+Rarely — most are single-use and either land somewhere unrecovered or are found and occasionally relaunched by hobbyists. Each flight gets its own serial ID in the data.
+
+### What's the difference between temperature, humidity, and pressure sensors on a sonde?
+
+They're independent physical sensors on the same instrument package — a sonde model can have a working thermometer but a failed or absent humidity/pressure sensor, which is why some readings show partial data.
+
+Accuracy & Coverage
+
+### Why does the nearest station show as far away?
+
+This isn't a dense ground-sensor network — it's wherever balloons happened to fly recently. If nothing launched near you, the nearest valid reading may be hundreds of km away. We always show the real distance rather than hide it.
+
+### Is this more accurate than Apple Weather / a forecast app?
+
+Different, not simply "more accurate" — this shows what a sensor actually measured, with no smoothing or modeling. A forecast app predicts; this reports.
+
+### Why does my location look approximate?
+
+Precise GPS requires a secure (HTTPS) connection. On plain http://, the app falls back to IP-based location, accurate only to city level.
+
+### Can I see live in-flight data?
+
+Yes — when the station currently shown is an actual balloon in flight, a live banner appears, fed by a WebSocket connection straight from the source telemetry.
+
+### Why did a reading show an obviously wrong temperature once?
+
+Occasionally a sensor glitches or reports a bad packet. We filter out impossible values (like 0,0 coordinates) but can't catch every anomaly — treat any wildly outlying single reading with suspicion.
+
+### How far back does history go?
+
+Depends on how long the instance has been running its fetch schedule — the public instance has months of accumulated history; a fresh self-hosted instance starts from whatever backfill window you choose.
+
+### Why does the same station ID show wildly different readings on different days?
+
+That's real atmospheric variation, not an error — the same launch site can see very different conditions day to day, especially across seasons.
+
+### Can two readings from the same station conflict?
+
+Each reading is keyed by station ID plus its exact receive timestamp, so multiple readings from one station over time are all kept — none overwrite each other.
+
+### Is coverage better in some countries than others?
+
+Yes — it depends entirely on where radiosonde receiver stations happen to be tracking flights; Central Europe tends to have denser coverage than sparsely-populated regions.
+
+Using the App
+
+### How do I find the station nearest me?
+
+Allow location access when prompted, or use the "Use my location" button — the app matches you to the closest fresh (within 24h) ground-level reading.
+
+### What does the map show?
+
+A satellite map with every ground-level station in the selected time range, clustered for performance, plus a "you are here" marker for your own location.
+
+### What's the "This day" map option?
+
+Filters the map to only readings from one specific calendar date instead of a rolling window — useful for looking back at a particular day's coverage.
+
+### How does Search work?
+
+Type a station ID, a temperature, or a place name. Place names are geocoded via Nominatim (OpenStreetMap) and matched to the nearest reading, with an adjustable date range from 7 days up to all-time.
+
+### Why doesn't Search find my city?
+
+The geocoder needs an unambiguous, spelled-correctly place name. Try adding a country ("Springfield, USA") if a common name returns the wrong result.
+
+### What's the "Next days" predictor based on?
+
+Years of this app's own balloon readings near you: it learns what is normal for each date and hour, how far today is from normal, and what followed similar situations before. Each day gets its own value, and the typical error is shown. Day 1-2 are reasonably good; from day 4 on it is close to the normal for the date. It is not an external forecast service.
+
+### Can I clear the cache?
+
+Yes — the footer has a "Clear cache & reload" button. Useful if the page seems stuck showing stale data, especially after adding it to your phone's home screen as an app.
+
+### Can I switch between light and dark mode?
+
+The app follows your system's light/dark setting automatically — there's no in-app manual toggle, since it's built entirely with CSS media queries tied to your OS preference.
+
+### Does the map remember my zoom/position?
+
+No — it recenters on the current selection each time you switch to the Map tab, rather than persisting a manually-panned view.
+
+### Can I see a specific station's full history?
+
+Yes — clicking a station's reading anywhere in the app (map, stations list, search results) switches the current view to that station, showing its own readings.
+
+### Why does the desktop layout differ from mobile?
+
+Desktop uses the extra screen space for a sidebar nav and multi-panel grid layout (map + week feed side-by-side) instead of mobile's single-column tab-based flow — same data, same features, different arrangement.
+
+API & Developers
+
+### Is there a public API?
+
+Yes — see API docs. GET /api/data is rate-limited (30 req/60s by default); getting a key via POST /api/keys/new raises that to 9000 req/10s.
+
+### Do I need an account to use the API?
+
+No account required — the free key endpoint just generates a token on the spot, no signup, no email.
+
+### What format does the API return?
+
+Plain JSON — an array of reading objects with id, time, temp, alt, pressure, humidity, lat, lon, and source. See the API docs for the exact shape.
+
+### Is there caching on API responses?
+
+No — every response is served with Cache-Control: no-store, so you always get the freshest data, never a stale cached copy.
+
+### Is there an MCP server?
+
+Yes — a Model Context Protocol server ships alongside the backend, exposing tools like current_reading, nearest_station, station_history, and predictor for use with Claude Code or other MCP clients.
+
+### Can I build my own app on top of this data?
+
+Yes — that's exactly what the public API is for. No special permission needed, just respect the rate limits or grab a key.
+
+### What happens if I exceed the rate limit?
+
+You get an HTTP 429 response until the window resets (60 seconds for the default tier, 10 seconds for a keyed tier) — no ban, no penalty, just wait it out or grab a key for a much higher ceiling.
+
+### How does the API key expire?
+
+It doesn't — a key generated via POST /api/keys/new stays valid indefinitely on that server instance unless the instance operator resets its api_keys.json file.
+
+### Can the MCP server filter by location or recency?
+
+Yes — nearest_station takes lat/lon and an optional max_age_days, and search_readings supports temperature range filters.
+
+### Is there a rate limit on the MCP server?
+
+No — it reads directly from the local data.json file, so there's no network rate limit to worry about, just normal local file I/O.
+
+Self-Hosting
+
+### Can I run my own instance?
+
+Yes — the full backend (server, live-feed proxy, data fetcher, and frontend) is on GitHub in the backend/ folder, with one-command launchers for both Linux/Mac and Windows.
+
+### How do I start it on Linux or Mac?
+
+Clone the repo, cd backend, then run ./start.sh — it interactively walks you through ports, an altitude filter, initial data backfill, and automatic update scheduling.
+
+### How do I start it on Windows?
+
+Run start.ps1 in PowerShell — same setup flow, using Windows Task Scheduler instead of cron for automatic checks. If WSL with a Linux distro is installed, it'll offer to hand off to the fuller start.sh instead.
+
+### Does self-hosting need any paid services?
+
+No — everything runs on plain Python (standard library only for the server), no database, no cloud dependency required.
+
+### Can I customize the ground-level altitude filter myself?
+
+Yes — start.sh/start.ps1 ask for it directly, or set the GROUNDCHECK_MAX_ALT_M environment variable manually.
+
+### How do I get automatic updates on my self-hosted instance?
+
+The setup script offers to install cron jobs (or Scheduled Tasks on Windows) that check for new radiosonde data every minute and/or once daily — fully configurable during setup.
+
+### Can I expose my self-hosted instance to the internet?
+
+Yes, with something like a Cloudflare Tunnel or reverse proxy in front of it — the server binds to 0.0.0.0 by default so it's reachable on your LAN out of the box.
+
+### Can I pick my own ports?
+
+Yes — start.sh/start.ps1 prompt for the HTTP data port and WebSocket live-feed port directly, defaulting to 8765 and 8766.
+
+### What if I don't want the automatic checks running constantly?
+
+Decline the cron/Task Scheduler setup step, or choose "0" for the custom-interval option during setup — you can always run update.py manually whenever you want fresh data.
+
+### How large is the initial backfill?
+
+Depends what you choose — the setup menu offers 1 to 800 days; a 1-day backfill is nearly instant, while an 800-day one can take a long time and use more disk space for station_store.json.
+
+### Does self-hosting include the MCP server too?
+
+Yes — backend/mcp_server.py ships alongside everything else and resolves its data path relative to itself, so it works out of the box against your own instance's data.
+
+Android Tablet App
+
+### Is there an Android app?
+
+Yes — a Kotlin WebView wrapper around this same web app, built for tablets, with pull-to-refresh, local notifications, and offline-friendly loading of the GitHub Pages URL.
+
+### Where do I download the Android app?
+
+From the GitHub Releases page on the project repo — it's distributed as a sideloadable APK, not published on the Play Store.
+
+### Do I need to enable anything to install it?
+
+Yes — since it's not from the Play Store, you'll need "Install from unknown sources" enabled for your browser or file manager.
+
+### Does the Android app get notifications?
+
+Yes — a background job checks periodically for nearby rain/thunderstorm conditions and posts a real Android notification if one's detected.
+
+### Why does the Android app load a website instead of being fully native?
+
+It's intentionally a hardened WebView wrapper loading the live GitHub Pages site — that way the app always shows the current version without needing a new APK build for every web update.
+
+### Does the Android app work without internet?
+
+No — it needs a connection to reach the live data, same as the website. There's no offline data cache built in.
+
+### Is there pull-to-refresh?
+
+It was tried and removed — it kept conflicting with the embedded Leaflet map's own pan/drag gestures, so the app relies on its normal auto-refresh polling instead.
+
+macOS App
+
+### Is there a macOS app?
+
+Yes — a native Swift/WebKit wrapper in the macos/ folder of the repo, targeting macOS 13.0 and up.
+
+### How do I build it?
+
+Open Groundcheck.xcodeproj in Xcode and hit Run, or use xcodebuild from the command line — see the folder's README for exact commands.
+
+### Does it work on both Intel and Apple Silicon Macs?
+
+Yes — it's a plain WKWebView-based app with no special GPU code; macOS itself handles GPU selection (Intel integrated, discrete AMD, or Apple Silicon) transparently at the OS level.
+
+### Is the macOS app sandboxed?
+
+No — App Sandbox was tried and removed after it caused the app to hang on launch with no window ever appearing (confirmed via a launchservicesd assertion failure in the system log) with a locally ad-hoc-signed build.
+
+### Where do I get the app icon from?
+
+It's a custom-generated icon (a weather balloon + radiosonde instrument box on a gradient sky) already bundled in the project's asset catalog — no extra download needed.
+
+Troubleshooting
+
+### The page looks stuck / stale — what do I do?
+
+Try the "Clear cache & reload" button in the footer first. If you added the app to your phone's home screen (iOS especially), that caching layer is more aggressive — delete and re-add the home-screen icon if the button alone doesn't fix it.
+
+### The live feed banner says "unreachable" — is something broken?
+
+Not necessarily — it means the WebSocket connection to the live telemetry feed couldn't connect right now. It retries automatically every 5 seconds; if it's a self-hosted instance, check that ws_proxy.py is actually running.
+
+### Why does the map show a blank area?
+
+Either the selected time range has no readings in that region, or satellite tiles are still loading — try zooming/panning slightly to trigger a tile refresh.
+
+### My self-hosted instance shows "no data available" everywhere.
+
+data.json is likely empty or missing — run python3 update.py --days 7 (or answer "y" to the setup script's backfill prompt) to populate it.
+
+### Location permission was denied — now what?
+
+The app falls back to IP-based geolocation automatically (city-level accuracy) — you can still browse normally, just without precise "nearest station" matching.
+
+Privacy, Account & Ads
+
+### Are there ads?
+
+No. No ads, no ad SDKs, no third-party trackers or analytics embedded in the app.
+
+### Does it cost anything?
+
+No — the app, the API, and self-hosting are all free.
+
+### Do I need to sign up for an account?
+
+No. The optional "Account" tab just saves a nickname and a random local token to your browser's own storage — there's no server-side account system, no password, no email collected.
+
+### What data does the app collect about me?
+
+Your device's location (only if you grant permission, used purely to find your nearest station) and whatever you type into Search. Nothing is sent to a third party beyond the geocoding lookup itself.
+
+### Is my location shared with anyone?
+
+No — it's used client-side only, to compute distance to stations. It isn't stored server-side or sent anywhere beyond the optional geocoding request you trigger yourself in Search.
+
+### Can I delete my local account?
+
+Yes — the Account tab has a "Forget this device" button that clears the saved nickname and token from your browser's local storage instantly.
+
+### Does the nickname/token get sent to a server anywhere?
+
+No — it's purely local storage in your browser, never transmitted to the app's backend or any third party.
+
+Development & Contributing
+
+### Is the source code open?
+
+Yes — the full repo (frontend, backend, Android, macOS) is public on GitHub, linked from the footer.
+
+### What's the tech stack?
+
+Hand-written HTML/CSS/JS for the frontend (no build step, no framework), Python for the server/data pipeline/MCP server, Go for the predictor service, Kotlin for Android, and Swift for macOS.
+
+### Why no frontend framework?
+
+Deliberately kept simple — single self-contained HTML files avoid a build pipeline entirely, making it trivial to deploy as static files via GitHub Pages.
+
+### Can I suggest a feature or report a bug?
+
+Yes — open an issue on the GitHub repo. It's actively maintained.
+
+
+---
+
+## Data API documentation
+
+GROUNDCHECK
+
+# API
+
+Real weather-balloon measurements from around the world, free and read-only. No sign-up needed. An optional free key raises the limit a lot. Back to the weather app.
+
+## Quick start
+
+```
+curl {BASE}/api/data
+```
+
+That returns every recent ground-level reading as JSON, newest first. Without a key you get 30 requests per 60 seconds per address.
+
+### Get a free key (13,000 requests per 10 seconds)
+
+```
+curl -X POST {BASE}/api/keys/new
+```
+
+```
+curl {BASE}/api/data -H "X-API-Key: YOUR_KEY"
+curl "{BASE}/api/data?key=YOUR_KEY"
+```
+
+## Right now
+
+Load the live numbers from the API. It counts as one request.
+
+–readings
+
+–in the last 24 hours
+
+–from live balloon feeds
+
+–from SondeHub
+
+–from NOAA IGRA
+
+–newest reading
+
+## Endpoints
+
+GET/api/data
+
+All current ground-level readings, newest first. Only temperatures at or above 0 °C and sensor heights up to about 980 m are included. With a key, your key's settings filter and reshape the answer.
+
+POST/api/keys/new
+
+Makes a free key on the spot: {"api_key": "…", "limit": "13000 requests / 10s"}.
+
+GET/api/keys/KEY/stats
+
+What your key has used. The key itself is the password.
+
+POST/api/keys/KEY/settings
+
+Changes the settings of your key, for example {"label":"mine","min_lat":47,"max_lat":55.1,"max_age_hours":48}. Also pauses or resumes it with {"paused": true}.
+
+POST/api/keys/KEY/revoke
+
+Deletes your key for good.
+
+GET/api/keys/settings/schema
+
+The list of all 30 settings with their types and defaults.
+
+### Limits and errors
+
+Over the limit you get 429 with a Retry-After header. A paused key gets 403. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is GET or POST JSON, and any website may call it (CORS is open).
+
+## What a reading looks like
+
+```
+{
+  "id": "Y0943402",                 // sonde serial, or the weather station for NOAA readings
+  "time": "2026-10-12T14:08:28Z",   // UTC
+  "tsunix": 1791814108,             // the same time in Unix seconds
+  "temp": 12.7,                     // degrees C, never below 0
+  "alt": 474.9,                     // metres above sea level
+  "pressure": 959.8,                // hPa, or null
+  "humidity": 90,                   // percent, or null
+  "lat": 51.772308,
+  "lon": 9.25355,
+  "source": ["RS41", "SondeHub"]    // see "Where the readings come from"
+}
+```
+
+ | Field | Type | Meaning
+
+ | id | string | The sonde's serial number. For NOAA readings, the weather station's id (for example GMM00010393).
+
+ | time, tsunix | string, number | When it was measured, in UTC.
+
+ | temp | number | Air temperature in °C. Readings below 0 °C are left out.
+
+ | alt | number | Height in metres. For a balloon, where the sensor was. For NOAA, the station's height.
+
+ | pressure, humidity | number or null | hPa and percent. Some sources do not report them.
+
+ | lat, lon | number | Position in degrees.
+
+ | source | array | The instrument or the archive it came from. The last entry names the network: SondeHub or IGRA. Readings with only an instrument name come from the live sonde.mine.nu feed.
+
+## Where the readings come from
+
+sonde.mine.nu / zeesen.mine.nu
+Live radiosonde telemetry from a volunteer receiver network, mostly in central Europe. Updated every minute. source is the sonde type, such as ["RS41"].
+
+SondeHub
+An open worldwide database of radiosonde telemetry. Groundcheck keeps the ground-level frame of each sonde every 5 hours, so it covers many more countries, with a delay of about 5 hours. source ends with "SondeHub". Thank you to the volunteers who run the receivers. sondehub.org
+
+NOAA IGRA
+The Integrated Global Radiosonde Archive: the official soundings of about 650 weather-service stations in more than 100 countries, one reading per station per day (the sounding nearest 12:00 UTC). Public domain, from NOAA NCEI. Each station is refreshed about once a week, so readings can be up to a week late. source is ["IGRA"]. NOAA IGRA
+
+If you use the data, please credit sonde.mine.nu, SondeHub and NOAA NCEI.
+
+## Key settings
+
+These apply only to requests that carry your key. Every setting is optional. GET /api/keys/settings/schema lists them all.
+
+ | Setting | What it does
+
+ | min_lat max_lat min_lon max_lon | Only readings inside this box.
+
+ | max_age_hours | Only readings newer than this.
+
+ | limit_results | At most this many readings.
+
+ | dedupe_by_station | One reading per sonde or station: the newest.
+
+ | temp_/humidity_/pressure_/altitude_ min_threshold, max_threshold | Drop readings outside a range.
+
+ | …_decimal_places, temp_round_to_integer | Round the numbers.
+
+ | temp_convert_units | Temperatures in °F instead of °C.
+
+ | …_hide_if_null, strip_null_fields | Skip readings or fields that are missing.
+
+ | sort_by_time_desc, pretty_print, include_metadata | Order and layout of the answer.
+
+### Example: Europe only, last 24 hours, one reading per station
+
+```
+curl -X POST {BASE}/api/keys/YOUR_KEY/settings \
+  -d '{"min_lat":35,"max_lat":72,"min_lon":-12,"max_lon":45,"max_age_hours":24,"dedupe_by_station":true}'
+```
+
+ Groundcheck is free software (AGPL-3.0). Source code. Forecast values shown in the app are estimates and can be wrong. This API only serves measurements.
+
+
+---
+
+## Self-hosting guide
+
+Groundcheck
+
+# Self-host Groundcheck for almost nothing
+
+Groundcheck's server is one small Python program. No database, no Docker, no extra packages. It runs on nearly anything, so the real question is only: what is the cheapest machine you can leave switched on?
+
+## You probably shouldn't need this
+
+Most people don't have to run anything. The hosted Groundcheck is free, and it already has the full history:
+
+- the web app, which works on any phone or computer,
+
+- the apps for iPhone, iPad, Android and Mac on the download page,
+
+- and the forecast scoreboard, which needs nothing from you.
+
+Self-hosting makes sense only if you want your own copy of the data, want it to keep working when someone else's server is down, want to build something on top of the data, or simply like running your own things. If none of that is you, close this page. You'll have lost nothing.
+
+ Why it must stay on. The weather-balloon source only hands out the latest reading of each balloon. Groundcheck builds its history by asking every minute, and it catches balloons just after launch or landing that way. A computer that sleeps or is switched off misses them. So "cheapest" really means "cheapest thing that is on all day".
+
+## The options
+
+ | Machine | Cost (roughly) | Always on? | Good for
+
+ | A computer you already own | €0, plus a few € a month of power if it runs all day | Only while it is on | Trying it out
+
+ | An old Android phone with Termux, kept plugged in | €0 | Yes, if it never sleeps | Tinkering
+
+ | A Raspberry Pi (any Pi from the 3 up; a Zero 2 W is enough) | One-time €20–60, then about €2–5 a year of electricity | Yes, 24/7 | best long-term quiet, tiny, yours
+
+ | A free cloud tier (for example Oracle Cloud "Always Free" or Google's e2-micro) | €0, but they ask for a card and free capacity is sometimes full | Yes, 24/7 | Free and public
+
+ | A cheap VPS (rented small server) | About €3–5 a month | Yes, 24/7 | The easiest public setup
+
+Prices are rough and change often. Check the current price before you buy. Any of these is already more than Groundcheck needs.
+
+## What it needs
+
+- Python 3 (nothing else to install).
+
+- 512 MB of memory and 1 GB of disk are plenty for the self-host package. If you also collect the SondeHub and NOAA feeds (what the hosted app does), plan for about 1 GB of memory (see Storage).
+
+- A normal internet connection. It makes one small request a minute.
+
+## Storage
+
+Good news: the data takes little room. These are the real sizes from the running Groundcheck server. What you collect depends on which feeds you switch on.
+
+### The self-host package: the live feed, every minute
+
+ | File | What it is | Size
+
+ | station_store.json | the raw store the updater merges new readings into (about 16,300 readings after 3.5 years) | 2.8 MB
+
+ | data.json | the ground-level readings the app shows, rebuilt from the store | about 4 MB
+
+ | Growth | about 3 MB a year
+
+In ten years that is about 30 MB. The package itself is tiny: the whole repository is a 1.7 MB download, the backend folder is 156 KB, and the installer script install.py is 2.8 KB.
+
+### The hosted Groundcheck: three feeds
+
+The hosted app also collects SondeHub (worldwide balloons, every few hours) and NOAA's radiosonde archive (about 650 official stations in more than 100 countries, every night). That gives readings from every continent, and it is much more data:
+
+ | File | What it is | Size
+
+ | station_store.json | the raw store: about 167,500 readings (16,300 live feed, 800 SondeHub, 150,400 NOAA) | 35 MB
+
+ | data.json | the ground-level readings the app shows (about 158,000 of them) | about 40 MB
+
+ | Growth | about 60 MB a year
+
+In ten years that is about 0.6 GB, still small for any SD card or disk. These two extra feeds are not part of the self-host package yet. They live in the main server's folder as update_sondehub.py and update_igra.py, and they are the reason the data files are so much bigger. The files compress very well: the 35 MB store packs into a 2.8 MB archive.
+
+ Logs are the real storage risk. On the live server the whole folder is 5.9 GB, and nearly all of it is log files: serve.log is 3.1 GB and ws_proxy.log 0.9 GB, because every single request gets a line. That would fill a small SD card within months. So answer n to "Enable logs?" in start.sh. If you want logs while testing, rotate them so they stay small. Put this in /etc/logrotate.d/groundcheck (change the folder):
+```
+/home/pi/groundcheck-main/backend/*.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+### Which storage to buy
+
+ | Storage | Cost (roughly) | Notes
+
+ | SD card (8–32 GB) for a Raspberry Pi | €5–10 | Enough for decades of data. SD cards wear out from constant writing, so keep logs off, and a "high endurance" card is the safer pick.
+
+ | USB stick or small SSD on a Pi | €5–25 | Longer-lived than an SD card, if you want something sturdier.
+
+ | Disk included with a VPS or free cloud tier | €0 extra | Usually 10–40 GB, which is far more than needed.
+
+ | An old computer's own disk | €0 | Already there.
+
+### Back it up (one file)
+
+All the history is in station_store.json. data.json is rebuilt from it, so you only need the store. Copy it somewhere safe now and then:
+
+```
+scp pi@your-machine:groundcheck-main/backend/station_store.json ~/groundcheck-backup/
+```
+
+To restore after a failure, put the file back in the backend folder before you start the server. With the live feed only it is about 3 MB; with all three feeds it is about 35 MB (2.8 MB if you compress it). Any free cloud drive, USB stick or spare computer can hold the backups.
+
+## Set it up (about five minutes)
+
+On the machine you picked, in a terminal:
+
+```
+curl -L -o groundcheck.zip https://github.com/Luishae07/groundcheck/archive/refs/heads/main.zip
+python3 -m zipfile -e groundcheck.zip .
+cd groundcheck-main/backend
+bash start.sh
+```
+
+The download is small (the whole repository is 1.7 MB). The second line unpacks it with Python itself, so you don't need unzip, tar or git. start.sh then asks a few questions. These answers give the cheapest, always-up-to-date setup:
+
+ | Question | Answer
+
+ | HTTP data API port | Press Enter (8765)
+
+ | WebSocket live-feed port | Press Enter (8766)
+
+ | Max ground-level altitude filter | Press Enter (980)
+
+ | Create data.json now? | y, then choose how many days of history to fetch, for example 10
+
+ | Set up automatic checks with cron? | y
+
+ | Check every minute? | y
+
+ | Also check once daily? | y
+
+ | Run in the background with nohup? | y
+
+ | Enable logs? | n (see Storage: logs are what fill the disk)
+
+Then open http://localhost:8765/ (or the machine's address from another device on your network). The cron job keeps adding new readings; the more days it runs, the fuller the history.
+
+## Keep it running after a restart
+
+The cron job restarts the updates by itself. The web server also needs to start when the machine boots. Run crontab -e and add two lines (change the folder to where you unpacked it):
+
+```
+@reboot cd /home/pi/groundcheck-main/backend && nohup python3 serve.py >/dev/null 2>&1 &
+@reboot cd /home/pi/groundcheck-main/backend && nohup python3 ws_proxy.py >/dev/null 2>&1 &
+```
+
+## Reaching it from outside the house
+
+ | Way | Cost | Notes
+
+ | Home network only | €0 | Open http://<machine-ip>:8765/ from any device on your Wi-Fi.
+
+ | Cloudflare quick tunnel | €0 | cloudflared tunnel --url http://localhost:8765 gives a public https address. It changes every time the tunnel restarts.
+
+ | Permanent tunnel with your own domain | about €10 a year for the domain | A fixed address that never changes. The tunnel itself is free.
+
+ | A VPS with a public address | included in the VPS price | Open the port in its firewall and use the machine's address.
+
+## The cheapest sensible plan
+
+- Use a Raspberry Pi you already have, or an old laptop, as the always-on machine. About €20–60 if you have to buy one.
+
+- Run the four commands above and answer y to cron every minute.
+
+- Add the two @reboot lines.
+
+- Leave it on your home network, or add a free Cloudflare quick tunnel when you want to show it to someone.
+
+ Running cost afterwards: a few euros of electricity a year. If you don't want any hardware, a free cloud tier or a €3–5 a month VPS does the same job.
+
+## Questions
+
+Does it cost anything per visit? No. It only serves one small data file, and there are no accounts or databases to pay for.
+
+Can I run it on a phone? Yes, on Android with Termux. An iPhone app can run it only while the app is open on screen, so it's no good for a server.
+
+I only want to see the data, not host it. You don't need any of this. The hosted Groundcheck app and the apps for iPhone, Android and desktop are free to use.
+
+Is it safe to put on the internet? It only serves public weather-balloon readings and has no login. Keep Python and the machine updated, and prefer a tunnel over opening your router.
+ Groundcheck · source on GitHub · AGPL-3.0
