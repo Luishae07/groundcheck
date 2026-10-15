@@ -971,7 +971,7 @@ footer a{color:#fff}
       <div class="qa"><div class="q">Fonts</div><div class="a">Sora and Inter, from Google Fonts, under the SIL Open Font License.</div></div>
       <div class="qa"><div class="q">Open source</div><div class="a">Groundcheck is free software under the AGPL-3.0 licence. The source code is on <a href="https://github.com/Luishae07/groundcheck" target="_blank" rel="noopener noreferrer">GitHub</a>.</div></div>
       <div class="listhead">Projects we make</div>
-      <div class="qa"><div class="q">Flowsearch</div><div class="a">A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. <a href="https://github.com/Luishae07/flowsearch" target="_blank" rel="noopener noreferrer">Flowsearch on GitHub</a></div></div>
+      <div class="qa"><div class="q">Flowsearch</div><div class="a">A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com" target="_blank" rel="noopener noreferrer">Open Flowsearch</a> &middot; <a href="https://github.com/Luishae07/flowsearch" target="_blank" rel="noopener noreferrer">Source on GitHub</a></div></div>
       <div class="listhead">Good to know</div>
       <div class="qa"><div class="q">Forecasts can be wrong</div><div class="a">Measurements come straight from weather balloon sensors. The Next days forecast is an estimate that Groundcheck calculates from collected readings, with no weather model, and it can be wrong. Its typical error is shown next to it.</div></div>
       <div class="qa"><div class="q">Thank you</div><div class="a">To everyone who builds, launches, hosts and runs radiosondes and receivers. Without them there would be nothing to show.</div></div>
@@ -1040,7 +1040,7 @@ footer a{color:#fff}
       <p>Groundcheck shows the temperature, air pressure and humidity measured at ground level by weather balloons (radiosondes) around the world, as a map and as a weather app. Radiosondes are launched from stations every day, and the first reading each one sends from the ground is a real measurement taken at that spot.</p>
       <p><b>Where the data comes from:</b> the live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a>, amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a>, and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches. Readings come from several hundred stations across Europe, North and South America, Asia, Africa, Australia and the Pacific islands.</p>
       <p><b>The forecast:</b> Groundcheck's own forecast for the next hours and days is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong; the <a href="accuracy.html">accuracy page</a> shows how past forecasts did.</p>
-      <p><b>Free to use:</b> the web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="apidocs/">public data API</a>, and a <a href="selfhost.html">self-host package</a> to run your own copy. We also make <a href="https://github.com/Luishae07/flowsearch">Flowsearch</a>, a search engine with its own crawler and index. See also the <a href="coolthing.html">3D globe of every reading</a>.</p>
+      <p><b>Free to use:</b> the web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="apidocs/">public data API</a>, and a <a href="selfhost.html">self-host package</a> to run your own copy. We also make <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com">Flowsearch</a>, a search engine with its own crawler and index. See also the <a href="coolthing.html">3D globe of every reading</a>.</p>
     </section>
     <footer>
       Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
@@ -2140,6 +2140,10 @@ function connectLiveFeed(){
 }
 
 connectLiveFeed();
+</script>
+<script>
+// the Flowsearch site runs on a tunnel whose address changes now and then; the current one is kept in a file in the Flowsearch repo
+(function(){try{fetch('https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt').then(function(r){return r.text()}).then(function(t){t=(t||'').trim();if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t))return;document.querySelectorAll('a.fs-link').forEach(function(a){a.href=t})}).catch(function(){})}catch(e){}})();
 </script>
 </body>
 </html>
