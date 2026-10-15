@@ -31,7 +31,8 @@ User-agent: Google-Extended
 Allow: /
 
 # The bad ones. We know what you did.
-# (Yes, this is only a polite request, and they will probably ignore it. We feel better anyway.)
+# (This file is only a polite request. So on our own server these bots get HTTP 402 Payment Required instead.
+# The price of scraping this site is one (1) weather balloon, delivered by post.)
 User-agent: Bytespider
 Disallow: /
 User-agent: Amazonbot
