@@ -28,7 +28,7 @@
 
   Last updated: 2026-10-15, give or take a balloon.
 -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
   <!--
     The main page. Today's temperature, measured by a real balloon.
@@ -41,6 +41,18 @@
     <lastmod>2026-10-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://luishae07.github.io/groundcheck/dl_screenshot_today.png</image:loc>
+      <image:title>Groundcheck Today screen: ground temperature measured by a weather balloon</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://luishae07.github.io/groundcheck/dl_screenshot_stations.png</image:loc>
+      <image:title>Groundcheck station map: weather balloon stations around the world</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://luishae07.github.io/groundcheck/logo.svg</image:loc>
+      <image:title>Groundcheck logo: a globe with a weather balloon and a temperature</image:title>
+    </image:image>
   </url>
 
   <!--
@@ -205,6 +217,17 @@
     <lastmod>2026-10-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
+  </url>
+
+  <!--
+    The same news as the changelog, but for feed readers and for search engines that like feeds.
+    Atom is RSS that went to a good school.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/feed.xml</loc>
+    <lastmod>2026-10-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.4</priority>
   </url>
 
   <!--
