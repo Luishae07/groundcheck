@@ -23,6 +23,7 @@ Data comes from the live radiosonde feed of sonde.mine.nu, the open SondeHub dat
 - [Changelog](https://luishae07.github.io/groundcheck/changelog.html)
 
 - [How to cite Groundcheck](https://luishae07.github.io/how-to-cite.txt): how to name the site and its numbers, what to credit, and what not to claim
+- [AI policy](https://luishae07.github.io/ai-policy.txt): what AI systems may do with the site, and what they may not
 - [Full text of this site](https://luishae07.github.io/llms-full.txt): the FAQ, the API documentation and the self-hosting guide in one plain-text file
 
 ## Optional
