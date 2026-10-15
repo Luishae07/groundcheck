@@ -1,0 +1,64 @@
+# Credits for Groundcheck
+
+Groundcheck is made with the work of many other people. This file lists them, in the same words as the Credits tab of the app. If you write about Groundcheck or use its numbers, please credit the data networks below as well (see how-to-cite.txt).
+
+Site: https://luishae07.github.io/
+Overview: https://luishae07.github.io/llms.txt
+
+## Weather data
+
+### sonde.mine.nu / zeesen.mine.nu
+
+Live radiosonde telemetry from a public tracking network run by volunteers with their own receivers. sonde.mine.nu (https://sonde.mine.nu)
+
+### SondeHub
+
+An open, worldwide database of radiosonde telemetry, fed by hundreds of volunteer receivers. It gives Groundcheck readings from North and South America, Asia, Australia and more. sondehub.org (https://sondehub.org)
+
+### NOAA IGRA
+
+The Integrated Global Radiosonde Archive of NOAA's National Centers for Environmental Information: the official soundings of about 650 weather-service stations in more than 100 countries (public domain). NOAA NCEI (https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive)
+
+## Maps & places
+
+### Esri
+
+Map imagery © Esri, Maxar, Earthstar Geographics and the GIS user community. esri.com (https://www.esri.com)
+
+### OpenStreetMap
+
+Place search and place names come from Nominatim, using © OpenStreetMap contributors data. openstreetmap.org/copyright (https://www.openstreetmap.org/copyright)
+
+### Leaflet
+
+The map is drawn with Leaflet (BSD-2-Clause) and Leaflet.markercluster (MIT). leafletjs.com (https://leafletjs.com)
+
+### DB-IP
+
+If you do not share your exact location, an approximate one is looked up from your IP address on our own server with the free IP to City Lite database. Your IP is not stored. IP Geolocation by DB-IP (https://db-ip.com)
+
+## Design & code
+
+### Fonts
+
+Sora and Inter, from Google Fonts, under the SIL Open Font License.
+
+### Open source
+
+Groundcheck is free software under the AGPL-3.0 licence. The source code is on GitHub (https://github.com/Luishae07/groundcheck).
+
+## Projects we make
+
+### Flowsearch
+
+A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. Open Flowsearch (https://nav-declared-technical-organic.trycloudflare.com) · Source on GitHub (https://github.com/Luishae07/flowsearch)
+
+## Good to know
+
+### Forecasts can be wrong
+
+Measurements come straight from weather balloon sensors. The Next days forecast is an estimate that Groundcheck calculates from collected readings, with no weather model, and it can be wrong. Its typical error is shown next to it.
+
+### Thank you
+
+To everyone who builds, launches, hosts and runs radiosondes and receivers. Without them there would be nothing to show.
