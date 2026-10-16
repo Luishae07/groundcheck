@@ -8,46 +8,118 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
 <style>
-:root{--top:#4a7fb5;--bot:#a9cbe3;--ink:#fff;--card:rgba(255,255,255,.16);--line:rgba(255,255,255,.35)}
-@media (prefers-color-scheme: dark){:root{--top:#0c1a2b;--bot:#1f3a52}}
+:root{--top:#4a7fb5;--mid:#6ea0c8;--bot:#a9cbe3;--ink:#fff;--card:rgba(255,255,255,.16);--line:rgba(255,255,255,.38);--cloud:rgba(255,255,255,.55)}
+@media (prefers-color-scheme: dark){:root{--top:#0b1626;--mid:#12263b;--bot:#1f3a52;--cloud:rgba(255,255,255,.12)}}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--bot));display:flex;align-items:center;justify-content:center;padding:1.2rem;overflow:hidden}
-.wrap{max-width:34rem;text-align:center;position:relative;z-index:1}
-.code{font-size:clamp(5rem,22vw,9rem);font-weight:200;letter-spacing:-.04em;line-height:1;margin:0}
-h1{font-size:1.5rem;font-weight:600;margin:.4rem 0 .6rem}
-p{margin:.5rem 0;line-height:1.55;opacity:.92}
-.card{margin:1.4rem 0;padding:1rem 1.2rem;border-radius:16px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;text-align:left;line-height:1.7}
+html,body{min-height:100%;margin:0}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--mid) 55%,var(--bot));display:flex;align-items:center;justify-content:center;padding:1.2rem;overflow-x:hidden;position:relative}
+.sky{position:fixed;inset:0;overflow:hidden;pointer-events:none}
+.cloud{position:absolute;background:var(--cloud);border-radius:999px;filter:blur(1px);animation:drift linear infinite}
+.cloud::before,.cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cloud::before{width:55%;height:180%;left:12%;top:-80%}
+.cloud::after{width:40%;height:140%;left:48%;top:-55%}
+.c1{width:160px;height:34px;top:14%;animation-duration:70s;left:-200px}
+.c2{width:240px;height:46px;top:62%;animation-duration:95s;animation-delay:-40s;left:-260px}
+.c3{width:120px;height:26px;top:38%;animation-duration:60s;animation-delay:-20s;left:-160px}
+@keyframes drift{to{transform:translateX(calc(100vw + 340px))}}
+.balloon{position:absolute;bottom:-160px;animation:rise linear infinite}
+.balloon svg{display:block;animation:sway 5s ease-in-out infinite}
+.b1{left:7%;animation-duration:26s}
+.b2{left:82%;animation-duration:34s;animation-delay:-12s;transform:scale(.7)}
+.b3{left:48%;animation-duration:42s;animation-delay:-25s;transform:scale(.5)}
+@keyframes rise{to{bottom:112%}}
+@keyframes sway{0%,100%{transform:translateX(-10px) rotate(-3deg)}50%{transform:translateX(10px) rotate(3deg)}}
+.wrap{max-width:36rem;text-align:center;position:relative;z-index:1;width:100%}
+.code{font-size:clamp(5rem,24vw,9.5rem);font-weight:200;letter-spacing:-.05em;line-height:1;margin:0;text-shadow:0 6px 30px rgba(0,0,0,.18)}
+h1{font-size:1.55rem;font-weight:600;margin:.3rem 0 .5rem}
+p{margin:.5rem 0;line-height:1.55;opacity:.94}
+#joke{min-height:3.2em}
+.card{margin:1.3rem 0;padding:1rem 1.2rem;border-radius:16px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;text-align:left;line-height:1.75;overflow-wrap:anywhere}
 .card b{font-weight:600}
-a.btn{display:inline-block;margin:.3rem .3rem 0;padding:.65rem 1.2rem;border-radius:999px;background:#fff;color:#0c1a2b;text-decoration:none;font-weight:600}
+#sug{margin:.2rem 0 .6rem;min-height:1.4em}
+#sug a{color:inherit;font-weight:600}
+a.btn{display:inline-block;margin:.3rem .25rem 0;padding:.65rem 1.2rem;border-radius:999px;background:#fff;color:#0c1a2b;text-decoration:none;font-weight:600}
 a.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.balloon{position:absolute;font-size:2.4rem;animation:rise 14s linear infinite;opacity:.8}
-.balloon:nth-child(1){left:8%;animation-duration:15s}
-.balloon:nth-child(2){left:78%;animation-duration:19s;animation-delay:-6s;font-size:1.8rem}
-.balloon:nth-child(3){left:42%;animation-duration:23s;animation-delay:-11s;font-size:1.4rem}
-@keyframes rise{from{top:105%}to{top:-12%}}
-@media (prefers-reduced-motion: reduce){.balloon{animation:none;top:12%}}
+.list{display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center;margin-top:1.1rem}
+.list a{padding:.3rem .8rem;border-radius:999px;border:1px solid var(--line);color:inherit;text-decoration:none;font-size:.82rem;background:var(--card)}
+.list a:hover{background:rgba(255,255,255,.28)}
+.small{font-size:.78rem;opacity:.75;margin-top:1.1rem}
+@media (prefers-reduced-motion: reduce){.cloud,.balloon,.balloon svg{animation:none}.balloon{bottom:62%}.cloud{left:20%}}
 </style>
 </head>
 <body>
-<div class="balloon" aria-hidden="true">&#127880;</div>
-<div class="balloon" aria-hidden="true">&#127880;</div>
-<div class="balloon" aria-hidden="true">&#127880;</div>
+<div class="sky" aria-hidden="true">
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  <div class="balloon b1"><svg width="64" height="110" viewBox="0 0 64 110"><ellipse cx="32" cy="32" rx="26" ry="31" fill="#ff7a3c"/><path d="M32 1c-9 9-14 19-14 31s5 22 14 31c9-9 14-19 14-31S41 10 32 1z" fill="#ffa63c" opacity=".55"/><path d="M26 62l-4 8h20l-4-8" fill="#c8602a"/><path d="M32 70v22" stroke="#fff" stroke-width="1.2"/><rect x="26" y="92" width="12" height="9" rx="2" fill="#e9eef2"/></svg></div>
+  <div class="balloon b2"><svg width="64" height="110" viewBox="0 0 64 110"><ellipse cx="32" cy="32" rx="26" ry="31" fill="#52c7e6"/><path d="M32 1c-9 9-14 19-14 31s5 22 14 31c9-9 14-19 14-31S41 10 32 1z" fill="#7fe08a" opacity=".45"/><path d="M26 62l-4 8h20l-4-8" fill="#2f8aa6"/><path d="M32 70v22" stroke="#fff" stroke-width="1.2"/><rect x="26" y="92" width="12" height="9" rx="2" fill="#e9eef2"/></svg></div>
+  <div class="balloon b3"><svg width="64" height="110" viewBox="0 0 64 110"><ellipse cx="32" cy="32" rx="26" ry="31" fill="#ffd24a"/><path d="M32 1c-9 9-14 19-14 31s5 22 14 31c9-9 14-19 14-31S41 10 32 1z" fill="#fff" opacity=".3"/><path d="M26 62l-4 8h20l-4-8" fill="#c99a2e"/><path d="M32 70v22" stroke="#fff" stroke-width="1.2"/><rect x="26" y="92" width="12" height="9" rx="2" fill="#e9eef2"/></svg></div>
+</div>
 <main class="wrap">
   <p class="code">404</p>
   <h1>This page floated away</h1>
-  <p>We sent a weather balloon to fetch it. It rose to 30 kilometres, burst, and the page was not on board.</p>
+  <p id="joke">We sent a weather balloon to fetch it. It rose to 30 kilometres, burst, and the page was not on board.</p>
   <div class="card">
     <b>Flight log</b><br>
-    launch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: looking for your page<br>
-    altitude&nbsp;&nbsp;: 30 km<br>
-    temperature: very cold<br>
+    target&nbsp;&nbsp;&nbsp;&nbsp;: <span id="what">this page</span><br>
+    altitude&nbsp;&nbsp;: <span id="alt">30</span> km<br>
+    temperature: <span id="tmp">-54</span> &deg;C<br>
     result&nbsp;&nbsp;&nbsp;&nbsp;: page not found<br>
     landing&nbsp;&nbsp;&nbsp;: somewhere in a field
   </div>
-  <p>The address may be mistyped, or the page was moved. The weather, at least, is real.</p>
+  <p id="sug"></p>
   <a class="btn" href="https://luishae07.github.io/">Back to Groundcheck</a>
   <a class="btn alt" href="https://luishae07.github.io/apidocs/">API docs</a>
+  <div class="list" aria-label="Pages that exist">
+    <a href="https://luishae07.github.io/desktop/">Desktop</a>
+    <a href="https://luishae07.github.io/accuracy.html">Accuracy</a>
+    <a href="https://luishae07.github.io/selfhost.html">Self-host</a>
+    <a href="https://luishae07.github.io/coolthing.html">3D globe</a>
+    <a href="https://luishae07.github.io/download.html">Download</a>
+    <a href="https://luishae07.github.io/changelog.html">Changelog</a>
+    <a href="https://luishae07.github.io/llms.txt">llms.txt</a>
+  </div>
+  <p class="small">The address may be mistyped, or the page was moved. The weather, at least, is real.</p>
 </main>
+<script>
+(function(){
+  // show the address that was not found (as text, never as HTML)
+  var path = location.pathname.replace(/^\/groundcheck\//, "/");
+  document.getElementById("what").textContent = path.length > 60 ? path.slice(0, 57) + "..." : path;
+
+  // a different joke each time
+  var jokes = [
+    "We sent a weather balloon to fetch it. It rose to 30 kilometres, burst, and the page was not on board.",
+    "The page went up with a balloon and did not come down. Thoughts and prayers, and a few hundred metres of string.",
+    "It was here a moment ago. Then the wind changed.",
+    "Our radiosonde says the temperature at this address is minus 54 and the page is nowhere.",
+    "This page is at a place without a station within 900 kilometres. Like Nairobi, sadly.",
+    "Search party: one balloon, one antenna, one very patient volunteer."
+  ];
+  document.getElementById("joke").textContent = jokes[Math.floor(Math.random() * jokes.length)];
+  document.getElementById("alt").textContent = 18 + Math.floor(Math.random() * 16);
+  document.getElementById("tmp").textContent = "-" + (40 + Math.floor(Math.random() * 25));
+
+  // "did you mean": the closest real page by edit distance
+  var pages = ["apidocs/", "desktop/", "accuracy.html", "selfhost.html", "coolthing.html", "download.html", "changelog.html", "keys.html", "basemap.html", "llms.txt", "llms-full.txt", "robots.txt", "sitemap.xml", "credits.txt", "ai-policy.txt", "how-to-cite.txt", "feed.xml"];
+  function dist(a, b) {
+    var m = [], i, j;
+    for (i = 0; i <= a.length; i++) m[i] = [i];
+    for (j = 1; j <= b.length; j++) m[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++)
+      m[i][j] = Math.min(m[i-1][j] + 1, m[i][j-1] + 1, m[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+    return m[a.length][b.length];
+  }
+  var want = path.replace(/^\/+/, "").toLowerCase(), best = null, bd = 99;
+  if (want) pages.forEach(function (p) { var d = dist(want, p); if (d < bd) { bd = d; best = p; } });
+  if (best && bd <= Math.max(3, Math.floor(best.length / 3))) {
+    var a = document.createElement("a");
+    a.href = "https://luishae07.github.io/" + best; a.textContent = "/" + best;
+    var s = document.getElementById("sug");
+    s.appendChild(document.createTextNode("Did you mean "));
+    s.appendChild(a);
+    s.appendChild(document.createTextNode("?"));
+  }
+})();
+</script>
 </body>
 </html>
