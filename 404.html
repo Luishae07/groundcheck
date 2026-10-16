@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>404: this page floated away - Groundcheck</title>
+<meta name="description" content="This page could not be found. Our weather balloon lost contact with it.">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<style>
+:root{--top:#4a7fb5;--bot:#a9cbe3;--ink:#fff;--card:rgba(255,255,255,.16);--line:rgba(255,255,255,.35)}
+@media (prefers-color-scheme: dark){:root{--top:#0c1a2b;--bot:#1f3a52}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--bot));display:flex;align-items:center;justify-content:center;padding:1.2rem;overflow:hidden}
+.wrap{max-width:34rem;text-align:center;position:relative;z-index:1}
+.code{font-size:clamp(5rem,22vw,9rem);font-weight:200;letter-spacing:-.04em;line-height:1;margin:0}
+h1{font-size:1.5rem;font-weight:600;margin:.4rem 0 .6rem}
+p{margin:.5rem 0;line-height:1.55;opacity:.92}
+.card{margin:1.4rem 0;padding:1rem 1.2rem;border-radius:16px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;text-align:left;line-height:1.7}
+.card b{font-weight:600}
+a.btn{display:inline-block;margin:.3rem .3rem 0;padding:.65rem 1.2rem;border-radius:999px;background:#fff;color:#0c1a2b;text-decoration:none;font-weight:600}
+a.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.balloon{position:absolute;font-size:2.4rem;animation:rise 14s linear infinite;opacity:.8}
+.balloon:nth-child(1){left:8%;animation-duration:15s}
+.balloon:nth-child(2){left:78%;animation-duration:19s;animation-delay:-6s;font-size:1.8rem}
+.balloon:nth-child(3){left:42%;animation-duration:23s;animation-delay:-11s;font-size:1.4rem}
+@keyframes rise{from{top:105%}to{top:-12%}}
+@media (prefers-reduced-motion: reduce){.balloon{animation:none;top:12%}}
+</style>
+</head>
+<body>
+<div class="balloon" aria-hidden="true">&#127880;</div>
+<div class="balloon" aria-hidden="true">&#127880;</div>
+<div class="balloon" aria-hidden="true">&#127880;</div>
+<main class="wrap">
+  <p class="code">404</p>
+  <h1>This page floated away</h1>
+  <p>We sent a weather balloon to fetch it. It rose to 30 kilometres, burst, and the page was not on board.</p>
+  <div class="card">
+    <b>Flight log</b><br>
+    launch&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: looking for your page<br>
+    altitude&nbsp;&nbsp;: 30 km<br>
+    temperature: very cold<br>
+    result&nbsp;&nbsp;&nbsp;&nbsp;: page not found<br>
+    landing&nbsp;&nbsp;&nbsp;: somewhere in a field
+  </div>
+  <p>The address may be mistyped, or the page was moved. The weather, at least, is real.</p>
+  <a class="btn" href="https://luishae07.github.io/">Back to Groundcheck</a>
+  <a class="btn alt" href="https://luishae07.github.io/apidocs/">API docs</a>
+</main>
+</body>
+</html>
