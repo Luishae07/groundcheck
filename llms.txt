@@ -8,7 +8,7 @@ Data comes from the live radiosonde feed of sonde.mine.nu, the open SondeHub dat
 
 - [Web app](https://luishae07.github.io/groundcheck/): today's reading near you, map of stations, history and forecast
 - [Desktop view](https://luishae07.github.io/groundcheck/desktop/): the fuller layout with search and FAQ
-- [Firefox add-on](https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/): the current reading in the browser toolbar
+- [Firefox add-on](https://luishae07.github.io/firefox/): the current balloon reading in the browser toolbar, with a link to the store page
 - [3D globe of every reading](https://luishae07.github.io/groundcheck/coolthing.html)
 
 ## For developers
