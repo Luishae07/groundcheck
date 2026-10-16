@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Groundcheck for Firefox: the weather a balloon measured near you</title>
+<meta name="description" content="Free Firefox add-on: search with Flowsearch and see the temperature a weather balloon measured near you. Your location stays in your browser.">
+<link rel="canonical" href="https://luishae07.github.io/firefox/">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Groundcheck for Firefox: the weather a balloon measured near you">
+<meta property="og:description" content="Free Firefox add-on: search with Flowsearch and see the temperature a weather balloon measured near you.">
+<meta property="og:url" content="https://luishae07.github.io/firefox/">
+<meta property="og:image" content="https://luishae07.github.io/dl_screenshot_today.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Flowsearch + Groundcheck",
+  "applicationCategory": "BrowserApplication",
+  "operatingSystem": "Firefox",
+  "description": "A Firefox add-on that searches with Flowsearch and shows the temperature measured by the nearest weather balloon, using your location.",
+  "url": "https://luishae07.github.io/firefox/",
+  "downloadUrl": "https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/",
+  "softwareVersion": "1.0.1",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "isPartOf": { "@type": "WebApplication", "name": "Groundcheck", "url": "https://luishae07.github.io/" }
+}
+</script>
+<style>
+:root{--top:#4a7fb5;--mid:#6ea0c8;--bot:#a9cbe3;--ink:#132433;--dim:#34506b;--card:rgba(255,255,255,.72);--line:rgba(255,255,255,.7);--accent:#e08a2c}
+@media (prefers-color-scheme: dark){:root{--top:#0b1626;--mid:#12263b;--bot:#1f3a52;--ink:#eaf2fa;--dim:#a9bdd0;--card:rgba(255,255,255,.08);--line:rgba(255,255,255,.16)}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--mid) 40%,var(--bot)) fixed;line-height:1.6}
+main{max-width:46rem;margin:0 auto;padding:2rem 1.2rem 3rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:600;color:#fff;text-decoration:none;margin-bottom:1.6rem}
+.brand img{width:28px;height:28px;border-radius:8px}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:300;letter-spacing:-.02em;line-height:1.1;margin:0 0 .8rem;color:#fff}
+.lead{font-size:1.1rem;color:#fff;opacity:.95;margin:0 0 1.4rem}
+.get img{height:58px;display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.2rem 1.3rem;margin:1.2rem 0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+h2{font-size:1.15rem;margin:0 0 .5rem}
+ul{padding-left:1.2rem;margin:.4rem 0}
+li{margin:.25rem 0}
+dt{font-weight:600;margin-top:.8rem}
+dd{margin:.15rem 0 0;color:var(--dim)}
+a{color:inherit}
+.shot{width:100%;border-radius:14px;border:1px solid var(--line);margin-top:.6rem}
+footer{margin-top:2rem;color:#fff;opacity:.85;font-size:.85rem;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="https://luishae07.github.io/"><img src="https://luishae07.github.io/logo.svg" alt="Groundcheck logo">Groundcheck</a>
+  <h1>The weather a balloon measured near you, in Firefox</h1>
+  <p class="lead">A free add-on that shows the temperature, pressure and humidity measured by the nearest weather balloon, and lets you search with Flowsearch from the same toolbar button.</p>
+  <a class="get" href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/"><img src="https://luishae07.github.io/firefox-addon.svg" alt="Get the add-on for Firefox"></a>
+
+  <section class="card">
+    <h2>What it does</h2>
+    <ul>
+      <li>Shows the latest ground-level reading from the weather balloon station nearest to you, with its distance and age.</li>
+      <li>Only readings from the last 19 hours count, the same rule as the Groundcheck website. If no balloon has reported lately, it says so and does not guess.</li>
+      <li>Searches the web with Flowsearch, a search engine with its own crawler and index.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Your location stays in your browser</h2>
+    <p>The add-on asks Firefox for your location, downloads the recent balloon readings, and works out the nearest one inside your browser. Your position is not sent to Groundcheck. The add-on stores a few settings in your browser and runs a small timer to keep the data fresh.</p>
+  </section>
+
+  <section class="card">
+    <h2>Permissions, and why</h2>
+    <dl>
+      <dt>Location</dt><dd>To find the balloon station nearest to you. It is used on your device only.</dd>
+      <dt>Storage</dt><dd>To remember its settings and the last readings.</dd>
+      <dt>Alarms</dt><dd>A timer that refreshes the readings now and then.</dd>
+      <dt>luishae07.github.io, raw.githubusercontent.com and trycloudflare.com</dt><dd>The places it downloads from: the Groundcheck site, the file that holds the current server address, and the server that sends the readings.</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Is it free?</dt><dd>Yes. There are no ads and no accounts.</dd>
+      <dt>Where does the weather come from?</dt><dd>From weather balloons (radiosondes): the live feed of sonde.mine.nu, the open SondeHub database, and the NOAA IGRA archive. Groundcheck shows what they measured and does not use a weather model.</dd>
+      <dt>Why does it say there is no reading?</dt><dd>There may be no balloon station near you, or none has reported in the last 19 hours. Many places, such as parts of Africa and the tropics, have no station within hundreds of kilometres.</dd>
+      <dt>Does it work in other browsers?</dt><dd>It is made for Firefox. Groundcheck itself works in any browser at <a href="https://luishae07.github.io/">luishae07.github.io</a>.</dd>
+      <dt>Is the code open?</dt><dd>Groundcheck is free software under the AGPL-3.0 licence: <a href="https://github.com/Luishae07/groundcheck">github.com/Luishae07/groundcheck</a>.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    <a href="https://luishae07.github.io/">Groundcheck</a> &middot;
+    <a href="https://luishae07.github.io/apidocs/">API</a> &middot;
+    <a href="https://luishae07.github.io/changelog.html">Changelog</a> &middot;
+    <a href="https://luishae07.github.io/credits.txt">Credits</a>
+  </footer>
+</main>
+</body>
+</html>
