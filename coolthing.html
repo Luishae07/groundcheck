@@ -96,11 +96,11 @@ Promise.all([
 function prepare(d) {
   d.sort(function (a, b) { return a.tsunix - b.tsunix; });
   N = d.length;
-  pts = { sinP: new Float32Array(N), cosP: new Float32Array(N), lam: new Float32Array(N), t: new Float64Array(N), temp: new Float32Array(N), src: new Uint8Array(N), idx: d };
+  pts = { sinP: new Float32Array(N), cosP: new Float32Array(N), lam: new Float32Array(N), cosL: new Float32Array(N), sinL: new Float32Array(N), bk: new Uint8Array(N), t: new Float64Array(N), temp: new Float32Array(N), src: new Uint8Array(N), idx: d };
   var ids = {}, counts = [0, 0, 0], perYear = {};
   for (var i = 0; i < N; i++) {
     var r = d[i], s = r.source || [], k = s.indexOf("IGRA") >= 0 ? 2 : s.indexOf("SondeHub") >= 0 ? 1 : 0;
-    pts.sinP[i] = Math.sin(r.lat * RAD); pts.cosP[i] = Math.cos(r.lat * RAD); pts.lam[i] = r.lon * RAD;
+    pts.sinP[i] = Math.sin(r.lat * RAD); pts.cosP[i] = Math.cos(r.lat * RAD); pts.lam[i] = r.lon * RAD; pts.cosL[i] = Math.cos(pts.lam[i]); pts.sinL[i] = Math.sin(pts.lam[i]); pts.bk[i] = bucket(r.temp);
     pts.t[i] = r.tsunix; pts.temp[i] = r.temp; pts.src[i] = k; ids[r.id] = 1; counts[k]++;
     var y = new Date(r.tsunix * 1000).getUTCFullYear(); perYear[y] = (perYear[y] || 0) + 1;
   }
@@ -222,42 +222,53 @@ function drawShade() {
 }
 
 // ---- the balloons
-var bx = null, by = null, bb = null, vis = 0;
+var bxs = null, bys = null, bn = new Int32Array(8), rk = [], rj = [], vis = 0, lastDraw = 0;
+function isMoving() { return dragging || spinning || playing || Math.abs(vLon) > 0.002 || Math.abs(vLat) > 0.002; }
+
 function drawPoints() {
   if (!pts) return;
-  if (!bx || bx.length < N) { bx = new Float32Array(N); by = new Float32Array(N); bb = new Uint8Array(N); }
+  if (!bxs || bxs[0].length < N) { bxs = []; bys = []; for (var q = 0; q < 8; q++) { bxs.push(new Float32Array(N)); bys.push(new Float32Array(N)); } }
   // how many readings are older than T (the list is sorted by time)
   var lo = 0, hi = N;
   while (lo < hi) { var m = (lo + hi) >> 1; if (pts.t[m] <= T) lo = m + 1; else hi = m; }
-  var last = lo, s0 = Math.sin(lat0 * RAD), c0 = Math.cos(lat0 * RAD), l0 = lon0 * RAD, n = 0;
+  var last = lo, s0 = Math.sin(lat0 * RAD), c0 = Math.cos(lat0 * RAD), l0 = lon0 * RAD, cl0 = Math.cos(l0), sl0 = Math.sin(l0), n = 0;
   var win = playing ? 86400 * 25 : 86400 * 2;
-  var recent = [];
-  for (var i = 0; i < last; i++) {
-    if (!srcOn[pts.src[i]]) continue;
-    var dl = pts.lam[i] - l0, cdl = Math.cos(dl), cc = s0 * pts.sinP[i] + c0 * pts.cosP[i] * cdl;
+  // while the globe moves, draw about 45,000 points at most; when it stands still, draw them all
+  var stride = isMoving() ? Math.max(1, Math.ceil(last / 45000)) : 1;
+  for (var k0 = 0; k0 < 8; k0++) bn[k0] = 0;
+  var nr = 0, cosP = pts.cosP, sinP = pts.sinP, cosL = pts.cosL, sinL = pts.sinL, tt = pts.t, bk = pts.bk, src = pts.src;
+  for (var i = 0; i < last; i += stride) {
+    if (!srcOn[src[i]]) continue;
+    var cdl = cosL[i] * cl0 + sinL[i] * sl0, sdl = sinL[i] * cl0 - cosL[i] * sl0;     // cos and sin of (longitude - lon0)
+    var cc = s0 * sinP[i] + c0 * cosP[i] * cdl;
     if (cc < 0.03) continue;
-    var x = pts.cosP[i] * Math.sin(dl), y = c0 * pts.sinP[i] - s0 * pts.cosP[i] * cdl;
-    bx[n] = CX + R * x; by[n] = CY - R * y; bb[n] = bucket(pts.temp[i]); n++;
-    if (T - pts.t[i] < win) recent.push(n - 1);
+    var k = bk[i], c = bn[k]++;
+    bxs[k][c] = CX + R * cosP[i] * sdl; bys[k][c] = CY - R * (c0 * sinP[i] - s0 * cosP[i] * cdl); n++;
+    if (nr < 900 && T - tt[i] < win) { rk[nr] = k; rj[nr] = c; nr++; }
   }
   vis = n;
-  var size = Math.max(1.3, R / 260 * 1.7);
+  var size = Math.max(1.3, R / 260 * 1.7) * (stride > 1 ? 1.25 : 1);
   ctx.globalCompositeOperation = "lighter";
-  for (var k = 0; k < 8; k++) {
-    ctx.fillStyle = PAL[k]; ctx.globalAlpha = showAll ? 0.62 : 0.5; ctx.beginPath();
-    for (var j = 0; j < n; j++) if (bb[j] === k) ctx.rect(bx[j] - size / 2, by[j] - size / 2, size, size);
+  for (var b = 0; b < 8; b++) {
+    var bxk = bxs[b], byk = bys[b], cnt = bn[b];
+    if (!cnt) continue;
+    ctx.fillStyle = PAL[b]; ctx.globalAlpha = showAll ? 0.62 : 0.5; ctx.beginPath();
+    for (var j = 0; j < cnt; j++) ctx.rect(bxk[j] - size / 2, byk[j] - size / 2, size, size);
     ctx.fill();
   }
   // the newest ones glow (and pulse a little)
   var pulse = 0.75 + 0.25 * Math.sin(performance.now() / 380), gs = size * 7 * pulse;
   ctx.globalAlpha = 0.8;
-  for (var r = 0; r < recent.length && r < 900; r++) { var q = recent[r]; ctx.drawImage(glow, bx[q] - gs / 2, by[q] - gs / 2, gs, gs); }
+  for (var r = 0; r < nr; r++) { var kk = rk[r], jj = rj[r]; ctx.drawImage(glow, bxs[kk][jj] - gs / 2, bys[kk][jj] - gs / 2, gs, gs); }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
 }
 
 // ---- the loop
 var lastT = 0;
 function frame(now) {
+  // standing still, the globe only needs the pulsing glow: about 15 frames a second is plenty
+  if (!isMoving() && now - lastDraw < 66) { requestAnimationFrame(frame); return; }
+  lastDraw = now;
   var dt = Math.min(50, now - lastT) / 1000; lastT = now;
   if (playing) {
     T += (tMax - tMin) / 26 * dt;
