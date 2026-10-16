@@ -498,6 +498,27 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
 .addoncard span{font-size:.82rem;color:var(--ink-dim);line-height:1.4}
 #view-today .addoncard{grid-column:1/-1}
 </style>
+<style id="wide-layout">
+/* Wide screens: the temperature on the left and the condition tiles on the right, so the map and forecast come into view sooner. */
+@media (min-width:1200px){
+  html .wrap{max-width:1380px!important}
+  html .hero{display:grid!important;grid-template-columns:minmax(320px,.85fr) minmax(0,1.5fr);grid-template-areas:"icon metrics" "readout metrics";grid-template-rows:auto 1fr;column-gap:2.4rem;row-gap:0;align-items:center!important;text-align:left!important;padding:1.6rem 2rem 1.8rem!important}
+  html .hero .icon{grid-area:icon;justify-self:start;align-self:end;position:relative}
+  html .hero .readout{grid-area:readout;align-items:flex-start!important;align-self:start}
+  html .hero .temp{font-size:8.5rem!important}
+  html .hero .loc{font-size:1.9rem!important}
+  html .hero .stamp{max-width:26rem}
+  html .hero .metrics{grid-area:metrics;position:relative;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.9rem!important;margin:0!important;max-width:none!important;width:auto!important;justify-content:stretch!important}
+  html .hero .mhead{grid-column:1/-1}
+  html .hero .metric{min-width:0!important;flex:none!important;min-height:160px}
+}
+/* Very wide screens: more room for the map */
+@media (min-width:1500px){
+  html .wrap{max-width:1640px!important}
+  html #view-today:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(0,1.7fr)!important}
+  html .grid3 #mapbox{min-height:560px!important}
+}
+</style>
 </head>
 <body>
 
