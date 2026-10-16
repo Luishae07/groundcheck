@@ -241,6 +241,16 @@
   </url>
 
   <!--
+    How to add Groundcheck to ChatGPT as a custom MCP server. Click, paste, kaboom.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/mcp.html</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!--
     The end. Thank you for reading the whole map.
     Nobody ever does. We are touched.
     If you made it this far, here is a free cloud: (  )
