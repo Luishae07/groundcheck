@@ -231,6 +231,16 @@
   </url>
 
   <!--
+    The Firefox add-on page. Install it and your toolbar knows what a balloon measured near you.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/firefox/</loc>
+    <lastmod>2026-10-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!--
     The end. Thank you for reading the whole map.
     Nobody ever does. We are touched.
     If you made it this far, here is a free cloud: (  )
