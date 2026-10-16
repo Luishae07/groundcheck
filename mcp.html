@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Groundcheck for ChatGPT: add the MCP server</title>
+<meta name="description" content="Add the Groundcheck MCP server to ChatGPT in a minute, and ask it about real weather balloon readings and forecasts for any place.">
+<link rel="canonical" href="https://luishae07.github.io/mcp.html">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Groundcheck for ChatGPT: add the MCP server">
+<meta property="og:description" content="Add the Groundcheck MCP server to ChatGPT and ask about real weather balloon readings and forecasts.">
+<meta property="og:url" content="https://luishae07.github.io/mcp.html">
+<meta property="og:image" content="https://luishae07.github.io/dl_screenshot_today.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<style>
+:root{--top:#4a7fb5;--mid:#6ea0c8;--bot:#a9cbe3;--ink:#132433;--dim:#34506b;--card:rgba(255,255,255,.74);--line:rgba(255,255,255,.7);--accent:#e08a2c;--code:#0c1a2b}
+@media (prefers-color-scheme: dark){:root{--top:#0b1626;--mid:#12263b;--bot:#1f3a52;--ink:#eaf2fa;--dim:#a9bdd0;--card:rgba(255,255,255,.08);--line:rgba(255,255,255,.16);--code:#06101c}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--mid) 45%,var(--bot)) fixed;line-height:1.6}
+main{max-width:46rem;margin:0 auto;padding:2rem 1.2rem 3.5rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:600;color:#fff;text-decoration:none;margin-bottom:1.6rem}
+.brand img{width:28px;height:28px;border-radius:8px}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:300;letter-spacing:-.02em;line-height:1.1;margin:0 0 .8rem;color:#fff}
+.lead{font-size:1.1rem;color:#fff;opacity:.95;margin:0 0 1.2rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.2rem 1.3rem;margin:1.1rem 0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+h2{font-size:1.15rem;margin:0 0 .6rem}
+ol{margin:.3rem 0;padding-left:0;list-style:none;counter-reset:s}
+ol li{counter-increment:s;position:relative;padding:.55rem 0 .55rem 2.5rem;border-top:1px solid var(--line)}
+ol li:first-child{border-top:0}
+ol li::before{content:counter(s);position:absolute;left:0;top:.55rem;width:1.8rem;height:1.8rem;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+b.btn{background:var(--code);color:#fff;border-radius:7px;padding:.1rem .5rem;font-weight:600;font-size:.92em;white-space:nowrap}
+.addr{display:flex;gap:.5rem;align-items:stretch;margin:.6rem 0}
+.addr code{flex:1;min-width:0;background:var(--code);color:#9fe0b4;border-radius:12px;padding:.8rem 1rem;font-size:.95rem;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,Consolas,monospace}
+.addr button{border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:700;padding:0 1.2rem;cursor:pointer}
+.addr button:active{transform:scale(.97)}
+.note{font-size:.88rem;color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+td{padding:.4rem .3rem;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap;padding-right:.8rem;color:var(--accent);font-weight:600}
+ul{margin:.3rem 0;padding-left:1.2rem}
+li{margin:.25rem 0}
+a{color:inherit}
+footer{margin-top:2rem;color:#fff;opacity:.85;font-size:.85rem;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="https://luishae07.github.io/"><img src="https://luishae07.github.io/logo.svg" alt="Groundcheck logo">Groundcheck</a>
+  <h1>Add Groundcheck to ChatGPT</h1>
+  <p class="lead">One minute, and ChatGPT can look up the real temperature that a weather balloon measured near any place, plus Groundcheck's own forecast.</p>
+
+  <section class="card">
+    <h2>The address to paste</h2>
+    <div class="addr"><code id="addr">Looking up the current address…</code><button id="copy" type="button">Copy</button></div>
+    <p class="note" id="addrnote">The address ends in <b>/mcp</b>. It changes now and then, because the server runs behind a temporary tunnel, so always copy it from here.</p>
+  </section>
+
+  <section class="card">
+    <h2>Add it, step by step</h2>
+    <ol>
+      <li>Open <b>ChatGPT</b> and go to your settings. Open the <b class="btn">Plugins</b> area (it may be called <b class="btn">Connectors</b> or <b class="btn">Apps</b> in your version). If you don't see a way to add your own server, turn on <b class="btn">Developer mode</b> in the advanced settings first.</li>
+      <li>Click the <b class="btn">+</b> button to add a new one.</li>
+      <li>Choose <b class="btn">Add custom MCP server</b>.</li>
+      <li>Give it a name, for example <b>Groundcheck</b>, and paste the address from the box above.</li>
+      <li>For authentication choose <b class="btn">No authentication</b>. Tick the box that says you trust the server, and click <b class="btn">Create</b>.</li>
+      <li>Start a new chat, switch Groundcheck on for it, and ask a question. Kaboom, it works.</li>
+    </ol>
+    <p class="note">The names of the buttons can look a little different from one version of ChatGPT to the next, and custom servers are not offered on every plan. The idea is always the same: add a custom MCP server, and paste the address.</p>
+  </section>
+
+  <section class="card">
+    <h2>Things to ask</h2>
+    <ul>
+      <li>“What did a weather balloon measure near Berlin today?”</li>
+      <li>“Give me Groundcheck's forecast for Potsdam for the next days.”</li>
+      <li>“Which balloon station is closest to Nairobi, and how old is its latest reading?”</li>
+      <li>“How warm was it around the balloon stations 50 days ago?”</li>
+      <li>“How many readings does Groundcheck have, and from which sources?”</li>
+    </ul>
+    <p class="note">ChatGPT may ask your permission the first time it calls a tool. Groundcheck has temperature, air pressure and humidity only: no rain, wind or clouds.</p>
+  </section>
+
+  <section class="card">
+    <h2>What ChatGPT can use</h2>
+    <table>
+      <tr><td>nearest_station</td><td>The weather balloon reading nearest to a latitude and longitude.</td></tr>
+      <tr><td>predictor</td><td>Groundcheck's own forecast for a place, built only from balloon readings. It can be wrong.</td></tr>
+      <tr><td>current_reading</td><td>The newest reading in Groundcheck.</td></tr>
+      <tr><td>recent_readings</td><td>All readings from the last few days.</td></tr>
+      <tr><td>weather_days_ago</td><td>What the balloons measured a number of days ago.</td></tr>
+      <tr><td>station_history</td><td>The history of one station.</td></tr>
+      <tr><td>search_readings</td><td>Find readings by temperature.</td></tr>
+      <tr><td>stats</td><td>How many readings there are and where they come from.</td></tr>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>If it does not work</h2>
+    <ul>
+      <li><b>ChatGPT cannot connect.</b> The address changed. Reload this page, copy the new address, and edit the server's address in ChatGPT.</li>
+      <li><b>There is no “Add custom MCP server”.</b> Your plan or version may not offer it yet, or developer mode is off.</li>
+      <li><b>The answer says no data.</b> There may be no balloon station within hundreds of kilometres of that place, for example in parts of Africa and the tropics.</li>
+    </ul>
+    <p class="note">Everything in the answers comes from real balloon measurements by the networks credited on the <a href="https://luishae07.github.io/credits.txt">credits</a> page. Groundcheck is free software: <a href="https://github.com/Luishae07/groundcheck">github.com/Luishae07/groundcheck</a>.</p>
+  </section>
+
+  <footer>
+    <a href="https://luishae07.github.io/">Groundcheck</a> &middot;
+    <a href="https://luishae07.github.io/apidocs/">API</a> &middot;
+    <a href="https://luishae07.github.io/firefox/">Firefox add-on</a> &middot;
+    <a href="https://luishae07.github.io/llms.txt">llms.txt</a>
+  </footer>
+</main>
+<script>
+// The server runs behind a temporary tunnel whose address changes, so the current one is read from a file in the repository.
+(function () {
+  var code = document.getElementById('addr'), note = document.getElementById('addrnote'), btn = document.getElementById('copy');
+  fetch('https://raw.githubusercontent.com/Luishae07/groundcheck/main/mcp-url.txt', { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(function (t) {
+      t = (t || '').trim().replace(/\/$/, '');
+      if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t)) throw new Error('bad address');
+      code.textContent = t + '/mcp';
+    })
+    .catch(function () {
+      code.textContent = 'Could not look up the address right now. Reload this page in a minute.';
+      btn.disabled = true;
+    });
+  btn.addEventListener('click', function () {
+    var text = code.textContent;
+    if (!/^https:\/\//.test(text)) return;
+    var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { window.getSelection().selectAllChildren(code); });
+    } else {
+      window.getSelection().selectAllChildren(code);
+    }
+  });
+})();
+</script>
+</body>
+</html>
