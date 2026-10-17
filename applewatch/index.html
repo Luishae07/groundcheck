@@ -28,12 +28,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
 <p id="more"></p>
 <p id="msg">Loading…</p>
 <noscript><p style="font-size:15px;line-height:1.3;color:#cfd6dd">This page needs JavaScript. Open <a href="https://luishae07.github.io/" style="color:#7cc4ff">luishae07.github.io</a> on your iPhone.</p></noscript>
-<p id="foot"><a href="../">Groundcheck</a> &middot; real weather balloon data</p>
+<p id="foot"><a href="../">Groundcheck</a> &middot; real weather balloon data<br><a href="place.html">Set my place</a></p>
 <script>
 // A tiny page for watch screens. It asks the Groundcheck server for the readings of the last two days (about 18 KB),
 // finds the balloon nearest to you and shows its temperature. Without a location from the device, your place is the server's rough guess from your
 // network address (it is not stored), or from the address: ?lat=52.5&lon=13.4&name=Berlin  and  &units=f for Fahrenheit.
 // The page first asks the device for its location; &gps=0 skips that and uses the network address only.
+// A map link works too:  ?map=<a Google Maps or OpenStreetMap link>  (place.html turns a pasted link into a short watch link).
+// A map link (Google Maps, OpenStreetMap ...) in the address:  ?map=<link>  gives the place. The same code is in place.html.
+function parseMapLink(raw) {
+  var t = String(raw || '').trim();
+  for (var i = 0; i < 2; i++) { try { t = decodeURIComponent(t); } catch (e) { break; } }
+  var num = '(-?\\d{1,3}(?:\\.\\d+)?)';
+  var m, best = null, centre = null;
+  m = new RegExp('@' + num + ',' + num).exec(t);
+  if (m) centre = [parseFloat(m[1]), parseFloat(m[2])];
+  var pins = [], re = new RegExp('!3d' + num + '!4d' + num, 'g');
+  while ((m = re.exec(t))) pins.push([parseFloat(m[1]), parseFloat(m[2])]);
+  if (pins.length) {
+    best = pins[pins.length - 1];
+    if (centre) {
+      var d = 1e18;
+      pins.forEach(function (p) { var x = (p[0] - centre[0]) * (p[0] - centre[0]) + (p[1] - centre[1]) * (p[1] - centre[1]); if (x < d) { d = x; best = p; } });
+    }
+  } else if (centre) {
+    best = centre;
+  }
+  if (!best && (m = new RegExp('[?&](?:q|ll|query|center|destination|daddr|sll)=' + num + '[ ,+]+' + num).exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best && (m = new RegExp('#map=\\d+/' + num + '/' + num).exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best && (m = new RegExp('mlat=' + num + '[^]*?mlon=' + num).exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best && (m = new RegExp('^\\s*' + num + '\\s*[,;\\s]\\s*' + num + '\\s*$').exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best || !isFinite(best[0]) || !isFinite(best[1]) || Math.abs(best[0]) > 90 || Math.abs(best[1]) > 180) return null;
+  var name = '';
+  if ((m = /\/maps\/place\/([^\/@?]+)/.exec(t))) name = m[1].replace(/\+/g, ' ').split(',')[0].trim();
+  return { lat: best[0], lon: best[1], name: name.slice(0, 24) };
+}
+
 (function () {
   var POINTER = 'https://raw.githubusercontent.com/Luishae07/groundcheck/main/tunnel-url.txt';
   var LITE = '/apiinternel/dont/json/microsftwindowssucks/lite?days=2';
@@ -105,6 +135,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
   function locate(base, cb) {
     var lat = parseFloat(String(params.lat).replace(',', '.')), lon = parseFloat(String(params.lon).replace(',', '.')); // a German iPhone writes 52,52
     if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return cb({ lat: lat, lon: lon, name: params.name || '' });
+    var fromMap = params.map ? parseMapLink(params.map) : null;
+    if (fromMap) return cb({ lat: fromMap.lat, lon: fromMap.lon, name: params.name || fromMap.name || '' });
     if (!navigator.geolocation || params.gps === '0') return viaNetwork(base, cb);
     if (!shown) $('msg').textContent = 'Asking for your location\u2026';
     var done = false;
