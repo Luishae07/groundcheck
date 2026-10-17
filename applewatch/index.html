@@ -103,7 +103,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
 
   // 1. a place in the address, 2. the location of the device (asks once), 3. the server's rough guess from the network address
   function locate(base, cb) {
-    var lat = parseFloat(params.lat), lon = parseFloat(params.lon);
+    var lat = parseFloat(String(params.lat).replace(',', '.')), lon = parseFloat(String(params.lon).replace(',', '.')); // a German iPhone writes 52,52
     if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return cb({ lat: lat, lon: lon, name: params.name || '' });
     if (!navigator.geolocation || params.gps === '0') return viaNetwork(base, cb);
     if (!shown) $('msg').textContent = 'Asking for your location\u2026';
