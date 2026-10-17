@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Groundcheck for Apple Watch</title>
+<meta name="description" content="A tiny Groundcheck page for watch screens: the temperature measured by the weather balloon nearest to you.">
+<link rel="canonical" href="https://luishae07.github.io/applewatch/">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<style>
+html,body{margin:0;padding:0;background:#000;color:#fff}
+body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;text-align:center;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:8px 6px;box-sizing:border-box;-webkit-text-size-adjust:100%}
+#where{font-size:15px;line-height:1.2;color:#9fd2ff;font-weight:600;margin:0 0 2px;word-break:break-word}
+#temp{font-family:inherit;font-size:56px;font-size:clamp(44px,30vw,110px);font-weight:300;line-height:1;color:#fff;background:none;border:0;padding:0;margin:2px 0;cursor:pointer;-webkit-appearance:none;appearance:none}
+#sub{font-size:14px;line-height:1.25;color:#cfd6dd;margin:2px 0}
+#more{font-size:13px;line-height:1.25;color:#8d98a3;margin:2px 0}
+#msg{font-size:15px;line-height:1.3;color:#cfd6dd;margin:0}
+#foot{font-size:11px;color:#6b7580;margin-top:8px}
+#foot a{color:#7cc4ff;text-decoration:none}
+</style>
+</head>
+<body>
+<p id="where"></p>
+<button id="temp" type="button" title="Tap to switch between °C and °F" hidden></button>
+<p id="sub"></p>
+<p id="more"></p>
+<p id="msg">Loading…</p>
+<noscript><p style="font-size:15px;line-height:1.3;color:#cfd6dd">This page needs JavaScript. Open <a href="https://luishae07.github.io/" style="color:#7cc4ff">luishae07.github.io</a> on your iPhone.</p></noscript>
+<p id="foot"><a href="../">Groundcheck</a> &middot; real weather balloon data</p>
+<script>
+// A tiny page for watch screens. It asks the Groundcheck server for the readings of the last two days (about 18 KB),
+// finds the balloon nearest to you and shows its temperature. Your place comes from the server's rough guess from your
+// network address (it is not stored), or from the address: ?lat=52.5&lon=13.4&name=Berlin  and  &units=f for Fahrenheit.
+(function () {
+  var POINTER = 'https://raw.githubusercontent.com/Luishae07/groundcheck/main/tunnel-url.txt';
+  var LITE = '/apiinternel/dont/json/microsftwindowssucks/lite?days=2';
+  var $ = function (id) { return document.getElementById(id); };
+
+  var params = {};
+  location.search.replace(/^\?/, '').split('&').forEach(function (kv) {
+    var p = kv.split('=');
+    if (p[0]) params[decodeURIComponent(p[0])] = decodeURIComponent((p[1] || '').replace(/\+/g, ' '));
+  });
+  var fahrenheit = String(params.units || '').toLowerCase() === 'f';
+  var shown = null;
+
+  function ajax(url, cb) {
+    var x = new XMLHttpRequest();
+    x.open('GET', url, true);
+    x.timeout = 25000;
+    x.onload = function () { x.status >= 200 && x.status < 300 ? cb(null, x.responseText) : cb(new Error('HTTP ' + x.status)); };
+    x.onerror = x.ontimeout = function () { cb(new Error('network')); };
+    x.send();
+  }
+
+  function km(lat1, lon1, lat2, lon2) {
+    var r = Math.PI / 180, dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 12742 * Math.asin(Math.sqrt(a));
+  }
+
+  function age(ts) {
+    var s = Math.max(0, Date.now() / 1000 - ts);
+    if (s < 90 * 60) return Math.max(1, Math.round(s / 60)) + ' min ago';
+    if (s < 48 * 3600) return Math.round(s / 3600) + ' h ago';
+    return Math.round(s / 86400) + ' days ago';
+  }
+
+  function fail(text) {
+    if (shown) return; // keep showing the last good reading
+    $('temp').hidden = true;
+    $('where').textContent = $('sub').textContent = $('more').textContent = '';
+    $('msg').textContent = text;
+  }
+
+  function draw() {
+    if (!shown) return;
+    var t = fahrenheit ? shown.temp * 9 / 5 + 32 : shown.temp;
+    $('temp').textContent = (Math.round(t * 10) / 10).toFixed(1).replace(/\.0$/, '') + '°' + (fahrenheit ? 'F' : '');
+    $('temp').hidden = false;
+    $('where').textContent = shown.name || '';
+    $('sub').textContent = 'Balloon ' + Math.round(shown.dist) + ' km away · ' + age(shown.ts);
+    var more = [];
+    if (shown.pressure != null) more.push(Math.round(shown.pressure) + ' hPa');
+    if (shown.humidity != null) more.push(Math.round(shown.humidity) + ' %');
+    $('more').textContent = more.join(' · ');
+    $('msg').textContent = '';
+  }
+
+  function locate(base, cb) {
+    var lat = parseFloat(params.lat), lon = parseFloat(params.lon);
+    if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return cb({ lat: lat, lon: lon, name: params.name || '' });
+    ajax(base + '/api/whereami', function (err, body) {
+      if (err) return cb(null);
+      try {
+        var d = JSON.parse(body);
+        if (d && d.success && isFinite(d.latitude) && isFinite(d.longitude)) return cb({ lat: d.latitude, lon: d.longitude, name: d.city || d.region || d.country || '' });
+      } catch (e) {}
+      cb(null);
+    });
+  }
+
+  function start() {
+    ajax(POINTER, function (err, text) {
+      var base = (text || '').trim().replace(/\/$/, '');
+      if (err || !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(base)) return fail('Cannot reach Groundcheck right now.');
+      locate(base, function (loc) {
+        if (!loc) return fail('Where are you? Add ?lat=52.5&lon=13.4 to the address.');
+        ajax(base + LITE, function (err2, body) {
+          if (err2) return fail('Cannot load the balloon readings.');
+          var list;
+          try { list = JSON.parse(body); } catch (e) { return fail('Cannot read the balloon readings.'); }
+          var best = null;
+          for (var i = 0; i < list.length; i++) {
+            var r = list[i];
+            if (!r || !isFinite(r.lat) || !isFinite(r.lon) || !isFinite(r.temp)) continue;
+            var ts = r.tsunix || Date.parse(r.time) / 1000;
+            var d = km(loc.lat, loc.lon, r.lat, r.lon);
+            if (!best || d < best.dist - 1 || (Math.abs(d - best.dist) <= 1 && ts > best.ts)) {
+              best = { dist: d, ts: ts, temp: r.temp, pressure: isFinite(r.pressure) ? r.pressure : null, humidity: isFinite(r.humidity) ? r.humidity : null };
+            }
+          }
+          if (!best) return fail('No balloon readings in the last two days.');
+          best.name = loc.name;
+          shown = best;
+          draw();
+        });
+      });
+    });
+  }
+
+  $('temp').addEventListener('click', function () { fahrenheit = !fahrenheit; draw(); });
+  start();
+  setInterval(start, 10 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
