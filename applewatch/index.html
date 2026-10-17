@@ -17,6 +17,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
 #sub{font-size:14px;line-height:1.25;color:#cfd6dd;margin:2px 0}
 #more{font-size:13px;line-height:1.25;color:#8d98a3;margin:2px 0}
 #msg{font-size:15px;line-height:1.3;color:#cfd6dd;margin:0}
+#chg{font-size:13px;color:#7cc4ff;text-decoration:none;display:inline-block;margin:6px 0 2px;padding:4px 8px}
+#cities{width:100%;margin:6px 0 0}
+#cities button{display:block;width:100%;box-sizing:border-box;margin:4px 0;padding:10px 6px;font:inherit;font-size:16px;color:#fff;background:#1c2330;border:0;border-radius:12px;cursor:pointer}
+#cities button.auto{color:#9fd2ff;background:#10151d}
 #foot{font-size:11px;color:#6b7580;margin-top:8px}
 #foot a{color:#7cc4ff;text-decoration:none}
 </style>
@@ -27,6 +31,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
 <p id="sub"></p>
 <p id="more"></p>
 <p id="msg">Loading…</p>
+<a id="chg" href="#">Change place</a>
+<div id="cities" hidden></div>
 <noscript><p style="font-size:15px;line-height:1.3;color:#cfd6dd">This page needs JavaScript. Open <a href="https://luishae07.github.io/" style="color:#7cc4ff">luishae07.github.io</a> on your iPhone.</p></noscript>
 <p id="foot"><a href="../">Groundcheck</a> &middot; real weather balloon data<br><a href="place.html">Set my place</a></p>
 <script>
@@ -74,6 +80,15 @@ function parseMapLink(raw) {
     var p = kv.split('=');
     if (p[0]) params[decodeURIComponent(p[0])] = decodeURIComponent((p[1] || '').replace(/\+/g, ' '));
   });
+  var CITIES = [['Berlin', 52.52, 13.405], ['Potsdam', 52.3906, 13.0645], ['Hamburg', 53.5511, 9.9937], ['M\u00fcnchen', 48.1351, 11.582],
+    ['K\u00f6ln', 50.9375, 6.9603], ['Frankfurt', 50.1109, 8.6821], ['Dresden', 51.0504, 13.7373], ['Leipzig', 51.3397, 12.3731],
+    ['Wien', 48.2082, 16.3738], ['Z\u00fcrich', 47.3769, 8.5417], ['London', 51.5074, -0.1278], ['Paris', 48.8566, 2.3522],
+    ['New York', 40.7128, -74.006], ['Los Angeles', 34.0522, -118.2437], ['Tokyo', 35.6762, 139.6503], ['Sydney', -33.8688, 151.2093]];
+  function savedPlace() {
+    try { var v = JSON.parse(localStorage.getItem('gc_place')); if (v && isFinite(v.lat) && isFinite(v.lon)) return v; } catch (e) {}
+    return null;
+  }
+  function savePlace(v) { try { if (v) localStorage.setItem('gc_place', JSON.stringify(v)); else localStorage.removeItem('gc_place'); } catch (e) {} }
   var fahrenheit = String(params.units || '').toLowerCase() === 'f';
   var shown = null;
 
@@ -137,6 +152,8 @@ function parseMapLink(raw) {
     if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return cb({ lat: lat, lon: lon, name: params.name || '' });
     var fromMap = params.map ? parseMapLink(params.map) : null;
     if (fromMap) return cb({ lat: fromMap.lat, lon: fromMap.lon, name: params.name || fromMap.name || '' });
+    var sp = savedPlace();
+    if (sp) return cb(sp);
     if (!navigator.geolocation || params.gps === '0') return viaNetwork(base, cb);
     if (!shown) $('msg').textContent = 'Asking for your location\u2026';
     var done = false;
@@ -154,12 +171,29 @@ function parseMapLink(raw) {
     }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 });
   }
 
+  function showCities(show) { $('cities').hidden = !show; }
+  function buildCities() {
+    var box = $('cities');
+    var auto = document.createElement('button');
+    auto.type = 'button'; auto.className = 'auto'; auto.textContent = 'Find my place';
+    auto.addEventListener('click', function () { savePlace(null); showCities(false); shown = null; start(); });
+    box.appendChild(auto);
+    CITIES.forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = c[0];
+      b.addEventListener('click', function () { savePlace({ lat: c[1], lon: c[2], name: c[0] }); showCities(false); shown = null; start(); });
+      box.appendChild(b);
+    });
+  }
+  $('chg').addEventListener('click', function (e) { e.preventDefault(); showCities($('cities').hidden); });
+  buildCities();
+
   function start() {
     ajax(POINTER, function (err, text) {
       var base = (text || '').trim().replace(/\/$/, '');
       if (err || !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(base)) return fail('Cannot reach Groundcheck right now.');
       locate(base, function (loc) {
-        if (!loc) return fail('Where are you? Add ?lat=52.5&lon=13.4 to the address.');
+        if (!loc) { showCities(true); return fail('Where are you? Tap a place:'); }
         ajax(base + LITE, function (err2, body) {
           if (err2) return fail('Cannot load the balloon readings.');
           var list;
