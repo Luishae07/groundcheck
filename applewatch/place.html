@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Set your place for the Groundcheck watch page</title>
+<meta name="description" content="Paste a Google Maps link and get a link to the Groundcheck Apple Watch page for exactly that place.">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<style>
+:root{--bg:#f4f7fb;--ink:#14202e;--dim:#566779;--card:#fff;--line:#d5dee9;--accent:#1b5fbd}
+@media (prefers-color-scheme: dark){:root{--bg:#0c1118;--ink:#e9eff6;--dim:#9aabbd;--card:#151d28;--line:#273445;--accent:#6fb1ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+main{max-width:34rem;margin:0 auto;padding:1.4rem 1rem 3rem}
+h1{font-size:1.5rem;margin:.2rem 0 .4rem}
+p{margin:.5rem 0}
+.dim{color:var(--dim);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:1rem 0}
+textarea{width:100%;min-height:5.5rem;font:inherit;font-size:16px;padding:.7rem;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:12px;background:var(--accent);color:#fff;padding:.7rem 1.1rem;margin:.5rem .4rem 0 0;cursor:pointer;text-decoration:none;display:inline-block}
+button.alt,.btn.alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+code,#out{word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:.85rem}
+#result{display:none}
+ol{padding-left:1.2rem;margin:.4rem 0}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Set your place</h1>
+  <p class="dim">The Apple Watch page cannot ask for your location, so it needs to be told. Paste a Google Maps link to the place you want, and you get a link for the watch.</p>
+
+  <div class="card">
+    <p><b>1.</b> In Google Maps, open your place, tap <b>Share</b> and <b>Copy link</b>. <b>2.</b> Paste it here.</p>
+    <textarea id="link" placeholder="Paste the map link here" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    <button id="go" type="button">Make my watch link</button>
+    <p class="dim" id="problem" style="display:none"></p>
+  </div>
+
+  <div class="card" id="result">
+    <p><b id="place"></b><br><span class="dim" id="coords"></span></p>
+    <p class="dim">Your link for the watch:</p>
+    <p id="out"></p>
+    <button id="copy" type="button">Copy link</button>
+    <button id="share" type="button" class="alt" style="display:none">Share…</button>
+    <a id="open" class="btn alt" href="#">Open it</a>
+    <p class="dim" style="margin-top:1rem">Send the link to yourself in Messages, then tap it on your watch. Or save it in a note or a Shortcut.</p>
+  </div>
+
+  <p class="dim">A short link such as <code>maps.app.goo.gl/…</code> cannot be read here. Open it in Safari first, then copy the long address from the address bar. Links from OpenStreetMap, or plain numbers like <code>52.52, 13.40</code>, also work.</p>
+  <p class="dim"><a href="./">Back to the watch page</a> &middot; <a href="../">Groundcheck</a></p>
+</main>
+<script>
+// Finds a place in a map link, the same way the groundcheckai tool does: a Google link can hold several pins, and the one
+// nearest the centre of the map is the place that was open.
+function parseMapLink(raw) {
+  var t = String(raw || '').trim();
+  for (var i = 0; i < 2; i++) { try { t = decodeURIComponent(t); } catch (e) { break; } }
+  var num = '(-?\\d{1,3}(?:\\.\\d+)?)';
+  var m, best = null, centre = null;
+  m = new RegExp('@' + num + ',' + num).exec(t);
+  if (m) centre = [parseFloat(m[1]), parseFloat(m[2])];
+  var pins = [], re = new RegExp('!3d' + num + '!4d' + num, 'g');
+  while ((m = re.exec(t))) pins.push([parseFloat(m[1]), parseFloat(m[2])]);
+  if (pins.length) {
+    best = pins[pins.length - 1];
+    if (centre) {
+      var d = 1e18;
+      pins.forEach(function (p) { var x = (p[0] - centre[0]) * (p[0] - centre[0]) + (p[1] - centre[1]) * (p[1] - centre[1]); if (x < d) { d = x; best = p; } });
+    }
+  } else if (centre) {
+    best = centre;
+  }
+  if (!best && (m = new RegExp('[?&](?:q|ll|query|center|destination|daddr|sll)=' + num + '[ ,+]+' + num).exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best && (m = new RegExp('#map=\\d+/' + num + '/' + num).exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best && (m = new RegExp('mlat=' + num + '[^]*?mlon=' + num).exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best && (m = new RegExp('^\\s*' + num + '\\s*[,;\\s]\\s*' + num + '\\s*$').exec(t))) best = [parseFloat(m[1]), parseFloat(m[2])];
+  if (!best || !isFinite(best[0]) || !isFinite(best[1]) || Math.abs(best[0]) > 90 || Math.abs(best[1]) > 180) return null;
+  var name = '';
+  if ((m = /\/maps\/place\/([^\/@?]+)/.exec(t))) name = m[1].replace(/\+/g, ' ').split(',')[0].trim();
+  return { lat: best[0], lon: best[1], name: name.slice(0, 24) };
+}
+
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var base = location.href.replace(/place\.html.*$/, '');
+  var link = '';
+  $('go').addEventListener('click', function () {
+    var p = parseMapLink($('link').value);
+    if (!p) {
+      $('problem').style.display = 'block';
+      $('problem').textContent = 'I could not find a place in that. Open the link in Safari first and copy the address from the address bar, or paste two numbers like 52.52, 13.40.';
+      $('result').style.display = 'none';
+      return;
+    }
+    $('problem').style.display = 'none';
+    link = base + '?lat=' + p.lat.toFixed(5) + '&lon=' + p.lon.toFixed(5) + (p.name ? '&name=' + encodeURIComponent(p.name) : '');
+    $('place').textContent = p.name || 'Your place';
+    $('coords').textContent = p.lat.toFixed(5) + ', ' + p.lon.toFixed(5);
+    $('out').textContent = link;
+    $('open').href = link;
+    $('share').style.display = navigator.share ? 'inline-block' : 'none';
+    $('result').style.display = 'block';
+  });
+  $('copy').addEventListener('click', function () {
+    var done = function () { $('copy').textContent = 'Copied'; setTimeout(function () { $('copy').textContent = 'Copy link'; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, function () { window.getSelection().selectAllChildren($('out')); });
+    else window.getSelection().selectAllChildren($('out'));
+  });
+  $('share').addEventListener('click', function () { if (navigator.share) navigator.share({ title: 'Groundcheck for my watch', url: link }).catch(function () {}); });
+})();
+</script>
+</body>
+</html>
