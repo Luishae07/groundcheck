@@ -251,6 +251,16 @@
   </url>
 
   <!--
+    A tiny page for watch screens: the temperature of the weather balloon nearest to you, in big type.
+  -->
+  <url>
+    <loc>https://luishae07.github.io/groundcheck/applewatch/</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!--
     The end. Thank you for reading the whole map.
     Nobody ever does. We are touched.
     If you made it this far, here is a free cloud: (  )
