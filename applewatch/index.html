@@ -31,8 +31,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
 <p id="foot"><a href="../">Groundcheck</a> &middot; real weather balloon data</p>
 <script>
 // A tiny page for watch screens. It asks the Groundcheck server for the readings of the last two days (about 18 KB),
-// finds the balloon nearest to you and shows its temperature. Your place comes from the server's rough guess from your
+// finds the balloon nearest to you and shows its temperature. Without a location from the device, your place is the server's rough guess from your
 // network address (it is not stored), or from the address: ?lat=52.5&lon=13.4&name=Berlin  and  &units=f for Fahrenheit.
+// The page first asks the device for its location; &gps=0 skips that and uses the network address only.
 (function () {
   var POINTER = 'https://raw.githubusercontent.com/Luishae07/groundcheck/main/tunnel-url.txt';
   var LITE = '/apiinternel/dont/json/microsftwindowssucks/lite?days=2';
@@ -89,9 +90,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
     $('msg').textContent = '';
   }
 
-  function locate(base, cb) {
-    var lat = parseFloat(params.lat), lon = parseFloat(params.lon);
-    if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return cb({ lat: lat, lon: lon, name: params.name || '' });
+  function viaNetwork(base, cb) {
     ajax(base + '/api/whereami', function (err, body) {
       if (err) return cb(null);
       try {
@@ -100,6 +99,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
       } catch (e) {}
       cb(null);
     });
+  }
+
+  // 1. a place in the address, 2. the location of the device (asks once), 3. the server's rough guess from the network address
+  function locate(base, cb) {
+    var lat = parseFloat(params.lat), lon = parseFloat(params.lon);
+    if (isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return cb({ lat: lat, lon: lon, name: params.name || '' });
+    if (!navigator.geolocation || params.gps === '0') return viaNetwork(base, cb);
+    if (!shown) $('msg').textContent = 'Asking for your location\u2026';
+    var done = false;
+    var timer = setTimeout(function () { if (!done) { done = true; viaNetwork(base, cb); } }, 9000);
+    navigator.geolocation.getCurrentPosition(function (p) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      cb({ lat: p.coords.latitude, lon: p.coords.longitude, name: params.name || 'Your location' });
+    }, function () {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      viaNetwork(base, cb);
+    }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 });
   }
 
   function start() {
