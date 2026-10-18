@@ -1,16 +1,27 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>Groundcheck — Desktop</title>
-<link rel="icon" href="/favicon.ico" sizes="any">
+<title>Groundcheck for desktop: live weather from radiosonde balloons</title>
+<meta name="description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<link rel="alternate" type="application/atom+xml" title="Groundcheck changes" href="https://luishae07.github.io/feed.xml">
+<link rel="canonical" href="https://luishae07.github.io/desktop/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Groundcheck for desktop: live weather from radiosonde balloons">
+<meta property="og:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<meta property="og:url" content="https://luishae07.github.io/desktop/">
+<meta property="og:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<link rel="icon" href="../favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script><style>
 :root{
   --sky-top:#4a7fb5; --sky-mid:#6ea0c8; --sky-bot:#a9cbe3;
   --panel:#ffffff; --panel-2:#f2f6f9; --ink:#132433; --ink-dim:#5b7185; --ink-faint:#8b9db0;
@@ -166,7 +177,36 @@ main{
   font-size:.78rem;
 }
 
-#mapbox{ height:420px; border-radius:12px; overflow:hidden; border:1px solid var(--line) }
+#mapbox{ position:relative; height:420px; border-radius:12px; overflow:hidden; border:1px solid var(--line) }
+
+.maptoggle{ display:flex; gap:.35rem; }
+.maptogglebtn{
+  padding:.35rem .7rem;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--panel-2);
+  color:var(--ink-dim);
+  font-family:inherit;
+  font-size:.78rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.maptogglebtn.active{ background:var(--accent); color:#fff; border-color:transparent; }
+.heatoverlay{
+  position:absolute; top:12px; left:12px; z-index:1000;
+  background:rgba(10,20,30,.68); backdrop-filter:blur(6px);
+  border-radius:14px; padding:.8rem .9rem; color:#fff; pointer-events:none;
+}
+.heatoverlay .title{font-size:.78rem;font-weight:700;margin-bottom:.5rem;}
+.heatoverlay .scale{display:flex; gap:.5rem;}
+.heatoverlay .bar{
+  width:8px; height:120px; border-radius:4px;
+  background:linear-gradient(180deg,#c05a3c,#c99a2e,#2f9e6f,#3b82c4,#1e3a8a);
+}
+.heatoverlay .ticks{
+  display:flex; flex-direction:column; justify-content:space-between;
+  height:120px; font-size:.68rem; color:rgba(255,255,255,.85);
+}
 
 .cardgrid{
   display:grid;
@@ -235,6 +275,11 @@ main{
 .leaflet-popup-content-wrapper{background:var(--panel); color:var(--ink); border-radius:12px}
 .leaflet-popup-tip{background:var(--panel)}
 
+.about{max-width:42rem;margin:1.4rem auto 0;padding:0 1.2rem;font-size:.78rem;line-height:1.55;color:var(--ink-dim)}
+.about h2{font-size:.85rem;font-weight:600;margin:.9rem 0 .2rem;color:var(--ink)}
+.about h1{font-size:.95rem;font-weight:600;margin:0 0 .5rem;color:var(--ink)}
+.about p{margin:.45rem 0}
+.about a{color:inherit;text-decoration:underline}
 footer{margin-top:2rem; font-size:.78rem; color:var(--ink-faint); text-align:center}
 footer a{color:inherit}
 .clearcachebtn{
@@ -248,11 +293,238 @@ footer a{color:inherit}
   cursor:pointer;
 }
 .clearcachebtn:active{ transform:scale(.97); }
+.strip{
+  display:flex;
+  gap:.7rem;
+  overflow-x:auto;
+  padding:.4rem 0 .2rem;
+}
+.predictchip{
+  flex:0 0 auto;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:.7rem .9rem;
+  min-width:76px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.3rem;
+}
+.predictchip .h{font-size:.72rem; color:var(--ink-faint)}
+.predictchip svg{width:30px; height:30px}
+.predictchip .t{font-family:"Sora",sans-serif; font-weight:700; font-size:1.05rem; font-variant-numeric:tabular-nums}
+.faqgrid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:.7rem;
+}
+@media (max-width:900px){ .faqgrid{grid-template-columns:1fr} }
+.qa{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:.9rem 1rem;
+}
+.qa .q{
+  font-family:"Sora",sans-serif;
+  font-weight:700;
+  font-size:.9rem;
+  margin-bottom:.4rem;
+}
+.qa .a{
+  font-size:.83rem;
+  color:var(--ink-dim);
+  line-height:1.55;
+}
+.qa .a code{
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:.78rem;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:.05rem .35rem;
+}
+.faqsection{
+  font-family:"Sora",sans-serif;
+  font-weight:800;
+  font-size:1.05rem;
+  margin:1.6rem 0 .8rem;
+}
+.faqsection:first-child{ margin-top:0; }
+
+/* weather-app look: a human place name, high/low, hourly strip */
+.hilo{font-size:1.05rem;font-weight:600;opacity:.95;margin:.1rem 0 .25rem}
+.hilo:empty{display:none}
+#hourlyStrip .predictchip{min-width:62px}
+
+/* a sky that follows the weather and the sun, day rows with range bars, an hourly curve, gentle motion */
+.daylist{display:flex;flex-direction:column;padding:.4rem 0 0}
+.dayrow{display:grid;grid-template-columns:3.2rem 2rem 2.4rem 1fr 2.4rem;align-items:center;gap:.6rem;padding:.55rem .3rem;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.dayrow:first-child{border-top:0}
+.dayrow .dn{font-weight:600;font-size:.92rem}
+.dayrow .di svg{width:26px;height:26px;display:block}
+.dayrow .lo{color:var(--ink-faint);text-align:right;font-size:.92rem}
+.dayrow .hi{font-weight:700;font-size:.92rem}
+.dayrow .bar{position:relative;height:6px;border-radius:99px;background:var(--panel-2)}
+.dayrow .bar i{position:absolute;top:0;bottom:0;border-radius:99px}
+#hourlySpark{margin:.5rem 0 .2rem}
+#hourlySpark svg{display:block;width:100%;height:64px;overflow:visible}
+#hourlySpark .lab{font:600 10px Inter,system-ui,sans-serif;fill:var(--ink-dim)}
+@keyframes gcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes gcFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.bigicon svg,.hero .icon svg{animation:gcFloat 6s ease-in-out infinite}
+#view-today>*{animation:gcFadeUp .45s ease both}
+#view-today>*:nth-child(2){animation-delay:.05s}#view-today>*:nth-child(3){animation-delay:.1s}#view-today>*:nth-child(4){animation-delay:.15s}
+.sky,.hero{transition:background .6s ease}
+@media (prefers-reduced-motion:reduce){.bigicon svg,.hero .icon svg,#view-today>*{animation:none}.sky,.hero{transition:none}}
+
+@keyframes gcDrift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes gcTwinkle{from{opacity:.55}to{opacity:1}}
+@keyframes gcRain{to{background-position:-20px 160px}}
+@keyframes gcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes gcFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== v3: a full-screen sky with frosted-glass cards ===== */
+:root{--panel:rgba(255,255,255,.80);--panel-2:rgba(255,255,255,.58);--line:rgba(19,36,51,.10);--glassblur:blur(22px) saturate(1.5)}
+:root[data-sky="night"]{--panel:rgba(13,24,42,.62);--panel-2:rgba(13,24,42,.46);--ink:#e9f1f9;--ink-dim:#b0c1d2;--ink-faint:#8398ad;--line:rgba(255,255,255,.13)}
+html{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 55%,var(--sky-bot) 100%) fixed;transition:background .8s ease}
+body{background:none;position:relative;z-index:1}
+html::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 38% 9% at 18% 16%,rgba(255,255,255,.55),transparent 70%),radial-gradient(ellipse 42% 10% at 78% 26%,rgba(255,255,255,.42),transparent 70%),
+             radial-gradient(ellipse 46% 9% at 36% 44%,rgba(255,255,255,.26),transparent 70%),radial-gradient(ellipse 40% 8% at 85% 62%,rgba(255,255,255,.2),transparent 70%);
+  filter:blur(4px);opacity:.5;animation:gcDrift 70s ease-in-out infinite alternate}
+html[data-wx="clear"]::before{opacity:.26}
+html[data-wx="cloud"]::before,html[data-wx="rain"]::before,html[data-wx="storm"]::before{opacity:.85;filter:blur(6px) brightness(.85)}
+html[data-sky="night"]::before{opacity:.12}
+html::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0}
+html[data-sky="night"]:not([data-wx="rain"]):not([data-wx="storm"])::after{background-image:radial-gradient(1.6px 1.6px at 12% 8%,#fff,transparent),radial-gradient(1px 1px at 28% 15%,#fff,transparent),radial-gradient(1.3px 1.3px at 44% 6%,#fff,transparent),radial-gradient(1px 1px at 61% 12%,#fff,transparent),radial-gradient(1.6px 1.6px at 78% 7%,#fff,transparent),radial-gradient(1px 1px at 90% 18%,#fff,transparent),radial-gradient(1.2px 1.2px at 7% 26%,#fff,transparent),radial-gradient(1px 1px at 36% 24%,#fff,transparent),radial-gradient(1.4px 1.4px at 55% 28%,#fff,transparent),radial-gradient(1px 1px at 72% 22%,#fff,transparent),radial-gradient(1.2px 1.2px at 94% 31%,#fff,transparent),radial-gradient(1px 1px at 18% 38%,#fff,transparent),radial-gradient(1.3px 1.3px at 49% 40%,#fff,transparent),radial-gradient(1px 1px at 83% 44%,#fff,transparent);animation:gcTwinkle 5s ease-in-out infinite alternate}
+html[data-wx="rain"]::after,html[data-wx="storm"]::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cg stroke='rgba(255,255,255,.55)' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M10 10l-5 22M48 70l-5 22M86 20l-5 22M100 110l-5 22M30 120l-5 22M66 140l-5 22'/%3E%3C/g%3E%3C/svg%3E");background-size:120px 160px;opacity:.5;animation:gcRain .7s linear infinite}
+
+html::before,html::after{position:fixed!important}
+.topbar,.sidebar{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-top:0;border-left:0}
+.sidebar{border-bottom:0}
+.topbar .brand{color:var(--ink)}
+.navbtn.active{background:rgba(255,255,255,.28);color:var(--ink);border-radius:16px}
+main{background:none}
+.hero{background:none;box-shadow:none;border-radius:0;padding:1.2rem .3rem 1.6rem;gap:2.6rem}
+.hero::before{display:none}
+.hero .icon svg{width:112px;height:112px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.25));animation:gcFloat 6s ease-in-out infinite}
+.hero .temp{font-weight:200;font-size:7.2rem;letter-spacing:-.05em;text-shadow:0 4px 30px rgba(0,0,0,.18)}
+.hero .loc{font-size:1.7rem;font-weight:600;text-shadow:0 2px 14px rgba(0,0,0,.25)}
+.hero .cond{font-size:1.2rem;font-weight:500}
+.hero .stamp{font-size:.82rem;opacity:.85}
+.hero .metrics{gap:.8rem}
+.hero .metric{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);color:var(--ink);border-radius:20px;padding:.9rem 1.1rem;min-width:110px}
+.hero .metric .k{color:var(--ink-faint)}
+.hero .metric .v{color:var(--ink);font-weight:600}
+.locbtn{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);color:var(--ink);border-radius:16px}
+.panel{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-radius:24px;box-shadow:0 10px 40px rgba(0,0,0,.12)}
+.grid3{grid-template-columns:1fr}
+.stationcard,.qa,.predictchip{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-radius:18px}
+#hourlyStrip .predictchip{background:none;border:0;backdrop-filter:none}
+.panel,.hero{animation:gcFadeUp .5s ease both}
+footer{color:rgba(255,255,255,.85)}footer a{color:#fff}
+
+/* perf: no blur filters, no backdrop blur, no fixed backgrounds; the sky is one composited layer that only moves with transform */
+@keyframes gcRainT{to{transform:translate(-20px,160px)}}
+
+:root{--glassblur:none;--panel:rgba(255,255,255,.88);--panel-2:rgba(255,255,255,.7);--cloudk:.5}
+:root[data-sky="night"]{--panel:rgba(13,24,42,.84);--panel-2:rgba(13,24,42,.68);--cloudk:.2}
+:root[data-wx="clear"]{--cloudk:.45}
+:root[data-wx="cloud"],:root[data-wx="rain"],:root[data-wx="storm"]{--cloudk:1.5}
+*{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html{background:var(--sky-bot)!important;transition:none!important}
+html::before{position:fixed!important;inset:0 -8%!important;filter:none!important;opacity:1!important;will-change:transform;
+  background:radial-gradient(ellipse 38% 9% at 18% 16%,rgba(255,255,255,calc(.55*var(--cloudk,.5))),transparent 70%),radial-gradient(ellipse 42% 10% at 78% 26%,rgba(255,255,255,calc(.42*var(--cloudk,.5))),transparent 70%),radial-gradient(ellipse 46% 9% at 36% 44%,rgba(255,255,255,calc(.26*var(--cloudk,.5))),transparent 70%),radial-gradient(ellipse 40% 8% at 85% 62%,rgba(255,255,255,calc(.2*var(--cloudk,.5))),transparent 70%),linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 55%,var(--sky-bot) 100%)!important;animation:gcDrift 90s ease-in-out infinite alternate!important}
+html[data-wx="rain"]::after,html[data-wx="storm"]::after{inset:-160px 0 0 0!important;will-change:transform;background-position:0 0!important;animation:gcRainT .7s linear infinite!important}
+.hero .icon svg{filter:none!important;animation:none!important}
+.hero .temp,.hero .loc{text-shadow:0 2px 8px rgba(0,0,0,.16)!important}
+.panel{box-shadow:0 4px 16px rgba(0,0,0,.1)!important}
+
+/* app: a floating pill navigation, a centred hero, and a card grid like a real desktop weather app */
+body{grid-template-columns:1fr!important;grid-template-rows:1fr!important;grid-template-areas:"main"!important}
+.topbar{position:fixed!important;top:0;left:0;right:0;height:64px;z-index:20;background:none!important;border:0!important;padding:0 1.6rem}
+.topbar .brand{font-size:1.1rem;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.25)}
+.topbar .live,.topbar a.mobilelink{color:#fff;border-color:rgba(255,255,255,.35)}
+.sidebar{position:fixed!important;top:10px;left:50%;transform:translateX(-50%);z-index:30;flex-direction:row!important;align-items:center!important;gap:.2rem!important;
+  padding:.3rem!important;border-radius:999px;border:1px solid var(--line)!important;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.navbtn{flex-direction:row!important;gap:.45rem!important;padding:.5rem 1.15rem!important;margin:0!important;border-radius:999px!important;font-size:.85rem!important;font-weight:600}
+.navbtn svg{width:17px!important;height:17px!important}
+.navbtn.active{background:var(--accent)!important;color:#fff!important}
+main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
+.wrap{max-width:1240px!important}
+.hero{flex-direction:column!important;align-items:center!important;text-align:center;gap:.3rem!important;padding:1.2rem 0 1.4rem!important;margin-bottom:.4rem!important}
+.hero .readout{align-items:center}
+.hero .icon svg{width:96px!important;height:96px!important}
+.hero .temp{font-size:9.5rem!important;line-height:.95}
+.hero .loc{font-size:2rem!important}
+.hero .cond{font-size:1.3rem!important}
+.hero .hilo{font-size:1.15rem!important}
+.hero .stamp{max-width:34rem}
+.hero .metrics{margin:1.4rem 0 0!important;width:100%;justify-content:center;gap:.9rem!important}
+.hero .metric{min-width:150px!important;align-items:center;padding:1rem 1.2rem!important}
+.hero .metric .v{font-size:1.7rem!important}
+.hero .locbtn{position:absolute!important;top:.6rem;right:0}
+#view-today:not([hidden]){display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);grid-template-areas:"hourly hourly" "days map";gap:1.3rem;align-items:stretch}
+#hourlyPanel{grid-area:hourly;margin:0!important}
+#predictPanel{grid-area:days;margin:0!important}
+.grid3{grid-area:map;display:flex!important}
+.grid3 .panel{flex:1;display:flex;flex-direction:column}
+.grid3 #mapbox{flex:1;min-height:420px}
+#predictPanel .dayrow{padding:.8rem .4rem;grid-template-columns:3.6rem 2.4rem 2.6rem 1fr 2.6rem}
+#predictPanel .dayrow .dn{font-size:1.02rem}
+#hourlyStrip{justify-content:space-between}
+@media (max-width:1000px){
+  #view-today:not([hidden]){grid-template-columns:1fr;grid-template-areas:"hourly" "days" "map"}
+  .hero .temp{font-size:7rem!important}
+  .hero .locbtn{position:static!important;margin-top:.6rem}
+}
+
+/* tiles: small rings and dials */
+.hero .metrics{max-width:900px;margin-left:auto!important;margin-right:auto!important}
+.hero .mhead{width:100%;text-align:left;color:#fff;text-transform:uppercase;letter-spacing:.1em;font-size:.72rem;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.28);margin:0 .4rem -.2rem}
+.hero .metric{min-width:190px!important;min-height:170px;flex:1 1 190px;align-items:flex-start!important;justify-content:space-between;text-align:left}
+.hero .metric .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.hero .metric .g{align-self:center;margin:.3rem 0;color:var(--ink);display:flex;justify-content:center}
+.hero .metric .d{font-size:.88rem;color:var(--ink-dim);line-height:1.3}
+.hero .metric .d b{color:var(--ink);font-weight:700}
+
+/* the Firefox add-on card */
+.addoncard{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:1rem 1.2rem;margin:1.2rem 0 0;text-decoration:none;color:var(--ink)}
+.addoncard img{height:48px;width:auto;flex:0 0 auto}
+.addoncard b{display:block;font-weight:700}
+.addoncard span{font-size:.82rem;color:var(--ink-dim);line-height:1.4}
+#view-today .addoncard{grid-column:1/-1}
 </style>
+<style id="wide-layout">
+/* Wide screens: the temperature on the left and the condition tiles on the right, so the map and forecast come into view sooner. */
+@media (min-width:1200px){
+  html .wrap{max-width:1380px!important}
+  html .hero{display:grid!important;grid-template-columns:minmax(320px,.85fr) minmax(0,1.5fr);grid-template-areas:"icon metrics" "readout metrics";grid-template-rows:auto 1fr;column-gap:2.4rem;row-gap:0;align-items:center!important;text-align:left!important;padding:1.6rem 2rem 1.8rem!important}
+  html .hero .icon{grid-area:icon;justify-self:start;align-self:end;position:relative}
+  html .hero .readout{grid-area:readout;align-items:flex-start!important;align-self:start}
+  html .hero .temp{font-size:8.5rem!important}
+  html .hero .loc{font-size:1.9rem!important}
+  html .hero .stamp{max-width:26rem}
+  html .hero .metrics{grid-area:metrics;position:relative;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.9rem!important;margin:0!important;max-width:none!important;width:auto!important;justify-content:stretch!important}
+  html .hero .mhead{grid-column:1/-1}
+  html .hero .metric{min-width:0!important;flex:none!important;min-height:160px}
+}
+/* Very wide screens: more room for the map */
+@media (min-width:1500px){
+  html .wrap{max-width:1640px!important}
+  html #view-today:not([hidden]){grid-template-columns:minmax(0,1fr) minmax(0,1.7fr)!important}
+  html .grid3 #mapbox{min-height:560px!important}
+}
+</style>
+</head>
+<body>
 
 <div class="topbar">
-  <span class="brand">Groundcheck</span>
-  <a class="mobilelink" href="/">Mobile view</a>
+  <span class="brand"><img src="https://luishae07.github.io/logo.svg" alt="Groundcheck logo" width="24" height="24" style="vertical-align:-6px;margin-right:.45rem;border-radius:7px">Groundcheck</span>
+  <a class="mobilelink" href="../">Mobile view</a>
   <span class="live"><span class="dot"></span><span id="feedstatus">live feed</span></span>
 </div>
 
@@ -260,10 +532,6 @@ footer a{color:inherit}
   <button class="navbtn active" data-view="today">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
     Today
-  </button>
-  <button class="navbtn" data-view="stations">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-    Stations
   </button>
   <button class="navbtn" data-view="search">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -277,6 +545,10 @@ footer a{color:inherit}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
     Account
   </button>
+  <button class="navbtn" data-view="credits">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+    Credits
+  </button>
 </nav>
 
 <main>
@@ -284,9 +556,17 @@ footer a{color:inherit}
     <div class="hero" id="hero"></div>
 
     <div id="view-today">
+      <div class="panel" id="hourlyPanel" hidden style="margin-bottom:1.2rem">
+        <h2>Next 24 hours <span class="n">an estimate</span></h2>
+        <div class="strip" id="hourlyStrip"></div>
+      </div>
       <div class="grid3">
         <div class="panel">
-          <h2>Station map <span class="n" id="mapCount"></span>
+          <h2>Map <span class="n" id="mapCount"></span>
+            <div class="maptoggle">
+              <button class="maptogglebtn" data-mapmode="stations">Dots</button>
+              <button class="maptogglebtn active" data-mapmode="heat">Temperature</button>
+            </div>
             <select id="mapRange" class="rangepicker">
               <option value="7" selected>Last 7 days</option>
               <option value="30">Last 30 days</option>
@@ -296,26 +576,184 @@ footer a{color:inherit}
             </select>
             <input type="date" id="mapDay" class="rangepicker" hidden>
           </h2>
-          <div id="mapbox"></div>
-        </div>
-        <div class="panel">
-          <h2>Last 7 days <span class="n" id="weekCount"></span></h2>
-          <div class="cardgrid" id="weekGrid"></div>
+          <div id="mapbox">
+            <div class="heatoverlay" id="heatLegend" hidden>
+              <div class="title">Temperature</div>
+              <div class="scale">
+                <span class="bar"></span>
+                <span class="ticks">
+                  <span>35&deg;</span><span>20&deg;</span><span>10&deg;</span><span>0&deg;</span><span>-10&deg;</span>
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <div class="panel" id="predictPanel" hidden style="margin-top:1.2rem">
+        <h2>Next days<span class="n">typical day, from 7-day pattern</span></h2>
+        <div class="strip" id="predictStrip"></div>
+      </div>
+      <div class="addoncard"><a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/" target="_blank" rel="noopener noreferrer" aria-label="Get the Groundcheck add-on for Firefox"><img src="https://luishae07.github.io/firefox-addon.svg" alt="Get the add-on for Firefox"></a><div><b>Groundcheck in Firefox</b><span>See the nearest weather balloon reading from your toolbar, and search Flowsearch from the address bar. Free.</span></div></div>
     </div>
 
-    <div id="view-stations" hidden>
+    <div id="view-credits" hidden>
       <div class="panel">
-        <h2>All stations <span class="n" id="stationCount"></span></h2>
-        <div class="cardgrid" id="stationGrid"></div>
+        <h2>Credits</h2>
+        <div class="faqsection">Weather data</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">sonde.mine.nu / zeesen.mine.nu</div><div class="a">Live radiosonde telemetry from a public tracking network run by volunteers with their own receivers. <a href="https://sonde.mine.nu" target="_blank" rel="noopener noreferrer">sonde.mine.nu</a></div></div>
+          <div class="qa"><div class="q">SondeHub</div><div class="a">An open, worldwide database of radiosonde telemetry, fed by hundreds of volunteer receivers. It gives Groundcheck readings from North and South America, Asia, Australia and more. <a href="https://sondehub.org" target="_blank" rel="noopener noreferrer">sondehub.org</a></div></div>
+          <div class="qa"><div class="q">NOAA IGRA</div><div class="a">The Integrated Global Radiosonde Archive of NOAA's National Centers for Environmental Information: the official soundings of about 650 weather-service stations in more than 100 countries (public domain). <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" target="_blank" rel="noopener noreferrer">NOAA NCEI</a></div></div>
+        </div>
+        <div class="faqsection">Maps &amp; places</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Esri</div><div class="a">Map imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS user community. <a href="https://www.esri.com" target="_blank" rel="noopener noreferrer">esri.com</a></div></div>
+          <div class="qa"><div class="q">OpenStreetMap</div><div class="a">Place search and place names come from Nominatim, using &copy; OpenStreetMap contributors data. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">openstreetmap.org/copyright</a></div></div>
+          <div class="qa"><div class="q">Leaflet</div><div class="a">The map is drawn with Leaflet (BSD-2-Clause) and Leaflet.markercluster (MIT). <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a></div></div>
+          <div class="qa"><div class="q">DB-IP</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address on our own server with the free IP to City Lite database. Your IP is not stored. <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">IP Geolocation by DB-IP</a></div></div>
+        </div>
+        <div class="faqsection">Design &amp; code</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Fonts</div><div class="a">Sora and Inter, from Google Fonts, under the SIL Open Font License.</div></div>
+          <div class="qa"><div class="q">Open source</div><div class="a">Groundcheck is free software under the AGPL-3.0 licence. The source code is on <a href="https://github.com/Luishae07/groundcheck" target="_blank" rel="noopener noreferrer">GitHub</a>.</div></div>
+        </div>
+        <div class="faqsection">Projects we make</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Flowsearch</div><div class="a">A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com" target="_blank" rel="noopener noreferrer">Open Flowsearch</a> &middot; <a href="https://github.com/Luishae07/flowsearch" target="_blank" rel="noopener noreferrer">Source on GitHub</a></div></div>
+        </div>
+        <div class="faqsection">Good to know</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Forecasts can be wrong</div><div class="a">Measurements come straight from weather balloon sensors. The Next days forecast is an estimate that Groundcheck calculates from collected readings, with no weather model, and it can be wrong. Its typical error is shown next to it.</div></div>
+          <div class="qa"><div class="q">Thank you</div><div class="a">To everyone who builds, launches, hosts and runs radiosondes and receivers. Without them there would be nothing to show.</div></div>
+        </div>
       </div>
     </div>
 
     <div id="view-faq" hidden>
       <div class="panel">
         <h2>FAQ</h2>
-        <p style="color:var(--ink-dim);line-height:1.6">See the full FAQ on the <a href="/">mobile view</a> — same content, same data.</p>
+
+        <div class="faqsection">About &amp; Data</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">What is Groundcheck?</div><div class="a">A weather app built on <b>real radiosonde (weather balloon) sensor readings</b> instead of a forecast model. Every number you see was actually measured by a sensor in the air, not predicted.</div></div>
+          <div class="qa"><div class="q">Where does the data come from?</div><div class="a">Live telemetry from <b>sonde.mine.nu</b> / <b>zeesen.mine.nu</b>, a public radiosonde-tracking feed, from <b>SondeHub</b> (sondehub.org), an open worldwide radiosonde database, and from NOAA's <b>Integrated Global Radiosonde Archive</b> (IGRA), the official soundings of about 650 weather-service stations in more than 100 countries. We fetch its <code>sondes.php</code> endpoint on a schedule.</div></div>
+          <div class="qa"><div class="q">Is this a forecast app?</div><div class="a">No. The "Next days" panel is the one exception — it is this app's own forecast, learned from the balloon readings near you (no weather model, no outside forecast service). Everything else is raw sensor history.</div></div>
+          <div class="qa"><div class="q">Why only ground-level readings?</div><div class="a">Sondes spend most of a flight at altitude, where it's routinely far below freezing. Those readings aren't representative of ground weather, so we filter to a configurable altitude ceiling (currently under ~1000m) and only show near-surface readings.</div></div>
+          <div class="qa"><div class="q">How often does the data refresh?</div><div class="a">A background job fetches new readings every minute, plus deeper daily/weekly sweeps to catch anything missed. The page itself polls for updates every 5 minutes.</div></div>
+          <div class="qa"><div class="q">Why is a reading sometimes hours or days old?</div><div class="a">Radiosonde coverage is sparse by nature — it's wherever a balloon happened to fly, not a dense permanent sensor grid. No new nearby ground-level reading is normal, not a bug.</div></div>
+          <div class="qa"><div class="q">What's a radiosonde?</div><div class="a">A small instrument package carried aloft by a weather balloon, measuring temperature, humidity, and pressure as it ascends (and sometimes descends) through the atmosphere, transmitting data back by radio.</div></div>
+          <div class="qa"><div class="q">Why do Humidity or Pressure sometimes show "—"?</div><div class="a">Not every sonde model carries a working humidity or pressure sensor — some report temperature only. A dash means that sensor had no data, not an app error.</div></div>
+          <div class="qa"><div class="q">What does "ground-level" actually mean here?</div><div class="a">Any reading at or below the app's altitude ceiling (currently ~980-1000m depending on config) — usually captured near a sonde's launch site or during its final descent, not mid-flight.</div></div>
+          <div class="qa"><div class="q">Why zeesen.mine.nu instead of sonde.mine.nu?</div><div class="a">They're mirrors of the same underlying project; zeesen.mine.nu responds faster for large historical fetches, so it's preferred for bulk backfills while both serve the same live data.</div></div>
+          <div class="qa"><div class="q">Do radiosondes get reused?</div><div class="a">Rarely — most are single-use and either land somewhere unrecovered or are found and occasionally relaunched by hobbyists. Each flight gets its own serial ID in the data.</div></div>
+          <div class="qa"><div class="q">What's the difference between temperature, humidity, and pressure sensors on a sonde?</div><div class="a">They're independent physical sensors on the same instrument package — a sonde model can have a working thermometer but a failed or absent humidity/pressure sensor, which is why some readings show partial data.</div></div>
+        </div>
+
+        <div class="faqsection">Accuracy &amp; Coverage</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Why does the nearest station show as far away?</div><div class="a">This isn't a dense ground-sensor network — it's wherever balloons happened to fly recently. If nothing launched near you, the nearest valid reading may be hundreds of km away. We always show the real distance rather than hide it.</div></div>
+          <div class="qa"><div class="q">Is this more accurate than Apple Weather / a forecast app?</div><div class="a">Different, not simply "more accurate" — this shows what a sensor actually measured, with no smoothing or modeling. A forecast app predicts; this reports.</div></div>
+          <div class="qa"><div class="q">Why does my location look approximate?</div><div class="a">Precise GPS requires a secure (HTTPS) connection. On plain http://, the app falls back to IP-based location, accurate only to city level.</div></div>
+          <div class="qa"><div class="q">Can I see live in-flight data?</div><div class="a">Yes — when the station currently shown is an actual balloon in flight, a live banner appears, fed by a WebSocket connection straight from the source telemetry.</div></div>
+          <div class="qa"><div class="q">Why did a reading show an obviously wrong temperature once?</div><div class="a">Occasionally a sensor glitches or reports a bad packet. We filter out impossible values (like 0,0 coordinates) but can't catch every anomaly — treat any wildly outlying single reading with suspicion.</div></div>
+          <div class="qa"><div class="q">How far back does history go?</div><div class="a">Depends on how long the instance has been running its fetch schedule — the public instance has months of accumulated history; a fresh self-hosted instance starts from whatever backfill window you choose.</div></div>
+          <div class="qa"><div class="q">Why does the same station ID show wildly different readings on different days?</div><div class="a">That's real atmospheric variation, not an error — the same launch site can see very different conditions day to day, especially across seasons.</div></div>
+          <div class="qa"><div class="q">Can two readings from the same station conflict?</div><div class="a">Each reading is keyed by station ID plus its exact receive timestamp, so multiple readings from one station over time are all kept — none overwrite each other.</div></div>
+          <div class="qa"><div class="q">Is coverage better in some countries than others?</div><div class="a">Yes — it depends entirely on where radiosonde receiver stations happen to be tracking flights; Central Europe tends to have denser coverage than sparsely-populated regions.</div></div>
+        </div>
+
+        <div class="faqsection">Using the App</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">How do I find the station nearest me?</div><div class="a">Allow location access when prompted, or use the "Use my location" button — the app matches you to the closest fresh (within 24h) ground-level reading.</div></div>
+          <div class="qa"><div class="q">What does the map show?</div><div class="a">A satellite map with every ground-level station in the selected time range, clustered for performance, plus a "you are here" marker for your own location.</div></div>
+          <div class="qa"><div class="q">What's the "This day" map option?</div><div class="a">Filters the map to only readings from one specific calendar date instead of a rolling window — useful for looking back at a particular day's coverage.</div></div>
+          <div class="qa"><div class="q">How does Search work?</div><div class="a">Type a station ID, a temperature, or a place name. Place names are geocoded via Nominatim (OpenStreetMap) and matched to the nearest reading, with an adjustable date range from 7 days up to all-time.</div></div>
+          <div class="qa"><div class="q">Why doesn't Search find my city?</div><div class="a">The geocoder needs an unambiguous, spelled-correctly place name. Try adding a country ("Springfield, USA") if a common name returns the wrong result.</div></div>
+          <div class="qa"><div class="q">What's the "Next days" predictor based on?</div><div class="a">Years of this app's own balloon readings near you: it learns what is normal for each date and hour, how far today is from normal, and what followed similar situations before. Each day gets its own value, and the typical error is shown. Day 1-2 are reasonably good; from day 4 on it is close to the normal for the date. It is not an external forecast service.</div></div>
+          <div class="qa"><div class="q">Can I clear the cache?</div><div class="a">Yes — the footer has a "Clear cache &amp; reload" button. Useful if the page seems stuck showing stale data, especially after adding it to your phone's home screen as an app.</div></div>
+          <div class="qa"><div class="q">Can I switch between light and dark mode?</div><div class="a">The app follows your system's light/dark setting automatically — there's no in-app manual toggle, since it's built entirely with CSS media queries tied to your OS preference.</div></div>
+          <div class="qa"><div class="q">Does the map remember my zoom/position?</div><div class="a">No — it recenters on the current selection each time you switch to the Map tab, rather than persisting a manually-panned view.</div></div>
+          <div class="qa"><div class="q">Can I see a specific station's full history?</div><div class="a">Yes — clicking a station's reading anywhere in the app (map, stations list, search results) switches the current view to that station, showing its own readings.</div></div>
+          <div class="qa"><div class="q">Why does the desktop layout differ from mobile?</div><div class="a">Desktop uses the extra screen space for a sidebar nav and multi-panel grid layout (map + week feed side-by-side) instead of mobile's single-column tab-based flow — same data, same features, different arrangement.</div></div>
+        </div>
+
+        <div class="faqsection">API &amp; Developers</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Is there a public API?</div><div class="a">Yes — see <a href="../apidocs">API docs</a>. <code>GET /api/data</code> is rate-limited (30 req/60s by default); getting a key via <code>POST /api/keys/new</code> raises that to 9000 req/10s.</div></div>
+          <div class="qa"><div class="q">Do I need an account to use the API?</div><div class="a">No account required — the free key endpoint just generates a token on the spot, no signup, no email.</div></div>
+          <div class="qa"><div class="q">What format does the API return?</div><div class="a">Plain JSON — an array of reading objects with id, time, temp, alt, pressure, humidity, lat, lon, and source. See the API docs for the exact shape.</div></div>
+          <div class="qa"><div class="q">Is there caching on API responses?</div><div class="a">No — every response is served with <code>Cache-Control: no-store</code>, so you always get the freshest data, never a stale cached copy.</div></div>
+          <div class="qa"><div class="q">Is there an MCP server?</div><div class="a">Yes — a Model Context Protocol server ships alongside the backend, exposing tools like <code>current_reading</code>, <code>nearest_station</code>, <code>station_history</code>, and <code>predictor</code> for use with Claude Code or other MCP clients.</div></div>
+          <div class="qa"><div class="q">Can I build my own app on top of this data?</div><div class="a">Yes — that's exactly what the public API is for. No special permission needed, just respect the rate limits or grab a key.</div></div>
+          <div class="qa"><div class="q">What happens if I exceed the rate limit?</div><div class="a">You get an HTTP 429 response until the window resets (60 seconds for the default tier, 10 seconds for a keyed tier) — no ban, no penalty, just wait it out or grab a key for a much higher ceiling.</div></div>
+          <div class="qa"><div class="q">How does the API key expire?</div><div class="a">It doesn't — a key generated via <code>POST /api/keys/new</code> stays valid indefinitely on that server instance unless the instance operator resets its <code>api_keys.json</code> file.</div></div>
+          <div class="qa"><div class="q">Can the MCP server filter by location or recency?</div><div class="a">Yes — <code>nearest_station</code> takes lat/lon and an optional <code>max_age_days</code>, and <code>search_readings</code> supports temperature range filters.</div></div>
+          <div class="qa"><div class="q">Is there a rate limit on the MCP server?</div><div class="a">No — it reads directly from the local <code>data.json</code> file, so there's no network rate limit to worry about, just normal local file I/O.</div></div>
+        </div>
+
+        <div class="faqsection">Self-Hosting</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Can I run my own instance?</div><div class="a">Yes — the full backend (server, live-feed proxy, data fetcher, and frontend) is on GitHub in the <code>backend/</code> folder, with one-command launchers for both Linux/Mac and Windows.</div></div>
+          <div class="qa"><div class="q">How do I start it on Linux or Mac?</div><div class="a">Clone the repo, <code>cd backend</code>, then run <code>./start.sh</code> — it interactively walks you through ports, an altitude filter, initial data backfill, and automatic update scheduling.</div></div>
+          <div class="qa"><div class="q">How do I start it on Windows?</div><div class="a">Run <code>start.ps1</code> in PowerShell — same setup flow, using Windows Task Scheduler instead of cron for automatic checks. If WSL with a Linux distro is installed, it'll offer to hand off to the fuller <code>start.sh</code> instead.</div></div>
+          <div class="qa"><div class="q">Does self-hosting need any paid services?</div><div class="a">No — everything runs on plain Python (standard library only for the server), no database, no cloud dependency required.</div></div>
+          <div class="qa"><div class="q">Can I customize the ground-level altitude filter myself?</div><div class="a">Yes — <code>start.sh</code>/<code>start.ps1</code> ask for it directly, or set the <code>GROUNDCHECK_MAX_ALT_M</code> environment variable manually.</div></div>
+          <div class="qa"><div class="q">How do I get automatic updates on my self-hosted instance?</div><div class="a">The setup script offers to install cron jobs (or Scheduled Tasks on Windows) that check for new radiosonde data every minute and/or once daily — fully configurable during setup.</div></div>
+          <div class="qa"><div class="q">Can I expose my self-hosted instance to the internet?</div><div class="a">Yes, with something like a Cloudflare Tunnel or reverse proxy in front of it — the server binds to <code>0.0.0.0</code> by default so it's reachable on your LAN out of the box.</div></div>
+          <div class="qa"><div class="q">Can I pick my own ports?</div><div class="a">Yes — <code>start.sh</code>/<code>start.ps1</code> prompt for the HTTP data port and WebSocket live-feed port directly, defaulting to 8765 and 8766.</div></div>
+          <div class="qa"><div class="q">What if I don't want the automatic checks running constantly?</div><div class="a">Decline the cron/Task Scheduler setup step, or choose "0" for the custom-interval option during setup — you can always run <code>update.py</code> manually whenever you want fresh data.</div></div>
+          <div class="qa"><div class="q">How large is the initial backfill?</div><div class="a">Depends what you choose — the setup menu offers 1 to 800 days; a 1-day backfill is nearly instant, while an 800-day one can take a long time and use more disk space for <code>station_store.json</code>.</div></div>
+          <div class="qa"><div class="q">Does self-hosting include the MCP server too?</div><div class="a">Yes — <code>backend/mcp_server.py</code> ships alongside everything else and resolves its data path relative to itself, so it works out of the box against your own instance's data.</div></div>
+        </div>
+
+        <div class="faqsection">Android Tablet App</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Is there an Android app?</div><div class="a">Yes — a Kotlin WebView wrapper around this same web app, built for tablets, with pull-to-refresh, local notifications, and offline-friendly loading of the GitHub Pages URL.</div></div>
+          <div class="qa"><div class="q">Where do I download the Android app?</div><div class="a">From the GitHub Releases page on the project repo — it's distributed as a sideloadable APK, not published on the Play Store.</div></div>
+          <div class="qa"><div class="q">Do I need to enable anything to install it?</div><div class="a">Yes — since it's not from the Play Store, you'll need "Install from unknown sources" enabled for your browser or file manager.</div></div>
+          <div class="qa"><div class="q">Does the Android app get notifications?</div><div class="a">Yes — a background job checks periodically for nearby rain/thunderstorm conditions and posts a real Android notification if one's detected.</div></div>
+          <div class="qa"><div class="q">Why does the Android app load a website instead of being fully native?</div><div class="a">It's intentionally a hardened WebView wrapper loading the live GitHub Pages site — that way the app always shows the current version without needing a new APK build for every web update.</div></div>
+          <div class="qa"><div class="q">Does the Android app work without internet?</div><div class="a">No — it needs a connection to reach the live data, same as the website. There's no offline data cache built in.</div></div>
+          <div class="qa"><div class="q">Is there pull-to-refresh?</div><div class="a">It was tried and removed — it kept conflicting with the embedded Leaflet map's own pan/drag gestures, so the app relies on its normal auto-refresh polling instead.</div></div>
+        </div>
+
+        <div class="faqsection">macOS App</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Is there a macOS app?</div><div class="a">Yes — a native Swift/WebKit wrapper in the <code>macos/</code> folder of the repo, targeting macOS 13.0 and up.</div></div>
+          <div class="qa"><div class="q">How do I build it?</div><div class="a">Open <code>Groundcheck.xcodeproj</code> in Xcode and hit Run, or use <code>xcodebuild</code> from the command line — see the folder's README for exact commands.</div></div>
+          <div class="qa"><div class="q">Does it work on both Intel and Apple Silicon Macs?</div><div class="a">Yes — it's a plain WKWebView-based app with no special GPU code; macOS itself handles GPU selection (Intel integrated, discrete AMD, or Apple Silicon) transparently at the OS level.</div></div>
+          <div class="qa"><div class="q">Is the macOS app sandboxed?</div><div class="a">No — App Sandbox was tried and removed after it caused the app to hang on launch with no window ever appearing (confirmed via a <code>launchservicesd</code> assertion failure in the system log) with a locally ad-hoc-signed build.</div></div>
+          <div class="qa"><div class="q">Where do I get the app icon from?</div><div class="a">It's a custom-generated icon (a weather balloon + radiosonde instrument box on a gradient sky) already bundled in the project's asset catalog — no extra download needed.</div></div>
+        </div>
+
+        <div class="faqsection">Troubleshooting</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">The page looks stuck / stale — what do I do?</div><div class="a">Try the "Clear cache &amp; reload" button in the footer first. If you added the app to your phone's home screen (iOS especially), that caching layer is more aggressive — delete and re-add the home-screen icon if the button alone doesn't fix it.</div></div>
+          <div class="qa"><div class="q">The live feed banner says "unreachable" — is something broken?</div><div class="a">Not necessarily — it means the WebSocket connection to the live telemetry feed couldn't connect right now. It retries automatically every 5 seconds; if it's a self-hosted instance, check that <code>ws_proxy.py</code> is actually running.</div></div>
+          <div class="qa"><div class="q">Why does the map show a blank area?</div><div class="a">Either the selected time range has no readings in that region, or satellite tiles are still loading — try zooming/panning slightly to trigger a tile refresh.</div></div>
+          <div class="qa"><div class="q">My self-hosted instance shows "no data available" everywhere.</div><div class="a"><code>data.json</code> is likely empty or missing — run <code>python3 update.py --days 7</code> (or answer "y" to the setup script's backfill prompt) to populate it.</div></div>
+          <div class="qa"><div class="q">Location permission was denied — now what?</div><div class="a">The app falls back to IP-based geolocation automatically (city-level accuracy) — you can still browse normally, just without precise "nearest station" matching.</div></div>
+        </div>
+
+        <div class="faqsection">Privacy, Account &amp; Ads</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Are there ads?</div><div class="a">No. No ads, no ad SDKs, no third-party trackers or analytics embedded in the app.</div></div>
+          <div class="qa"><div class="q">Does it cost anything?</div><div class="a">No — the app, the API, and self-hosting are all free.</div></div>
+          <div class="qa"><div class="q">Do I need to sign up for an account?</div><div class="a">No. The optional "Account" tab just saves a nickname and a random local token to your browser's own storage — there's no server-side account system, no password, no email collected.</div></div>
+          <div class="qa"><div class="q">What data does the app collect about me?</div><div class="a">Your device's location (only if you grant permission, used purely to find your nearest station) and whatever you type into Search. Nothing is sent to a third party beyond the geocoding lookup itself.</div></div>
+          <div class="qa"><div class="q">Is my location shared with anyone?</div><div class="a">No — it's used client-side only, to compute distance to stations. It isn't stored server-side or sent anywhere beyond the optional geocoding request you trigger yourself in Search.</div></div>
+          <div class="qa"><div class="q">Can I delete my local account?</div><div class="a">Yes — the Account tab has a "Forget this device" button that clears the saved nickname and token from your browser's local storage instantly.</div></div>
+          <div class="qa"><div class="q">Does the nickname/token get sent to a server anywhere?</div><div class="a">No — it's purely local storage in your browser, never transmitted to the app's backend or any third party.</div></div>
+        </div>
+
+        <div class="faqsection">Development &amp; Contributing</div>
+        <div class="faqgrid">
+          <div class="qa"><div class="q">Is the source code open?</div><div class="a">Yes — the full repo (frontend, backend, Android, macOS) is public on GitHub, linked from the footer.</div></div>
+          <div class="qa"><div class="q">What's the tech stack?</div><div class="a">Hand-written HTML/CSS/JS for the frontend (no build step, no framework), Python for the server/data pipeline/MCP server, Go for the predictor service, Kotlin for Android, and Swift for macOS.</div></div>
+          <div class="qa"><div class="q">Why no frontend framework?</div><div class="a">Deliberately kept simple — single self-contained HTML files avoid a build pipeline entirely, making it trivial to deploy as static files via GitHub Pages.</div></div>
+          <div class="qa"><div class="q">Can I suggest a feature or report a bug?</div><div class="a">Yes — open an issue on the GitHub repo. It's actively maintained.</div></div>
+        </div>
       </div>
     </div>
 
@@ -368,9 +806,20 @@ footer a{color:inherit}
       </div>
     </div>
 
+    <section class="about" aria-labelledby="about-h">
+      <h1 id="about-h">Live weather from radiosonde balloons</h1>
+      <p>Groundcheck shows the temperature, air pressure and humidity measured at ground level by weather balloons (radiosondes) around the world, as a map and as a weather app. Radiosondes are launched from stations every day, and the first reading each one sends from the ground is a real measurement taken at that spot.</p>
+      <h2>Where the data comes from</h2>
+      <p>The live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a>, amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a>, and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches. Readings come from several hundred stations across Europe, North and South America, Asia, Africa, Australia and the Pacific islands.</p>
+      <h2>The forecast</h2>
+      <p>Groundcheck's own forecast for the next hours and days is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong; the <a href="https://luishae07.github.io/accuracy.html">accuracy page</a> shows how the big weather models scored against what balloons measured.</p>
+      <h2>Free to use</h2>
+      <p>The web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="../apidocs/">public data API</a>, and a <a href="https://luishae07.github.io/selfhost.html">self-host package</a> to run your own copy. We also make <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com">Flowsearch</a>, a search engine with its own crawler and index. See also the <a href="https://luishae07.github.io/coolthing.html">3D globe of every reading</a>.</p>
+    </section>
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs">API docs</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
-      &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
+      Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs">API docs</a>
+      &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
+      &middot; <span id="visitCount"></span> &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
 </main>
@@ -405,6 +854,119 @@ function condFor(temp, hum, pressure){
   if (temp >= 4) return "Partly cloudy";
   return "Cool, cloudy";
 }
+
+// ---- condition tiles with small rings and dials ---------------------------------------------------
+function ringSvg(pct){
+  const c = 2 * Math.PI * 26, p = Math.max(0, Math.min(100, pct));
+  return `<svg width="76" height="76" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="6"/>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#4aa3e8" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(c * p / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor">${Math.round(p)}%</text></svg>`;
+}
+function dialSvg(hpa){
+  const p = Math.max(960, Math.min(1050, hpa)), ang = (p - 960) / 90 * 180 - 90;
+  return `<svg width="86" height="58" viewBox="0 0 64 44"><defs><linearGradient id="gcdial" x1="0" x2="1"><stop offset="0" stop-color="#4aa3e8"/><stop offset=".5" stop-color="#3ec28f"/><stop offset="1" stop-color="#f0a030"/></linearGradient></defs>
+    <path d="M8 38 A24 24 0 0 1 56 38" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="6" stroke-linecap="round"/>
+    <path d="M8 38 A24 24 0 0 1 56 38" fill="none" stroke="url(#gcdial)" stroke-width="6" stroke-linecap="round" stroke-dasharray="75.4" stroke-dashoffset="0"/>
+    <line x1="32" y1="38" x2="32" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" transform="rotate(${ang.toFixed(1)} 32 38)"/><circle cx="32" cy="38" r="3.2" fill="currentColor"/></svg>`;
+}
+function comfortWord(dp){
+  return dp < 5 ? 'Dry' : dp < 12 ? 'Comfortable' : dp < 16 ? 'A bit humid' : dp < 20 ? 'Humid' : 'Muggy';
+}
+function dewBar(dp){
+  const pos = Math.max(0, Math.min(100, (dp + 5) / 30 * 100));
+  return `<div style="position:relative;width:86px;height:8px;border-radius:99px;background:linear-gradient(90deg,#8fd3f4,#3ec28f 45%,#f0a030 80%,#e0533c)"><i style="position:absolute;top:-3px;left:calc(${pos}% - 7px);width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid currentColor;box-sizing:border-box"></i></div>`;
+}
+function humWord(h){ return h < 30 ? 'Very dry air' : h < 60 ? 'Comfortable' : h < 85 ? 'Humid' : 'Very humid'; }
+function presWord(p){ return p < 1000 ? 'Low pressure' : p < 1020 ? 'Steady' : 'High pressure'; }
+function conditionTiles(p, dp){
+  const hum = p.humidity != null ? `<div class="g">${ringSvg(p.humidity)}</div><div class="d">${humWord(p.humidity)}</div>` : `<div class="v">—</div>`;
+  const pres = p.pressure != null ? `<div class="g">${dialSvg(p.pressure)}</div><div class="d"><b>${Math.round(p.pressure)} hPa</b> · ${presWord(p.pressure)}</div>` : `<div class="v">—</div>`;
+  const dew = dp != null ? `<div class="g">${dewBar(dp)}</div><div class="d"><b>${dp.toFixed(0)}°</b> · ${comfortWord(dp)}</div>` : `<div class="v">—</div>`;
+  const upd = `<div class="g"><svg width="62" height="62" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity=".35"/><path d="M12 7v5l3 2"/></svg></div><div class="d"><b>${timeAgo(p.time)}</b> · by a weather balloon</div>`;
+  return `<div class="mhead">Conditions</div>
+      <div class="metric"><span class="k">Humidity</span>${hum}</div>
+      <div class="metric"><span class="k">Pressure</span>${pres}</div>
+      <div class="metric"><span class="k">Dew point</span>${dew}</div>
+      <div class="metric"><span class="k">Measured</span>${upd}</div>`;
+}
+
+function timeAgo(iso){
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 2) return 'just now';
+  if (m < 90) return m + ' min ago';
+  const h = Math.round(m / 60);
+  return h < 36 ? h + ' h ago' : Math.round(h / 24) + ' days ago';
+}
+function dewPoint(t, h){
+  if (h == null || h <= 0) return null;
+  const g = Math.log(h / 100) + 17.625 * t / (243.04 + t);
+  return 243.04 * g / (17.625 - g);
+}
+const placeCache = {};
+function lookupPlaceName(lat, lon){
+  const key = lat.toFixed(1) + ',' + lon.toFixed(1);
+  if (placeCache[key]) return Promise.resolve(placeCache[key]);
+  return fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&lat=' + lat + '&lon=' + lon)
+    .then(r => r.json())
+    .then(d => {
+      const a = d.address || {};
+      const name = a.city || a.town || a.village || a.municipality || a.county || a.state || null;
+      if (name) placeCache[key] = name;
+      return name;
+    }).catch(() => null);
+}
+
+
+// ---- a sky that follows the weather and the sun --------------------------------------------------
+function solarElevation(lat, lon, d){
+  const rad = Math.PI / 180, day = (d - Date.UTC(d.getUTCFullYear(), 0, 0)) / 86400000;
+  const decl = 23.44 * rad * Math.sin(2 * Math.PI * (284 + day) / 365);
+  const solarH = (d.getUTCHours() + d.getUTCMinutes() / 60 + lon / 15 + 24) % 24;
+  const H = (solarH - 12) * 15 * rad;
+  return Math.asin(Math.sin(lat * rad) * Math.sin(decl) + Math.cos(lat * rad) * Math.cos(decl) * Math.cos(H)) / rad;
+}
+function hexMix(a, b, t){
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const x = p(a), y = p(b);
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function applySky(lat, lon, temp, hum, pres){
+  const stormy = hum != null && hum > 90 && pres != null && pres < 985;
+  const rainy = hum != null && hum > 92, showery = hum != null && hum > 85;
+  let c, wx;
+  if (stormy){ c = ['#232a35', '#363f4d', '#4d5766']; wx = 'storm'; }
+  else if (rainy){ c = ['#3c4856', '#546270', '#6b7b8a']; wx = 'rain'; }
+  else if (showery){ c = ['#4a5d70', '#65798d', '#8093a6']; wx = 'cloud'; }
+  else if (temp >= 11){ c = ['#1f64b5', '#3f88d4', '#6aa8e0']; wx = 'clear'; }
+  else if (temp >= 4){ c = ['#3b6fa3', '#5a8fbf', '#7fa9cc']; wx = 'mild'; }
+  else { c = ['#566f87', '#7088a0', '#8aa0b5']; wx = 'cool'; }
+  const night = ['#050a14', '#0b1730', '#16294a'];
+  const elev = solarElevation(lat, lon, new Date());
+  let t = elev >= 6 ? 0 : elev <= -6 ? 1 : (6 - elev) / 12;
+  const th = document.documentElement.dataset.theme;
+  const dark = th === 'dark' || (th !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  if (dark) t = Math.max(t, 0.75);
+  const out = c.map((x, i) => hexMix(x, night[i], t * 0.94));
+  const r = document.documentElement;
+  r.style.setProperty('--sky-top', out[0]); r.style.setProperty('--sky-mid', out[1]); r.style.setProperty('--sky-bot', out[2]);
+  r.dataset.sky = t > 0.55 ? 'night' : 'day';
+  r.dataset.wx = wx;
+}
+function sparkSvg(vals){
+  if (!vals || vals.length < 3) return '';
+  const W = 300, H = 64, pad = 6, lo = Math.min(...vals), hi = Math.max(...vals), span = Math.max(1, hi - lo);
+  const X = i => pad + i * (W - 2 * pad) / (vals.length - 1), Y = v => H - 14 - (v - lo) / span * (H - 28);
+  let d = 'M' + X(0) + ' ' + Y(vals[0]);
+  for (let i = 1; i < vals.length; i++){
+    const mx = (X(i - 1) + X(i)) / 2;
+    d += ' C' + mx + ' ' + Y(vals[i - 1]) + ' ' + mx + ' ' + Y(vals[i]) + ' ' + X(i) + ' ' + Y(vals[i]);
+  }
+  const hiI = vals.indexOf(hi), loI = vals.indexOf(lo);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="gcsp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e08a2c" stop-opacity=".35"/><stop offset="1" stop-color="#e08a2c" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L${X(vals.length - 1)} ${H} L${X(0)} ${H} Z" fill="url(#gcsp)"/><path d="${d}" fill="none" stroke="#e08a2c" stroke-width="2.5" stroke-linecap="round"/>
+    <text class="lab" x="${X(hiI)}" y="${Y(hi) - 5}" text-anchor="middle">${Math.round(hi)}\u00b0</text><text class="lab" x="${X(loI)}" y="${Y(lo) + 12}" text-anchor="middle">${Math.round(lo)}\u00b0</text></svg>`;
+}
+
 function fmtTime(iso){
   return new Date(iso).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 }
@@ -419,6 +981,8 @@ let points = [];
 let leafletMap = null;
 let leafletMarkerLayer = null;
 let youAreHereMarker = null;
+let mapMode = 'heat';
+let lastMapList = [];
 
 function updateYouAreHereMarker(){
   if (!leafletMap || !lastLoc) return;
@@ -444,7 +1008,7 @@ function haversine(lat1, lon1, lat2, lon2){
 }
 
 function locateByIP(){
-  return fetch('https://ipwho.is/')
+  return fetch(DATA_BASE.split('/apiinternel')[0] + '/api/whereami')
     .then(r => r.json())
     .then(d => {
       if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
@@ -453,50 +1017,185 @@ function locateByIP(){
 }
 
 function renderHero(p, distanceKm, label){
-  let locLine, sub;
+  applySky(p.lat, p.lon, p.temp, p.humidity, p.pressure);
+  const cached = (typeof lastLoc !== 'undefined' && lastLoc) ? placeCache[lastLoc.lat.toFixed(1) + ',' + lastLoc.lon.toFixed(1)] : null;
+  const where = label || cached || (distanceKm != null ? 'Near you' : 'Latest measurement');
+  let sub = 'Measured ' + timeAgo(p.time) + ' by a weather balloon';
   if (distanceKm != null){
-    locLine = 'Nearest station: ' + p.id;
-    sub = distanceKm < 60
-      ? distanceKm.toFixed(0) + ' km from you'
-      : '⚠ ' + distanceKm.toFixed(0) + ' km away — nothing closer reported in the last 7 days';
-    if (label) sub += ' &middot; approx. from ' + label;
-  } else {
-    locLine = 'Newest reading: station ' + p.id;
-    sub = p.lat.toFixed(2) + ', ' + p.lon.toFixed(2);
+    sub += distanceKm < 60 ? ', ' + distanceKm.toFixed(0) + ' km from you'
+                           : ' \u2014 ' + distanceKm.toFixed(0) + ' km away, nothing closer in the last 7 days';
   }
+  const dp = dewPoint(p.temp, p.humidity);
 
   document.getElementById('hero').innerHTML = `
     <div class="icon">${iconFor(p.temp, p.humidity, p.pressure)}</div>
     <div class="readout">
-      <div class="loc">${locLine}</div>
+      <div class="loc" id="placeName">${where}</div>
       <div class="temp">${p.temp.toFixed(1)}&deg;</div>
       <div class="cond">${condFor(p.temp, p.humidity, p.pressure)}</div>
-      <div class="stamp">${sub} &middot; ${fmtTime(p.time)}</div>
+      <div class="hilo" id="hilo"></div>
+      <div class="stamp" title="Balloon ${p.id}, ${Math.round(p.alt)} m, ${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}">${sub}</div>
     </div>
     <div class="metrics">
-      <div class="metric"><span class="k">Humidity</span><span class="v">${p.humidity != null ? p.humidity + '%' : '—'}</span></div>
-      <div class="metric"><span class="k">Pressure</span><span class="v">${p.pressure != null ? p.pressure + ' hPa' : '—'}</span></div>
-      <div class="metric"><span class="k">Altitude</span><span class="v">${Math.round(p.alt)} m</span></div>
-      <div class="metric"><span class="k">Stations</span><span class="v">${points.length}</span></div>
+      ${conditionTiles(p, dp)}
     </div>
     <button class="locbtn" id="locBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       Use my location
     </button>
   `;
+  if (!label && typeof lastLoc !== 'undefined' && lastLoc && !cached){
+    lookupPlaceName(lastLoc.lat, lastLoc.lon).then(name => { const el = document.getElementById('placeName'); if (el && name) el.textContent = name; });
+  }
   document.getElementById('locBtn').addEventListener('click', locate);
+  renderPrediction(p);
+}
+
+const PREDICTOR_URL = '/predict';
+let predictorCache = {};
+
+function renderPrediction(anchor){
+  const fetchAndRender = (data) => {
+    if (data && data.forecast && data.forecast.days && data.forecast.days.length){
+      // Groundcheck's own forecast: every day has its own value, learned from this app's balloon history (no weather model).
+      const fc = data.forecast;
+      const days = fc.days.filter(d => !d.partial).slice(0, 5);
+      const hd = document.getElementById('predictHead'), pn = document.getElementById('predictPanel'), st = document.getElementById('predictStrip');
+      if (days.length && st){
+        const err1 = (fc.accuracy && fc.accuracy[0]) ? fc.accuracy[0].mae : null;
+        const sub = (hd || pn).querySelector('.n');
+        if (sub) sub.textContent = 'from our own balloon history' + (err1 != null ? ' \u00b7 tomorrow typically \u00b1' + err1.toFixed(1) + '\u00b0' : '');
+        if (hd) hd.hidden = false;
+        if (pn) pn.hidden = false;
+        const today = fc.days[0];
+        const hl = document.getElementById('hilo');
+        if (hl && today) hl.textContent = 'H:' + Math.round(today.high) + '\u00b0   L:' + Math.round(today.low) + '\u00b0';
+        const hs = document.getElementById('hourlyStrip'), hp = document.getElementById('hourlyPanel');
+        if (hs && hp && fc.hourly && fc.hourly.length){
+          hs.innerHTML = fc.hourly.filter((h, i) => i % 2 === 0).slice(0, 13).map((h, i) => `
+            <div class="predictchip"><span class="h">${i === 0 ? 'Now' : new Date(h.t).toLocaleTimeString([], {hour: '2-digit'})}</span>${iconFor(h.temp, h.humidity, h.pressure)}<span class="t">${Math.round(h.temp)}&deg;</span></div>`).join('');
+          let sp = document.getElementById('hourlySpark');
+          if (!sp){ sp = document.createElement('div'); sp.id = 'hourlySpark'; hs.parentNode.insertBefore(sp, hs); }
+          sp.innerHTML = sparkSvg(fc.hourly.slice(0, 25).map(h => h.temp));
+          hp.hidden = false;
+        }
+        st.hidden = false;
+        const lowAll = Math.min(...days.map(d => d.low)), highAll = Math.max(...days.map(d => d.high)), spanAll = Math.max(1, highAll - lowAll);
+        st.className = 'daylist';
+        st.innerHTML = days.map(d => {
+          const l = (d.low - lowAll) / spanAll * 100, w = Math.max(6, (d.high - d.low) / spanAll * 100);
+          return `
+          <div class="dayrow" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
+            <span class="dn">${d.label}</span>
+            <span class="di">${iconFor(d.high, d.humidity, d.pressure)}</span>
+            <span class="lo">${Math.round(d.low)}\u00b0</span>
+            <span class="bar"><i style="left:${l}%;width:${w}%;background:linear-gradient(90deg,${tempColor(d.low)},${tempColor(d.high)})"></i></span>
+            <span class="hi">${Math.round(d.high)}\u00b0</span>
+          </div>`;
+        }).join('');
+        return;
+      }
+    }
+    const panel = document.getElementById('predictPanel');
+    const strip = document.getElementById('predictStrip');
+    if (!data || !data.hourly_avg || !data.hourly_avg.length){
+      panel.hidden = true;
+      return;
+    }
+    const byHour = new Map(data.hourly_avg.map(b => [b.hour, b]));
+    const nearestBucket = (h) => {
+      if (byHour.has(h)) return byHour.get(h);
+      let best = null, bestDist = Infinity;
+      for (const b of data.hourly_avg){
+        const d = Math.min(Math.abs(b.hour - h), 24 - Math.abs(b.hour - h));
+        if (d < bestDist){ bestDist = d; best = b; }
+      }
+      return best;
+    };
+
+    const anchorHour = new Date(anchor.time).getUTCHours();
+    const anchorBucket = nearestBucket(anchorHour);
+    const tempOffset = anchorBucket ? anchor.temp - anchorBucket.avg_temp : 0;
+    const humOffset = (anchorBucket && anchorBucket.avg_humidity != null && anchor.humidity != null)
+      ? anchor.humidity - anchorBucket.avg_humidity : 0;
+    const presOffset = (anchorBucket && anchorBucket.avg_pressure != null && anchor.pressure != null)
+      ? anchor.pressure - anchorBucket.avg_pressure : 0;
+
+    const dayTemps = data.hourly_avg.map(b => b.avg_temp + tempOffset);
+    const dayHigh = Math.max(...dayTemps);
+    const dayLow = Math.min(...dayTemps);
+    const middayBucket = nearestBucket(13);
+    const middayTemp = middayBucket ? middayBucket.avg_temp + tempOffset : dayHigh;
+    const middayHumidity = middayBucket && middayBucket.avg_humidity != null ? middayBucket.avg_humidity + humOffset : null;
+    const middayPressure = middayBucket && middayBucket.avg_pressure != null ? middayBucket.avg_pressure + presOffset : null;
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const anchorDate = new Date(anchor.time);
+    const chips = [];
+    for (let i = 1; i <= 5; i++){
+      const d = new Date(anchorDate);
+      d.setUTCDate(d.getUTCDate() + i);
+      chips.push({ label: dayNames[d.getUTCDay()], high: dayHigh, low: dayLow, temp: middayTemp, humidity: middayHumidity, pressure: middayPressure });
+    }
+
+    if (!chips.length){
+      panel.hidden = true;
+      return;
+    }
+    panel.hidden = false;
+    strip.innerHTML = chips.map(c => `
+      <div class="predictchip">
+        <span class="h">${c.label}</span>
+        ${iconFor(c.temp, c.humidity, c.pressure)}
+        <span class="t">${c.high.toFixed(0)}&deg;<span style="opacity:.6">/${c.low.toFixed(0)}&deg;</span></span>
+      </div>
+    `).join('');
+  };
+
+  const pkey = anchor.lat.toFixed(1) + ',' + anchor.lon.toFixed(1);
+  const hit = predictorCache[pkey];
+  if (hit && Date.now() - hit.at < 600000){
+    fetchAndRender(hit.data);
+    return;
+  }
+  fetch(PREDICTOR_URL + '?lat=' + anchor.lat + '&lon=' + anchor.lon + '&alt=' + Math.round(anchor.alt || 0))
+    .then(r => r.json())
+    .then(data => { predictorCache[pkey] = { at: Date.now(), data: data }; fetchAndRender(data); })
+    .catch(() => { document.getElementById('predictPanel').hidden = true; });
 }
 
 let lastLoc = null;
 
+function renderHeroNoFreshData(label){
+  document.getElementById('hero').innerHTML = `
+    <div class="icon"></div>
+    <div class="readout">
+      <div class="loc">${label || 'Near you'}</div>
+      <div class="temp">&mdash;</div>
+      <div class="cond">No recent data</div>
+      <div class="stamp">no weather balloon measurement nearby in the last 19 hours</div>
+    </div>
+    <button class="locbtn" id="locBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      Use my location
+    </button>
+  `;
+}
+
 function selectNearest(lat, lon, label){
-  const FRESH_HOURS = 24;
+  // Only ever show readings from the last 19h — a stale reading (even if
+  // geographically closer) is not an acceptable stand-in for "right now".
+  const FRESH_HOURS = 19;
   const cutoff = Date.now() - FRESH_HOURS * 3600 * 1000;
   const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
-  const pool = fresh.length ? fresh : points;
 
-  let nearest = pool[0], best = Infinity;
-  for (const p of pool){
+  if (!fresh.length){
+    renderHeroNoFreshData(label);
+    return;
+  }
+
+  let nearest = fresh[0], best = Infinity;
+  for (const p of fresh){
     const d = haversine(lat, lon, p.lat, p.lon);
     if (d < best){ best = d; nearest = p; }
   }
@@ -536,13 +1235,14 @@ function stationCard(p){
   return `
     <button class="stationcard" data-id="${p.id}">
       <div class="row1">${iconFor(p.temp, p.humidity, p.pressure)}<span class="t" style="color:${color}">${p.temp.toFixed(1)}&deg;</span></div>
-      <div class="id">${p.id}</div>
-      <div class="meta">${fmtTime(p.time)} &middot; ${Math.round(p.alt)} m alt</div>
+      <div class="id">${new Date(p.time).toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'})}</div>
+      <div class="meta">${new Date(p.time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})} &middot; ${p.id}</div>
     </button>
   `;
 }
 
 function renderMap(list){
+  lastMapList = list;
   document.getElementById('mapCount').textContent = list.length + ' stations';
   if (!leafletMap){
     leafletMap = L.map('mapbox', {
@@ -552,11 +1252,31 @@ function renderMap(list){
       maxBoundsViscosity: 1.0,
       minZoom: 2
     }).setView([51.5, 10.5], 5);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, noWrap: true }).addTo(leafletMap);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, noWrap: true, opacity:.85 }).addTo(leafletMap);
-    L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(leafletMap);
+    L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, maxNativeZoom: 18, noWrap: true }).addTo(leafletMap);
+    L.control.attribution({ prefix:false, position:'bottomright' }).addAttribution('Imagery: Esri, Maxar, Earthstar Geographics').addTo(leafletMap);
   }
-  if (leafletMarkerLayer) leafletMap.removeLayer(leafletMarkerLayer);
+
+  applyMapMode();
+  if (list.length) leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding:[24,24] });
+}
+
+function applyMapMode(){
+  if (!leafletMap) return;
+  const list = lastMapList;
+
+  if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
+
+  const heatLegend = document.getElementById('heatLegend');
+  if (heatLegend) heatLegend.hidden = mapMode !== 'heat';
+
+  if (mapMode === 'heat'){
+    ensureHeatCanvas();
+    heatCanvasEl.style.display = 'block';
+    drawInterpolatedHeat(list);
+    return;
+  } else if (heatCanvasEl){
+    heatCanvasEl.style.display = 'none';
+  }
 
   leafletMarkerLayer = L.markerClusterGroup({
     maxClusterRadius: 50,
@@ -589,7 +1309,114 @@ function renderMap(list){
 
   leafletMap.addLayer(leafletMarkerLayer);
   updateYouAreHereMarker();
-  if (list.length) leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding:[24,24] });
+}
+
+// --- Interpolated temperature surface (Apple Weather-style full coverage) ---
+let heatCanvasEl = null;
+const HEAT_MIN_T = -10, HEAT_MAX_T = 35;
+
+function heatColorForT(t){
+  const stops = [
+    [0.00, 30, 41, 59],
+    [0.20, 59, 130, 196],
+    [0.45, 47, 158, 111],
+    [0.70, 201, 154, 46],
+    [0.88, 192, 90, 60],
+    [1.00, 140, 30, 30]
+  ];
+  t = Math.max(0, Math.min(1, t));
+  let a = stops[0], b = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++){
+    if (t >= stops[i][0] && t <= stops[i + 1][0]){ a = stops[i]; b = stops[i + 1]; break; }
+  }
+  const span = (b[0] - a[0]) || 1;
+  const f = (t - a[0]) / span;
+  const r = Math.round(a[1] + (b[1] - a[1]) * f);
+  const g = Math.round(a[2] + (b[2] - a[2]) * f);
+  const bl = Math.round(a[3] + (b[3] - a[3]) * f);
+  return [r, g, bl];
+}
+
+function ensureHeatCanvas(){
+  if (heatCanvasEl) return;
+  heatCanvasEl = document.createElement('canvas');
+  heatCanvasEl.style.position = 'absolute';
+  heatCanvasEl.style.inset = '0';
+  // Leaflet's whole .leaflet-map-pane wrapper (tiles + everything) carries
+  // the generic .leaflet-pane class, which is z-index:400 — a value BELOW
+  // that renders invisibly underneath the entire map, not just the tiles.
+  heatCanvasEl.style.zIndex = 410;
+  heatCanvasEl.style.pointerEvents = 'none';
+  document.getElementById('mapbox').insertBefore(heatCanvasEl, document.getElementById('mapbox').firstChild);
+
+  let redrawTimer = null;
+  const scheduleRedraw = () => {
+    if (mapMode !== 'heat') return;
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+  };
+  leafletMap.on('move zoom resize', scheduleRedraw);
+}
+
+function drawInterpolatedHeat(list){
+  if (!leafletMap || !heatCanvasEl) return;
+  const size = leafletMap.getSize();
+  const W = size.x, H = size.y;
+  if (!W || !H) return;
+  heatCanvasEl.width = W;
+  heatCanvasEl.height = H;
+
+  const valid = list.filter(p => p.temp != null);
+  const ctx = heatCanvasEl.getContext('2d');
+  if (!valid.length){ ctx.clearRect(0, 0, W, H); return; }
+
+  const GRID_W = 72, GRID_H = Math.max(1, Math.round(GRID_W * (H / W)));
+  const off = document.createElement('canvas');
+  off.width = GRID_W; off.height = GRID_H;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(GRID_W, GRID_H);
+
+  const pts = valid.length > 700 ? valid.filter((_, i) => i % Math.ceil(valid.length / 700) === 0) : valid;
+  const llPts = pts.map(p => {
+    const cp = leafletMap.latLngToContainerPoint([p.lat, p.lon]);
+    return { x: cp.x, y: cp.y, temp: p.temp };
+  });
+
+  const COVER_PX = 140, FADE_PX = 320;
+
+  for (let gy = 0; gy < GRID_H; gy++){
+    const py = (gy + 0.5) * (H / GRID_H);
+    for (let gx = 0; gx < GRID_W; gx++){
+      const px = (gx + 0.5) * (W / GRID_W);
+      let wSum = 0, tSum = 0, minD2 = Infinity;
+      for (let i = 0; i < llPts.length; i++){
+        const dx = llPts[i].x - px, dy = llPts[i].y - py;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < minD2) minD2 = d2;
+        const w = 1 / Math.pow(d2 + 100, 2);
+        wSum += w;
+        tSum += w * llPts[i].temp;
+      }
+      const temp = tSum / wSum;
+      const t = (temp - HEAT_MIN_T) / (HEAT_MAX_T - HEAT_MIN_T);
+      const [r, g, b] = heatColorForT(t);
+
+      const dist = Math.sqrt(minD2);
+      let alpha;
+      if (dist <= COVER_PX) alpha = 200;
+      else if (dist >= FADE_PX) alpha = 0;
+      else alpha = Math.round(200 * (1 - (dist - COVER_PX) / (FADE_PX - COVER_PX)));
+
+      const idx = (gy * GRID_W + gx) * 4;
+      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = alpha;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(off, 0, 0, GRID_W, GRID_H, 0, 0, W, H);
 }
 
 function wireCardClicks(container){
@@ -618,16 +1445,11 @@ function render(){
     if (!cur || p.temp > cur.temp) byDay.set(day, p);
   }
   const days = [...byDay.values()].sort((a,b) => b.tsunix - a.tsunix).slice(0,7);
-  document.getElementById('weekCount').textContent = days.length + ' days';
-  const weekGrid = document.getElementById('weekGrid');
-  weekGrid.innerHTML = days.map(stationCard).join('');
-  wireCardClicks(weekGrid);
 
   // The map lives directly on the default-visible Today panel, so it has
   // to render right away — only the Stations grid (a separate tab that
   // isn't shown until clicked) benefits from being deferred.
   applyMapRange();
-  freshStationsGrid = false;
 }
 
 function pointsWithinDays(days){
@@ -648,29 +1470,17 @@ function pointsOnDay(dateStr){
 function applyMapRange(){
   const val = document.getElementById('mapRange').value;
   const dayInput = document.getElementById('mapDay');
+  let need;
   if (val === 'day'){
     dayInput.hidden = false;
-    if (!dayInput.value){
-      const now = new Date();
-      dayInput.value = now.toISOString().slice(0,10);
-    }
-    renderMap(pointsOnDay(dayInput.value));
+    if (!dayInput.value){ dayInput.value = new Date().toISOString().slice(0,10); }
+    need = daysSince(dayInput.value);
   } else {
     dayInput.hidden = true;
-    renderMap(pointsWithinDays(parseInt(val, 10)));
+    need = parseInt(val, 10);
   }
-}
-
-let freshStationsGrid = false;
-
-function renderHeavyViewsIfNeeded(view){
-  if (view !== 'stations' || freshStationsGrid) return;
-  freshStationsGrid = true;
-
-  document.getElementById('stationCount').textContent = points.length + ' stations';
-  const stationGrid = document.getElementById('stationGrid');
-  stationGrid.innerHTML = points.map(stationCard).join('');
-  wireCardClicks(stationGrid);
+  const draw = () => renderMap(val === 'day' ? pointsOnDay(dayInput.value) : pointsWithinDays(need));
+  if (rangeLoaded(need)) draw(); else ensureDays(need).then(draw).catch(draw);
 }
 
 document.querySelectorAll('.navbtn').forEach(btn => {
@@ -679,15 +1489,25 @@ document.querySelectorAll('.navbtn').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('main [id^="view-"]').forEach(v => v.hidden = true);
     document.getElementById('view-' + btn.dataset.view).hidden = false;
-    renderHeavyViewsIfNeeded(btn.dataset.view);
     if (btn.dataset.view === 'today' && leafletMap) setTimeout(() => leafletMap.invalidateSize(), 50);
     if (btn.dataset.view === 'search' && searchMap) setTimeout(() => searchMap.invalidateSize(), 50);
   });
 });
 
+const DATA_BASE = '/apiinternel/dont/json/microsftwindowssucks';
+let loadedDays = 7; // the page starts with the last 7 days only (the lean endpoint); older ranges load when they are asked for
+function fetchPoints(days){
+  return fetch(DATA_BASE + '/lite?days=' + days).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+function rangeLoaded(days){ return loadedDays === 0 || (days !== 0 && days <= loadedDays); }
+function ensureDays(days){
+  if (rangeLoaded(days)) return Promise.resolve();
+  return fetchPoints(days).then(d => { points = d; loadedDays = days; if (typeof freshViews !== 'undefined') freshViews.clear(); });
+}
+function daysSince(dateStr){ return Math.max(1, Math.ceil((Date.now() - new Date(dateStr + 'T00:00:00Z').getTime()) / 86400000) + 1); }
+
 function loadData(){
-  fetch('/apiinternel/dont/json/microsftwindowssucks/data')
-    .then(r => r.json())
+  fetchPoints(loadedDays)
     .then(data => { points = data; render(); })
     .catch(() => { document.getElementById('feedstatus').textContent = 'feed unreachable'; });
 }
@@ -696,6 +1516,15 @@ loadData();
 setInterval(loadData, 5 * 60 * 1000);
 document.getElementById('mapRange').addEventListener('change', applyMapRange);
 document.getElementById('mapDay').addEventListener('change', applyMapRange);
+
+document.querySelectorAll('.maptogglebtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.maptogglebtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mapMode = btn.dataset.mapmode;
+    applyMapMode();
+  });
+});
 
 document.getElementById('clearCacheBtn').addEventListener('click', async () => {
   try {
@@ -771,14 +1600,10 @@ let searchPlaceMarker = null;
 function ensureSearchMap(){
   if (searchMap) return searchMap;
   searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 18, noWrap: true,
-    attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, maxNativeZoom: 18, noWrap: true
   }).addTo(searchMap);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 18, noWrap: true, opacity: 0.85
-  }).addTo(searchMap);
-  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Tiles &copy; Esri').addTo(searchMap);
+  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Imagery: Esri, Maxar, Earthstar Geographics').addTo(searchMap);
   return searchMap;
 }
 
@@ -819,6 +1644,12 @@ function runSearch(query){
   query = query.trim();
   if (!query){ status.textContent = ''; results.innerHTML = ''; return; }
 
+  const needDays = parseInt(document.getElementById('searchRange').value, 10);
+  if (!rangeLoaded(needDays)){
+    document.getElementById('searchStatus').textContent = 'Loading older readings\u2026';
+    ensureDays(needDays).then(() => runSearch(query)).catch(() => { document.getElementById('searchStatus').textContent = 'Could not load older readings.'; });
+    return;
+  }
   const pool = searchPool();
   const rangeLabel = document.getElementById('searchRange').selectedOptions[0].textContent.toLowerCase();
 
@@ -885,3 +1716,26 @@ document.getElementById('searchRange').addEventListener('change', () => {
   runSearch(document.getElementById('searchInput').value);
 });
 </script>
+<script>
+// all-time visit counter: tell the live-feed server once per page load, and show the total
+(function(){
+  try{
+    var u = (typeof LIVE_WS_URL !== 'undefined') ? LIVE_WS_URL : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8766';
+    var w = new WebSocket(u);
+    w.onopen = function(){ try{ w.send('visit'); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 800); };
+  }catch(e){}
+  try{
+    var base = DATA_BASE.split('/apiinternel')[0];
+    fetch(base + '/api/visits').then(function(r){return r.json()}).then(function(d){
+      var el = document.getElementById('visitCount');
+      if (el && typeof d.visits === 'number') el.textContent = d.visits.toLocaleString() + ' visits since counting started';
+    }).catch(function(){});
+  }catch(e){}
+})();
+</script>
+<script>
+// the Flowsearch site runs on a tunnel whose address changes now and then; the current one is kept in a file in the Flowsearch repo
+(function(){try{fetch('https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt').then(function(r){return r.text()}).then(function(t){t=(t||'').trim();if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t))return;document.querySelectorAll('a.fs-link').forEach(function(a){a.href=t})}).catch(function(){})}catch(e){}})();
+</script>
+</body>
+</html>
