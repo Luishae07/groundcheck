@@ -5,11 +5,15 @@ import time
 import json
 import os
 import secrets
+import bisect
+import gzip
+import threading
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PORT = int(os.environ.get("GROUNDCHECK_HTTP_PORT", 8765))
 
 INTERNAL_PATH = "/apiinternel/dont/json/microsftwindowssucks/data"
+INTERNAL_LITE_PATH = "/apiinternel/dont/json/microsftwindowssucks/lite"   # ?days=N : only the last N days (the pages load this)
 PUBLIC_PATH = "/api/data"
 KEYGEN_PATH = "/api/keys/new"
 KEYS_FILE = os.path.join(BASE, "api_keys.json")
@@ -45,6 +49,44 @@ def is_rate_limited(bucket_id, max_reqs, window):
         return True
     hits.append(now)
     return False
+
+# The last N days of data.json with only the fields the pages use, plain and gzipped. data.json is read again when it
+# changes (a half-written file is skipped and the old data keeps being served); a range is rebuilt at most once a minute.
+LITE_FIELDS = ("id", "time", "temp", "alt", "pressure", "humidity", "lat", "lon", "tsunix", "source")
+_lite = {"mtime": None, "records": [], "ts": [], "built": {}}
+_lite_lock = threading.Lock()
+
+def _lite_load():
+    path = os.path.join(BASE, "data.json")
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        return bool(_lite["records"])
+    if _lite["mtime"] == mtime:
+        return True
+    try:
+        with open(path) as f:
+            recs = json.load(f)
+    except (OSError, ValueError):
+        return bool(_lite["records"])
+    recs = [{k: r[k] for k in LITE_FIELDS if k in r} for r in recs]
+    recs.sort(key=lambda r: r.get("tsunix", 0))
+    _lite.update(mtime=mtime, records=recs, ts=[r.get("tsunix", 0) for r in recs], built={})
+    return True
+
+def _lite_body(days):
+    with _lite_lock:
+        if not _lite_load():
+            return None
+        hit = _lite["built"].get(days)
+        if hit is None or time.time() - hit[0] > 60:
+            recs = _lite["records"]
+            if days:
+                recs = recs[bisect.bisect_left(_lite["ts"], time.time() - days * 86400):]
+            raw = json.dumps(recs, separators=(",", ":")).encode()
+            hit = (time.time(), raw, gzip.compress(raw, 6))
+            _lite["built"][days] = hit
+        return hit
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -87,6 +129,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _serve_lite(self):
+        days = 7
+        if "?" in self.path:
+            for part in self.path.split("?", 1)[1].split("&"):
+                if part.startswith("days="):
+                    try:
+                        days = max(0, min(5000, int(part[5:])))
+                    except ValueError:
+                        pass
+        hit = _lite_body(days)
+        if hit is None:
+            self.send_error(404, "data.json not found")
+            return
+        gz = "gzip" in (self.headers.get("Accept-Encoding") or "")
+        body = hit[2] if gz else hit[1]
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        if gz:
+            self.send_header("Content-Encoding", "gzip")
+        self.send_header("Vary", "Accept-Encoding")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(body)
+
     def _get_api_key(self):
         # Accept either header "X-API-Key" or query string "?key=..."
         key = self.headers.get("X-API-Key")
@@ -120,6 +187,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._serve_data_json()
             return
 
+        if base_path == INTERNAL_LITE_PATH:
+            self._serve_lite()
+            return
+
         if base_path == PUBLIC_PATH:
             api_key = self._get_api_key()
             if api_key and api_key in _valid_keys:
@@ -146,7 +217,7 @@ class Server(socketserver.ThreadingTCPServer):
 if __name__ == "__main__":
     with Server(("0.0.0.0", PORT), Handler) as httpd:
         print(f"Serving {BASE} on :{PORT}")
-        print(f"Internal (unlimited): {INTERNAL_PATH}")
+        print(f"Internal (unlimited): {INTERNAL_PATH}  and  {INTERNAL_LITE_PATH}?days=N")
         print(f"Public (default {DEFAULT_MAX}/{DEFAULT_WINDOW}s, keyed {KEY_MAX}/{KEY_WINDOW}s): {PUBLIC_PATH}")
         print(f"Get a key: POST {KEYGEN_PATH}")
         httpd.serve_forever()
