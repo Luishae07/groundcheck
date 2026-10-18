@@ -43,6 +43,13 @@
 }
 </script>
 <link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d2547">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Groundcheck">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2166,6 +2173,11 @@ connectLiveFeed();
 <script>
 // the Flowsearch site runs on a tunnel whose address changes now and then; the current one is kept in a file in the Flowsearch repo
 (function(){try{fetch('https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt').then(function(r){return r.text()}).then(function(t){t=(t||'').trim();if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t))return;document.querySelectorAll('a.fs-link').forEach(function(a){a.href=t})}).catch(function(){})}catch(e){}})();
+</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 </script>
 </body>
 </html>
