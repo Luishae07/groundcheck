@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Groundcheck Wrapped</title>
+<meta name="description" content="A year of Groundcheck in numbers: readings, hottest day, busiest station and temperature by month.">
+<link rel="canonical" href="https://luishae07.github.io/wrapped.html">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<style>
+:root{--top:#4a7fb5;--mid:#6ea0c8;--bot:#a9cbe3;--ink:#132433;--dim:#34506b;--card:rgba(255,255,255,.74);--line:rgba(255,255,255,.7);--accent:#e08a2c;--code:#0c1a2b}
+@media (prefers-color-scheme: dark){:root{--top:#0b1626;--mid:#12263b;--bot:#1f3a52;--ink:#eaf2fa;--dim:#a9bdd0;--card:rgba(255,255,255,.08);--line:rgba(255,255,255,.16);--code:#06101c}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--mid) 45%,var(--bot)) fixed;line-height:1.6}
+main{max-width:42rem;margin:0 auto;padding:2rem 1.2rem 3.5rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:600;color:#fff;text-decoration:none;margin-bottom:1.6rem}
+.brand img{width:28px;height:28px;border-radius:8px}
+h1{font-size:clamp(1.9rem,6vw,2.8rem);font-weight:300;letter-spacing:-.02em;line-height:1.1;margin:0 0 .8rem;color:#fff}
+.lead{font-size:1.1rem;color:#fff;opacity:.95;margin:0 0 1.2rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.2rem 1.3rem;margin:1.1rem 0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+h2{font-size:1.1rem;margin:0 0 .6rem}
+button{border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:700;padding:.8rem 1.4rem;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+button:active{transform:scale(.98)}
+.row{display:flex;gap:.5rem;align-items:stretch;margin:.6rem 0}
+.row code{flex:1;min-width:0;background:var(--code);color:#9fe0b4;border-radius:12px;padding:.8rem 1rem;font-size:.92rem;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,Consolas,monospace}
+.note{font-size:.88rem;color:var(--dim)}
+#err{color:#b3261e;font-weight:600}
+#result{display:none}
+a{color:inherit}
+footer{margin-top:2rem;color:#fff;opacity:.85;font-size:.85rem;text-align:center}
+
+.big{font-size:clamp(2.2rem,9vw,3.6rem);font-weight:300;letter-spacing:-.02em;line-height:1.05;margin:.1rem 0}
+.label{font-size:.85rem;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+@media (max-width:30rem){.grid2{grid-template-columns:1fr}}
+.grid2 .card{margin:0}
+.tabs{display:flex;gap:.5rem;margin:1rem 0}
+.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.tabs button.on{background:var(--accent);color:#fff;border-color:transparent}
+.bars{display:flex;align-items:flex-end;gap:.35rem;height:9rem;margin-top:.6rem}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bar i{display:block;width:100%;border-radius:6px 6px 0 0;background:var(--accent);min-height:2px}
+.bar span{font-size:.7rem;color:var(--dim);margin-top:.25rem}
+.bar b{font-size:.72rem;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="https://luishae07.github.io/"><img src="https://luishae07.github.io/logo.svg" alt="Groundcheck logo">Groundcheck</a>
+  <h1>Wrapped <span id="year"></span></h1>
+  <p class="lead">A year of ground-level weather from radiosondes, in numbers.</p>
+  <div class="tabs"><button id="tw" class="on" type="button">World</button><button id="tg" type="button">Germany</button></div>
+  <div id="out"></div>
+  <p class="note" id="note"></p>
+  <footer><a href="https://luishae07.github.io/">Groundcheck</a> &middot; <a href="https://luishae07.github.io/apidocs/">API</a></footer>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var data = null, view = 'world';
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function num(n) { return Number(n).toLocaleString('en'); }
+  function map(r) { return 'https://www.openstreetmap.org/?mlat=' + r.lat + '&mlon=' + r.lon + '#map=9/' + r.lat + '/' + r.lon; }
+  function card(label, big, small) { return '<div class="card"><div class="label">' + label + '</div><div class="big">' + big + '</div><div class="note">' + small + '</div></div>'; }
+  function draw() {
+    var s = data[view];
+    if (!s) { $('out').innerHTML = '<div class="card">No readings for this view yet.</div>'; return; }
+    var hot = s.hottest, max = Math.max.apply(null, s.months.map(function (m) { return m.avg; })), min = Math.min.apply(null, s.months.map(function (m) { return m.avg; }));
+    var top = Math.max(max, 1);
+    var bars = s.months.map(function (m) {
+      return '<div class="bar"><b>' + m.avg + '&deg;</b><i style="height:' + Math.max(2, Math.round(m.avg / top * 100)) + '%"></i><span>' + MONTHS[m.month - 1] + '</span></div>';
+    }).join('');
+    $('out').innerHTML =
+      '<div class="grid2">' +
+      card('Readings', num(s.readings), 'from ' + num(s.stations) + ' stations') +
+      card('Average', s.avg_temp + '&deg;C', 'across all readings') +
+      card('Hottest', hot.temp + '&deg;C', esc(hot.time) + ' &middot; ' + esc(hot.id) + ' &middot; <a href="' + map(hot) + '" target="_blank" rel="noopener">map</a>') +
+      card('Busiest day', num(s.busiest_day.readings), esc(s.busiest_day.day)) +
+      card('Busiest station', num(s.busiest_station.readings), esc(s.busiest_station.id) + ' reported most often') +
+      '</div>' +
+      '<section class="card" style="margin-top:.8rem"><div class="label">Average temperature by month</div><div class="bars">' + bars + '</div></section>';
+  }
+  function tab(v) { view = v; $('tw').className = v === 'world' ? 'on' : ''; $('tg').className = v === 'germany' ? 'on' : ''; if (data) draw(); }
+  $('tw').onclick = function () { tab('world'); };
+  $('tg').onclick = function () { tab('germany'); };
+  fetch('wrapped.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+    data = d; $('year').textContent = d.year;
+    var src = Object.keys(d.sources).map(function (k) { return num(d.sources[k]) + ' from ' + k; }).join(', ');
+    $('note').textContent = 'Updated ' + d.built + '. ' + src + '. Groundcheck keeps only readings of 0 \u00b0C or warmer taken near the ground, so averages lean warm and there is no coldest reading.';
+    draw();
+  }).catch(function () { $('out').innerHTML = '<div class="card">Could not load the numbers right now.</div>'; });
+})();
+</script>
+</body>
+</html>
