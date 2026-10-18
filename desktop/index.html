@@ -562,7 +562,7 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
       </div>
       <div class="grid3">
         <div class="panel">
-          <h2>Map <span class="n" id="mapCount"></span>
+          <h2>Map <span class="n" id="mapCount"></span> <span class="n" id="mathNote" hidden>doing math&hellip;</span>
             <div class="maptoggle">
               <button class="maptogglebtn" data-mapmode="stations">Dots</button>
               <button class="maptogglebtn active" data-mapmode="heat">Temperature</button>
@@ -981,6 +981,8 @@ let points = [];
 let leafletMap = null;
 let leafletMarkerLayer = null;
 let youAreHereMarker = null;
+let dotsHandler = null;
+function mathNote(on){ const e = document.getElementById('mathNote'); if (e) e.hidden = !on; }
 let mapMode = 'heat';
 let lastMapList = [];
 
@@ -1265,6 +1267,7 @@ function applyMapMode(){
   const list = lastMapList;
 
   if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
+  if (dotsHandler){ leafletMap.off('moveend', dotsHandler); dotsHandler = null; }
 
   const heatLegend = document.getElementById('heatLegend');
   if (heatLegend) heatLegend.hidden = mapMode !== 'heat';
@@ -1272,10 +1275,53 @@ function applyMapMode(){
   if (mapMode === 'heat'){
     ensureHeatCanvas();
     heatCanvasEl.style.display = 'block';
-    drawInterpolatedHeat(list);
+    mathNote(true);
+    setTimeout(() => { drawInterpolatedHeat(list); mathNote(false); }, 30);
     return;
   } else if (heatCanvasEl){
     heatCanvasEl.style.display = 'none';
+  }
+
+  if (window.gcwasm) try {
+    // Grouping is done in Go/WebAssembly for the visible area only, so just a few hundred elements exist at a time.
+    const pts = list.filter(p => p.lat != null && p.lon != null);
+    const f64 = a => new Uint8Array(new Float64Array(a).buffer);
+    gcwasm.setPoints(f64(pts.map(p => p.lat)), f64(pts.map(p => p.lon)));
+    leafletMarkerLayer = L.layerGroup().addTo(leafletMap);
+    const layer = leafletMarkerLayer;
+    const render = () => {
+      const z = leafletMap.getZoom(), b = leafletMap.getBounds().pad(0.3);
+      const raw = gcwasm.clusters(b.getWest(), b.getSouth(), b.getEast(), b.getNorth(), z, z >= 12 ? 0 : 50);
+      const r = new Float64Array(raw.buffer, raw.byteOffset, raw.byteLength / 8);
+      layer.clearLayers();
+      for (let i = 0; i < r.length; i += 4){
+        const lat = r[i], lon = r[i + 1], n = r[i + 2], idx = r[i + 3];
+        if (idx < 0){
+          const size = n < 10 ? 30 : n < 50 ? 38 : 46;
+          L.marker([lat, lon], { icon: L.divIcon({
+            html: `<div class="clusterdot" style="width:${size}px;height:${size}px">${n}</div>`, className: '', iconSize: [size, size]
+          }) }).on('click', () => leafletMap.setView([lat, lon], Math.min(z + 2, 12))).addTo(layer);
+        } else {
+          const p = pts[idx], color = tempColor(p.temp);
+          L.marker([lat, lon], { icon: L.divIcon({ className: '', html: `<div class="dotmarker" style="--mc:${color}"></div>`, iconSize: [14, 14], iconAnchor: [7, 7] }) })
+            .bindPopup(() => `<div class="mappop">
+         <div class="mappop-temp" style="color:${color}">${p.temp.toFixed(1)}&deg;C</div>
+         <div class="mappop-id">${p.id}</div>
+         <div class="mappop-row">${fmtTime(p.time)}</div>
+         <div class="mappop-row">Alt ${Math.round(p.alt)} m${p.pressure != null ? ' &middot; ' + p.pressure + ' hPa' : ''}${p.humidity != null ? ' &middot; ' + p.humidity + '% RH' : ''}</div>
+       </div>`).addTo(layer);
+        }
+      }
+    };
+    dotsHandler = () => { mathNote(true); setTimeout(() => { render(); mathNote(false); }, 30); };
+    leafletMap.on('moveend', dotsHandler);
+    dotsHandler();
+    updateYouAreHereMarker();
+    return;
+  } catch (e) {
+    window.gcwasm = null;   // fall back to the JavaScript version below
+    if (dotsHandler){ leafletMap.off('moveend', dotsHandler); dotsHandler = null; }
+    if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
   }
 
   leafletMarkerLayer = L.markerClusterGroup({
@@ -1353,7 +1399,8 @@ function ensureHeatCanvas(){
   const scheduleRedraw = () => {
     if (mapMode !== 'heat') return;
     clearTimeout(redrawTimer);
-    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+    mathNote(true);
+    redrawTimer = setTimeout(() => { drawInterpolatedHeat(lastMapList); mathNote(false); }, 60);
   };
   leafletMap.on('move zoom resize', scheduleRedraw);
 }
@@ -1384,6 +1431,13 @@ function drawInterpolatedHeat(list){
 
   const COVER_PX = 140, FADE_PX = 320;
 
+  let heatDone = false;
+  if (window.gcwasm) try {
+    const pb = new Uint8Array(new Float64Array(llPts.flatMap(q => [q.x, q.y, q.temp])).buffer);
+    img.data.set(gcwasm.heat(pb, W, H, GRID_W, GRID_H, COVER_PX, FADE_PX, HEAT_MIN_T, HEAT_MAX_T));
+    heatDone = true;
+  } catch (e) { window.gcwasm = null; }
+  if (!heatDone) {
   for (let gy = 0; gy < GRID_H; gy++){
     const py = (gy + 0.5) * (H / GRID_H);
     for (let gx = 0; gx < GRID_W; gx++){
@@ -1410,6 +1464,7 @@ function drawInterpolatedHeat(list){
       const idx = (gy * GRID_W + gx) * 4;
       img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = alpha;
     }
+  }
   }
   octx.putImageData(img, 0, 0);
 
@@ -1736,6 +1791,26 @@ document.getElementById('searchRange').addEventListener('change', () => {
 <script>
 // the Flowsearch site runs on a tunnel whose address changes now and then; the current one is kept in a file in the Flowsearch repo
 (function(){try{fetch('https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt').then(function(r){return r.text()}).then(function(t){t=(t||'').trim();if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t))return;document.querySelectorAll('a.fs-link').forEach(function(a){a.href=t})}).catch(function(){})}catch(e){}})();
+</script>
+<script>
+// Go/WebAssembly helpers (gc.wasm). If anything fails the page keeps using the JavaScript versions.
+(function () {
+  var sc = document.createElement('script');
+  sc.src = '../wasm_exec.js';
+  sc.onload = function () {
+    var go = new Go();
+    var load = WebAssembly.instantiateStreaming
+      ? WebAssembly.instantiateStreaming(fetch('../gc.wasm'), go.importObject).catch(function () {
+          return fetch('../gc.wasm').then(function (r) { return r.arrayBuffer(); }).then(function (b) { return WebAssembly.instantiate(b, go.importObject); });
+        })
+      : fetch('../gc.wasm').then(function (r) { return r.arrayBuffer(); }).then(function (b) { return WebAssembly.instantiate(b, go.importObject); });
+    load.then(function (res) {
+      go.run(res.instance);
+      if (typeof leafletMap !== 'undefined' && leafletMap && typeof applyMapMode === 'function') applyMapMode();
+    }).catch(function () {});
+  };
+  document.head.appendChild(sc);
+})();
 </script>
 </body>
 </html>
