@@ -52,6 +52,10 @@ footer{margin-top:2rem;color:#fff;opacity:.85;font-size:.85rem;text-align:center
   <h1>Wrapped <span id="year"></span></h1>
   <p class="lead">A year of ground-level weather from radiosondes, in numbers.</p>
   <div class="tabs"><button id="tw" class="on" type="button">World</button><button id="tg" type="button">Germany</button></div>
+  <section class="card"><div class="label">The year as a video</div>
+    <p class="note" id="vnote" hidden>This video is not ready yet.</p>
+    <video id="vid" controls playsinline muted loop preload="metadata" style="width:100%;border-radius:12px;margin-top:.6rem;background:#0a0d13"></video>
+  </section>
   <div id="out"></div>
   <p class="note" id="note"></p>
   <footer><a href="https://luishae07.github.io/">Groundcheck</a> &middot; <a href="https://luishae07.github.io/apidocs/">API</a></footer>
@@ -83,9 +87,10 @@ footer{margin-top:2rem;color:#fff;opacity:.85;font-size:.85rem;text-align:center
       '</div>' +
       '<section class="card" style="margin-top:.8rem"><div class="label">Average temperature by month</div><div class="bars">' + bars + '</div></section>';
   }
-  function tab(v) { view = v; $('tw').className = v === 'world' ? 'on' : ''; $('tg').className = v === 'germany' ? 'on' : ''; if (data) draw(); }
+  function tab(v) { view = v; var vd = $('vid'); $('vnote').hidden = true; vd.onerror = function () { $('vnote').hidden = false; }; vd.src = v === 'world' ? 'wrapped_world.mp4' : 'wrapped_germany.mp4';  $('tw').className = v === 'world' ? 'on' : ''; $('tg').className = v === 'germany' ? 'on' : ''; if (data) draw(); }
   $('tw').onclick = function () { tab('world'); };
   $('tg').onclick = function () { tab('germany'); };
+  tab('world');
   fetch('wrapped.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
     data = d; $('year').textContent = d.year;
     var src = Object.keys(d.sources).map(function (k) { return num(d.sources[k]) + ' from ' + k; }).join(', ');
