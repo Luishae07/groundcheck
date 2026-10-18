@@ -933,7 +933,7 @@ footer a{color:#fff}
     </div>
 
     <div id="view-map" hidden>
-      <div class="listhead">Map<span class="n" id="mapCount"></span></div>
+      <div class="listhead">Map<span class="n" id="mapCount"></span> <span class="n" id="mathNote" hidden>doing math&hellip;</span></div>
       <div class="maptoggle">
         <button class="maptogglebtn" data-mapmode="stations">Dots</button>
         <button class="maptogglebtn active" data-mapmode="heat">Temperature</button>
@@ -1620,6 +1620,7 @@ let mapMode = 'heat';
 let lastMapList = [];
 let youAreHereMarker = null;
 let dotsHandler = null;
+function mathNote(on){ const e = document.getElementById('mathNote'); if (e) e.hidden = !on; }
 
 function updateYouAreHereMarker(){
   if (!leafletMap || !lastLoc) return;
@@ -1681,7 +1682,8 @@ function applyMapMode(){
   if (mapMode === 'heat'){
     ensureHeatCanvas();
     heatCanvasEl.style.display = 'block';
-    drawInterpolatedHeat(list);
+    mathNote(true);
+    setTimeout(() => { drawInterpolatedHeat(list); mathNote(false); }, 30);
     return;
   } else if (heatCanvasEl){
     heatCanvasEl.style.display = 'none';
@@ -1718,9 +1720,9 @@ function applyMapMode(){
         }
       }
     };
-    dotsHandler = render;
+    dotsHandler = () => { mathNote(true); setTimeout(() => { render(); mathNote(false); }, 30); };
     leafletMap.on('moveend', dotsHandler);
-    render();
+    dotsHandler();
     updateYouAreHereMarker();
     return;
   } catch (e) {
@@ -1820,7 +1822,8 @@ function ensureHeatCanvas(){
   const scheduleRedraw = () => {
     if (mapMode !== 'heat') return;
     clearTimeout(redrawTimer);
-    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+    mathNote(true);
+    redrawTimer = setTimeout(() => { drawInterpolatedHeat(lastMapList); mathNote(false); }, 60);
   };
   leafletMap.on('move zoom resize', scheduleRedraw);
 }
