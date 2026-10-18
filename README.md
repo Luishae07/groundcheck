@@ -93,7 +93,7 @@ No. Every number was measured by a sensor on a balloon. It is not the output of 
 <details>
 <summary><b>Where does the data come from?</b></summary>
 
-From the open public radiosonde telemetry sites [sonde.mine.nu](https://sonde.mine.nu) and [zeesen.mine.nu](https://zeesen.mine.nu). The backend collects the readings and serves them.
+From the open public radiosonde telemetry sites [sonde.mine.nu](https://sonde.mine.nu), [zeesen.mine.nu](https://zeesen.mine.nu) and [SondeHub](https://sondehub.org). The backend collects the readings and serves them.
 
 </details>
 
