@@ -1,0 +1,166 @@
+{
+ "year": 2026,
+ "built": "2026-10-18",
+ "world": {
+  "readings": 157802,
+  "stations": 4757,
+  "hottest": {
+   "temp": 49.2,
+   "id": "SAM00040373",
+   "lat": 28.331,
+   "lon": 46.123,
+   "time": "2026-08-12 12:09 UTC"
+  },
+  "coldest": {
+   "temp": 0.0,
+   "id": "RSM00023884",
+   "lat": 61.581,
+   "lon": 90.031,
+   "time": "2026-10-15 11:31 UTC"
+  },
+  "busiest_day": {
+   "day": "2026-10-12",
+   "readings": 1027
+  },
+  "busiest_station": {
+   "id": "N3850104",
+   "readings": 576
+  },
+  "avg_temp": 18.9,
+  "months": [
+   {
+    "month": 1,
+    "avg": 15.1,
+    "readings": 11966
+   },
+   {
+    "month": 2,
+    "avg": 15.5,
+    "readings": 11956
+   },
+   {
+    "month": 3,
+    "avg": 15.4,
+    "readings": 15274
+   },
+   {
+    "month": 4,
+    "avg": 16.6,
+    "readings": 16194
+   },
+   {
+    "month": 5,
+    "avg": 18.6,
+    "readings": 17760
+   },
+   {
+    "month": 6,
+    "avg": 21.4,
+    "readings": 17994
+   },
+   {
+    "month": 7,
+    "avg": 23.0,
+    "readings": 18750
+   },
+   {
+    "month": 8,
+    "avg": 22.6,
+    "readings": 18594
+   },
+   {
+    "month": 9,
+    "avg": 19.9,
+    "readings": 19022
+   },
+   {
+    "month": 10,
+    "avg": 16.6,
+    "readings": 10292
+   }
+  ]
+ },
+ "germany": {
+  "readings": 8260,
+  "stations": 2360,
+  "hottest": {
+   "temp": 38.0,
+   "id": "GMM00010739",
+   "lat": 48.828,
+   "lon": 9.2,
+   "time": "2026-06-28 10:46 UTC"
+  },
+  "coldest": {
+   "temp": 0.0,
+   "id": "GMM00010035",
+   "lat": 54.528,
+   "lon": 9.549,
+   "time": "2026-02-20 16:44 UTC"
+  },
+  "busiest_day": {
+   "day": "2026-10-12",
+   "readings": 438
+  },
+  "busiest_station": {
+   "id": "N3850104",
+   "readings": 576
+  },
+  "avg_temp": 13.4,
+  "months": [
+   {
+    "month": 1,
+    "avg": 3.3,
+    "readings": 331
+   },
+   {
+    "month": 2,
+    "avg": 5.7,
+    "readings": 438
+   },
+   {
+    "month": 3,
+    "avg": 8.2,
+    "readings": 741
+   },
+   {
+    "month": 4,
+    "avg": 10.2,
+    "readings": 741
+   },
+   {
+    "month": 5,
+    "avg": 15.4,
+    "readings": 680
+   },
+   {
+    "month": 6,
+    "avg": 20.7,
+    "readings": 684
+   },
+   {
+    "month": 7,
+    "avg": 20.0,
+    "readings": 759
+   },
+   {
+    "month": 8,
+    "avg": 20.9,
+    "readings": 647
+   },
+   {
+    "month": 9,
+    "avg": 14.8,
+    "readings": 1423
+   },
+   {
+    "month": 10,
+    "avg": 10.7,
+    "readings": 1816
+   }
+  ]
+ },
+ "sources": {
+  "Sonde feeds (zeesen.mine.nu, SondeHub)": 6302,
+  "NOAA IGRA": 151500
+ }
+}
