@@ -1619,6 +1619,7 @@ let leafletMarkerLayer = null;
 let mapMode = 'heat';
 let lastMapList = [];
 let youAreHereMarker = null;
+let dotZoomHandler = null;
 
 function updateYouAreHereMarker(){
   if (!leafletMap || !lastLoc) return;
@@ -1685,37 +1686,18 @@ function applyMapMode(){
     heatCanvasEl.style.display = 'none';
   }
 
-  // Clustering keeps hundreds of stations fast: at low zoom, nearby points
-  // collapse into one bubble (far cheaper to draw and hit-test than
-  // individually rendering/interacting with every marker), expanding as
-  // you zoom in. Small colored dot icons instead of glow badges keep each
-  // individual marker cheap too.
-  leafletMarkerLayer = L.markerClusterGroup({
-    maxClusterRadius: 50,
-    spiderfyOnMaxZoom: true,
-    disableClusteringAtZoom: 12,
-    iconCreateFunction: cluster => {
-      const n = cluster.getChildCount();
-      const size = n < 10 ? 30 : n < 50 ? 38 : 46;
-      return L.divIcon({
-        html: `<div class="clusterdot" style="width:${size}px;height:${size}px">${n}</div>`,
-        className: '',
-        iconSize: [size, size]
-      });
-    }
-  });
+  // Dots are drawn on the map's one canvas (preferCanvas) instead of one HTML element per station with clustering,
+  // which took seconds with thousands of stations. The radius grows with the zoom so dots stay readable.
+  const dotRadius = () => { const z = leafletMap.getZoom(); return z < 5 ? 3 : z < 7 ? 4 : z < 10 ? 5 : 7; };
+  leafletMarkerLayer = L.layerGroup();
+  const dots = [];
 
   list.forEach(p => {
     const color = tempColor(p.temp);
-    const marker = L.marker([p.lat, p.lon], {
-      icon: L.divIcon({
-        className: '',
-        html: `<div class="dotmarker" style="--mc:${color}"></div>`,
-        iconSize: [14, 14],
-        iconAnchor: [7, 7]
-      })
+    const dot = L.circleMarker([p.lat, p.lon], {
+      radius: dotRadius(), color: '#fff', weight: 1, fillColor: color, fillOpacity: 0.95
     });
-    marker.bindPopup(() =>
+    dot.bindPopup(() =>
       `<div class="mappop">
          <div class="mappop-temp" style="color:${color}">${p.temp.toFixed(1)}&deg;C</div>
          <div class="mappop-id">${p.id}</div>
@@ -1723,8 +1705,12 @@ function applyMapMode(){
          <div class="mappop-row">Alt ${Math.round(p.alt)} m${p.pressure != null ? ' &middot; ' + p.pressure + ' hPa' : ''}${p.humidity != null ? ' &middot; ' + p.humidity + '% RH' : ''}</div>
        </div>`
     );
-    leafletMarkerLayer.addLayer(marker);
+    dots.push(dot);
+    leafletMarkerLayer.addLayer(dot);
   });
+  if (dotZoomHandler) leafletMap.off('zoomend', dotZoomHandler);
+  dotZoomHandler = () => { const r = dotRadius(); dots.forEach(d => d.setRadius(r)); };
+  leafletMap.on('zoomend', dotZoomHandler);
 
   leafletMap.addLayer(leafletMarkerLayer);
   updateYouAreHereMarker();
