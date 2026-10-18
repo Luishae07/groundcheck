@@ -1,16 +1,57 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>Groundcheck</title>
+<title>Groundcheck: live weather from radiosonde balloons, worldwide</title>
+<meta name="description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<link rel="alternate" type="application/atom+xml" title="Groundcheck changes" href="https://luishae07.github.io/feed.xml">
+<link rel="canonical" href="https://luishae07.github.io/">
+<meta name="robots" content="index, follow">
+<meta name="google-site-verification" content="OTs62Z9zd_G5ePEIKb6HW5YzWWF3UlNFyBRKrTvTxjM" />
+<meta property="og:type" content="website">
+<meta property="og:title" content="Groundcheck: live weather from radiosonde balloons, worldwide">
+<meta property="og:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<meta property="og:url" content="https://luishae07.github.io/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
+<meta property="og:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
+<meta property="og:site_name" content="Groundcheck">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:title" content="Groundcheck: live weather from radiosonde balloons, worldwide">
+<meta name="twitter:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Groundcheck",
+  "url": "https://luishae07.github.io/groundcheck/",
+  "description": "Live weather and radiosonde data map with real-time readings from weather stations and balloon soundings worldwide, plus a public API for querying the data.",
+  "applicationCategory": "Weather",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "screenshot": "https://luishae07.github.io/groundcheck/dl_screenshot_today.png",
+  "image": "https://luishae07.github.io/groundcheck/logo.svg",
+  "softwareHelp": "https://luishae07.github.io/groundcheck/apidocs/",
+  "sameAs": ["https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/", "https://github.com/Luishae07/groundcheck"],
+  "featureList": ["Ground-level temperature, pressure and humidity from radiosondes", "Forecast built only from balloon readings", "Map of every station", "Public data API", "Firefox add-on"],
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
-<style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script><style>
 :root{
   --sky-top:#4a7fb5;
   --sky-mid:#6ea0c8;
@@ -451,12 +492,37 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   font-size:.82rem;
 }
 #mapbox{
+  position:relative;
   height:calc(100dvh - 340px);
   min-height:260px;
   border-radius:16px;
   overflow:hidden;
   border:1px solid var(--line);
   touch-action:pan-x pan-y;
+}
+.heatoverlay{
+  position:absolute;
+  top:12px; left:12px;
+  z-index:1000;
+  background:rgba(10,20,30,.68);
+  backdrop-filter:blur(6px);
+  border-radius:14px;
+  padding:.8rem .9rem;
+  color:#fff;
+  pointer-events:none;
+}
+.heatoverlay .title{font-size:.78rem;font-weight:700;margin-bottom:.5rem;}
+.heatoverlay .scale{
+  display:flex; gap:.5rem;
+}
+.heatoverlay .bar{
+  width:8px; height:120px; border-radius:4px;
+  background:linear-gradient(180deg,#c05a3c,#c99a2e,#2f9e6f,#3b82c4,#1e3a8a);
+}
+.heatoverlay .ticks{
+  display:flex; flex-direction:column; justify-content:space-between;
+  height:120px;
+  font-size:.68rem; color:rgba(255,255,255,.85);
 }
 .maplegend{
   display:flex;
@@ -474,6 +540,39 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   margin-right:.3rem;
   vertical-align:middle;
 }
+.maptoggle{
+  display:flex;
+  gap:.4rem;
+  margin:.5rem 0 .6rem;
+}
+.maptogglebtn{
+  flex:1;
+  padding:.5rem 0;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink-dim);
+  font-family:inherit;
+  font-size:.8rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.maptogglebtn.active{
+  background:var(--accent);
+  color:#fff;
+  border-color:transparent;
+}
+.heatlegend{
+  align-items:center;
+  gap:.6rem;
+}
+.heatgradient{
+  display:inline-block;
+  width:120px;height:8px;
+  border-radius:4px;
+  background:linear-gradient(90deg,#3b82c4,#2f9e6f,#c99a2e,#c05a3c);
+}
+.heatlabel{font-size:.72rem;color:var(--ink-dim);}
 .dotmarker{
   width:14px;height:14px;
   border-radius:50%;
@@ -620,6 +719,11 @@ button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; }
   gap:.5rem;
 }
 
+.about{max-width:42rem;margin:1.4rem auto 0;padding:0 1.2rem;font-size:.78rem;line-height:1.55;color:var(--ink-dim)}
+.about h2{font-size:.85rem;font-weight:600;margin:.9rem 0 .2rem;color:var(--ink)}
+.about h1{font-size:.95rem;font-weight:600;margin:0 0 .5rem;color:var(--ink)}
+.about p{margin:.45rem 0}
+.about a{color:inherit;text-decoration:underline}
 footer{
   text-align:center;
   font-size:.68rem;
@@ -638,28 +742,158 @@ footer{
   cursor:pointer;
 }
 .clearcachebtn:active{ transform:scale(.97); }
+
+/* weather-app look: a human place name, high/low, hourly strip, balloon details tucked away */
+.hilo{text-align:center;font-size:1rem;font-weight:600;opacity:.95;margin-top:.1rem;min-height:1.2em}
+.hilo:empty{display:none}
+.detailcard summary{list-style:none;cursor:pointer;padding:.7rem .95rem;font-size:.85rem;font-weight:600;color:var(--ink-dim);display:flex;justify-content:space-between;align-items:center}
+.detailcard summary::-webkit-details-marker{display:none}
+.detailcard summary::after{content:"\25BE";opacity:.6;transition:transform .2s}
+.detailcard[open] summary::after{transform:rotate(180deg)}
+.detailcard[open] summary{border-bottom:1px solid var(--line)}
+#hourlyStrip .predictchip{min-width:58px;padding:.55rem .6rem}
+
+/* a sky that follows the weather and the sun, day rows with range bars, an hourly curve, gentle motion */
+.daylist{display:flex;flex-direction:column;padding:.4rem 0 0}
+.dayrow{display:grid;grid-template-columns:3.2rem 2rem 2.4rem 1fr 2.4rem;align-items:center;gap:.6rem;padding:.55rem .3rem;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.dayrow:first-child{border-top:0}
+.dayrow .dn{font-weight:600;font-size:.92rem}
+.dayrow .di svg{width:26px;height:26px;display:block}
+.dayrow .lo{color:var(--ink-faint);text-align:right;font-size:.92rem}
+.dayrow .hi{font-weight:700;font-size:.92rem}
+.dayrow .bar{position:relative;height:6px;border-radius:99px;background:var(--panel-2)}
+.dayrow .bar i{position:absolute;top:0;bottom:0;border-radius:99px}
+#hourlySpark{margin:.5rem 0 .2rem}
+#hourlySpark svg{display:block;width:100%;height:64px;overflow:visible}
+#hourlySpark .lab{font:600 10px Inter,system-ui,sans-serif;fill:var(--ink-dim)}
+@keyframes gcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes gcFadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.bigicon svg,.hero .icon svg{animation:gcFloat 6s ease-in-out infinite}
+#view-today>*{animation:gcFadeUp .45s ease both}
+#view-today>*:nth-child(2){animation-delay:.05s}#view-today>*:nth-child(3){animation-delay:.1s}#view-today>*:nth-child(4){animation-delay:.15s}
+.sky,.hero{transition:background .6s ease}
+@media (prefers-reduced-motion:reduce){.bigicon svg,.hero .icon svg,#view-today>*{animation:none}.sky,.hero{transition:none}}
+
+@keyframes gcDrift{from{transform:translateX(-6%)}to{transform:translateX(6%)}}
+@keyframes gcTwinkle{from{opacity:.55}to{opacity:1}}
+@keyframes gcRain{to{background-position:-20px 160px}}
+@keyframes gcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes gcFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== v3: a full-screen sky with frosted-glass cards ===== */
+:root{--panel:rgba(255,255,255,.82);--panel-2:rgba(255,255,255,.58);--line:rgba(19,36,51,.10);--glassblur:blur(22px) saturate(1.5)}
+:root[data-sky="night"]{--panel:rgba(13,24,42,.64);--panel-2:rgba(13,24,42,.46);--ink:#e9f1f9;--ink-dim:#b0c1d2;--ink-faint:#8398ad;--line:rgba(255,255,255,.13)}
+body{background:#060d19}
+.frame{background:linear-gradient(180deg,var(--sky-top) 0%,var(--sky-mid) 52%,var(--sky-bot) 100%);transition:background .8s ease}
+.frame::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 38% 9% at 18% 16%,rgba(255,255,255,.55),transparent 70%),radial-gradient(ellipse 42% 10% at 78% 26%,rgba(255,255,255,.42),transparent 70%),
+             radial-gradient(ellipse 46% 9% at 36% 44%,rgba(255,255,255,.26),transparent 70%),radial-gradient(ellipse 40% 8% at 85% 62%,rgba(255,255,255,.2),transparent 70%);
+  filter:blur(4px);opacity:.5;animation:gcDrift 70s ease-in-out infinite alternate}
+:root[data-wx="clear"] .frame::before{opacity:.26}
+:root[data-wx="cloud"] .frame::before,:root[data-wx="rain"] .frame::before,:root[data-wx="storm"] .frame::before{opacity:.85;filter:blur(6px) brightness(.85)}
+:root[data-sky="night"] .frame::before{opacity:.12}
+.frame::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0}
+:root[data-sky="night"]:not([data-wx="rain"]):not([data-wx="storm"]) .frame::after{background-image:radial-gradient(1.6px 1.6px at 12% 8%,#fff,transparent),radial-gradient(1px 1px at 28% 15%,#fff,transparent),radial-gradient(1.3px 1.3px at 44% 6%,#fff,transparent),radial-gradient(1px 1px at 61% 12%,#fff,transparent),radial-gradient(1.6px 1.6px at 78% 7%,#fff,transparent),radial-gradient(1px 1px at 90% 18%,#fff,transparent),radial-gradient(1.2px 1.2px at 7% 26%,#fff,transparent),radial-gradient(1px 1px at 36% 24%,#fff,transparent),radial-gradient(1.4px 1.4px at 55% 28%,#fff,transparent),radial-gradient(1px 1px at 72% 22%,#fff,transparent),radial-gradient(1.2px 1.2px at 94% 31%,#fff,transparent),radial-gradient(1px 1px at 18% 38%,#fff,transparent),radial-gradient(1.3px 1.3px at 49% 40%,#fff,transparent),radial-gradient(1px 1px at 83% 44%,#fff,transparent);animation:gcTwinkle 5s ease-in-out infinite alternate}
+:root[data-wx="rain"] .frame::after,:root[data-wx="storm"] .frame::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='160'%3E%3Cg stroke='rgba(255,255,255,.55)' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M10 10l-5 22M48 70l-5 22M86 20l-5 22M100 110l-5 22M30 120l-5 22M66 140l-5 22'/%3E%3C/g%3E%3C/svg%3E");background-size:120px 160px;opacity:.5;animation:gcRain .7s linear infinite}
+
+.sky,.sheet,.tabbar,footer{position:relative;z-index:1}
+.sky{background:none;padding:calc(.9rem + var(--safe-top)) 1.35rem 1.1rem}
+.sky::before{display:none}
+.statusrow .brand{font-weight:700;letter-spacing:.03em}
+.place{font-size:1.7rem;font-weight:600;margin-top:.9rem;text-shadow:0 2px 14px rgba(0,0,0,.25)}
+.place .sub{font-size:.78rem;opacity:.88;max-width:21rem;margin:.35rem auto 0;line-height:1.4}
+.bigicon svg{width:92px;height:92px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.25));animation:gcFloat 6s ease-in-out infinite}
+.bigtemp{font-weight:200;font-size:7.6rem;letter-spacing:-.05em;margin:.15rem 0 0;text-shadow:0 4px 30px rgba(0,0,0,.18)}
+.cond{font-size:1.2rem;font-weight:500;opacity:.97}
+.hilo{font-size:1.05rem;font-weight:600;text-shadow:0 1px 8px rgba(0,0,0,.2)}
+.stamp{font-size:.72rem;opacity:.7}
+.sheet{background:none;margin-top:0;padding:.3rem 1rem 1.2rem;flex:1 1 auto}
+.sheet::before{display:none}
+#view-today>*{animation:gcFadeUp .5s ease both}
+#view-today>*:nth-child(2){animation-delay:.05s}#view-today>*:nth-child(3){animation-delay:.1s}#view-today>*:nth-child(4){animation-delay:.15s}#view-today>*:nth-child(5){animation-delay:.2s}
+.stat,.detailcard,.acctcard,.qa,.feedrow,.refresh,.predictchip,.daylist{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-radius:22px}
+.grid2{gap:.75rem;margin-top:.75rem}
+.stat{padding:1rem 1.1rem;gap:.45rem}
+.stat .v{font-weight:600;font-size:1.55rem}
+.refresh{color:var(--ink);margin-top:1rem}
+.listhead{color:#fff;text-transform:uppercase;letter-spacing:.09em;font-size:.72rem;font-weight:700;margin:1.35rem .35rem .55rem;text-shadow:0 1px 8px rgba(0,0,0,.28)}
+.listhead .n{color:rgba(255,255,255,.78);text-transform:none;letter-spacing:0;font-weight:500}
+.daylist{padding:.3rem 1rem;margin-top:.2rem}
+#hourlySpark{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-bottom:0;border-radius:22px 22px 0 0;padding:.9rem 1rem 0;margin:.4rem 0 0}
+#hourlyStrip{background:var(--panel);border:1px solid var(--line);backdrop-filter:var(--glassblur);-webkit-backdrop-filter:var(--glassblur);border-top:0;border-radius:0 0 22px 22px;padding:.2rem .6rem .7rem}
+#hourlyStrip:first-of-type{border-top:1px solid var(--line);border-radius:22px}
+#hourlyStrip .predictchip{background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;border-radius:14px}
+#mapbox{border-radius:22px;overflow:hidden;border:1px solid var(--line)}
+footer{color:rgba(255,255,255,.82);padding-bottom:6.2rem}
+footer a{color:#fff}
+.tabbar{order:99;position:sticky;bottom:calc(.7rem + var(--safe-bot));z-index:50;margin:0 .9rem calc(.7rem + var(--safe-bot));padding:.3rem;
+  border:1px solid rgba(255,255,255,.28);border-radius:26px;background:rgba(255,255,255,.18);backdrop-filter:blur(26px) saturate(1.7);-webkit-backdrop-filter:blur(26px) saturate(1.7);box-shadow:0 12px 36px rgba(0,0,0,.3)}
+:root[data-sky="night"] .tabbar{background:rgba(13,24,42,.5)}
+.tab{color:rgba(255,255,255,.78);border-radius:20px;transition:background .2s,color .2s}
+.tab.active{color:#fff;background:rgba(255,255,255,.26)}
+
+/* perf: no blur filters, backdrop blur only on the tab bar */
+@keyframes gcRainT{to{transform:translate(-20px,160px)}}
+
+.frame{transition:none}
+.frame::before{filter:none!important;will-change:transform}
+:root[data-wx="cloud"] .frame::before,:root[data-wx="rain"] .frame::before,:root[data-wx="storm"] .frame::before{filter:none!important}
+:root[data-wx="rain"] .frame::after,:root[data-wx="storm"] .frame::after{inset:-160px 0 0 0!important;will-change:transform;background-position:0 0!important;animation:gcRainT .7s linear infinite!important}
+.stat,.detailcard,.acctcard,.qa,.feedrow,.refresh,.predictchip,.daylist,#hourlySpark,#hourlyStrip{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+:root{--panel:rgba(255,255,255,.88)}
+:root[data-sky="night"]{--panel:rgba(13,24,42,.82)}
+.bigicon svg{filter:none!important}
+.bigtemp,.place{text-shadow:0 2px 8px rgba(0,0,0,.16)!important}
+
+/* tiles: small rings and dials */
+.stat{min-height:158px;justify-content:space-between}
+.stat .g{align-self:center;margin:.2rem 0;color:var(--ink);display:flex;justify-content:center}
+.stat .d{font-size:.8rem;color:var(--ink-dim);line-height:1.3}
+.stat .d b{color:var(--ink);font-weight:700}
+
+/* the Firefox add-on card */
+.addoncard{display:flex;align-items:center;gap:1rem;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:1rem 1.2rem;margin:1.2rem 0 0;text-decoration:none;color:var(--ink)}
+.addoncard img{height:48px;width:auto;flex:0 0 auto}
+.addoncard b{display:block;font-weight:700}
+.addoncard span{font-size:.82rem;color:var(--ink-dim);line-height:1.4}
+#view-today .addoncard{grid-column:1/-1}
 </style>
+</head>
+<body>
+
+<noscript>
+  <div style="padding:2rem;text-align:center;font-family:sans-serif;background:#132433;color:#fff;">
+    <p style="font-size:1.5rem;font-weight:700;margin:0 0 .5rem">Enable JavaScript to use this site</p>
+    <p>Groundcheck needs JavaScript to load live weather data and the map.</p>
+  </div>
+</noscript>
 
 <div class="frame">
   <div class="sky">
     <div class="statusrow">
-      <span class="brand">Groundcheck</span>
+      <span class="brand"><img src="https://luishae07.github.io/logo.svg" alt="Groundcheck logo" width="24" height="24" style="vertical-align:-6px;margin-right:.45rem;border-radius:7px">Groundcheck</span>
       <span class="live" id="feedStatus"><span class="dot" id="feedDot"></span><span id="feedLabel">checking feed&hellip;</span></span>
     </div>
     <div class="place" id="place">Loading&hellip;<span class="sub"></span></div>
     <div class="bigicon" id="bigicon"></div>
     <div class="bigtemp" id="bigtemp">&nbsp;</div>
     <div class="cond" id="cond">&nbsp;</div>
+    <div class="hilo" id="hilo"></div>
     <div class="stamp" id="stamp">&nbsp;</div>
   </div>
 
   <div class="sheet">
     <div id="view-today">
       <div class="livecard" id="liveCard" hidden></div>
-      <div class="grid2" id="stats"></div>
-      <div class="detailcard" id="details"></div>
+      <div class="listhead" id="hourlyHead" hidden>Next 24 hours<span class="n">an estimate</span></div>
+      <div class="strip" id="hourlyStrip" hidden></div>
 
-      <div class="listhead" id="predictHead" hidden>Next hours<span class="n">from 7-day pattern</span></div>
+      <div class="listhead">Conditions</div>
+      <div class="grid2" id="stats"></div>
+      <details class="detailcard" id="detailsBox"><summary>About this measurement</summary><div id="details"></div></details>
+
+      <div class="listhead" id="predictHead" hidden>Next days<span class="n">typical day, from 7-day pattern</span></div>
       <div class="strip" id="predictStrip" hidden></div>
 
       <button class="refresh" id="refreshBtn">
@@ -667,22 +901,36 @@ footer{
         Refresh location
       </button>
 
-      <div class="listhead">Last 7 days<span class="n" id="weekCount"></span></div>
-      <div class="feed" id="weekList"></div>
+      <div class="addoncard"><a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/" target="_blank" rel="noopener noreferrer" aria-label="Get the Groundcheck add-on for Firefox"><img src="https://luishae07.github.io/firefox-addon.svg" alt="Get the add-on for Firefox"></a><div><b>Groundcheck in Firefox</b><span>See the nearest weather balloon reading from your toolbar, and search Flowsearch from the address bar. Free.</span></div></div>
+
     </div>
 
-    <div id="view-stations" hidden>
-      <div class="listhead">All stations, newest first<span class="n" id="stationCount"></span></div>
-      <div class="feed" id="stationList"></div>
-    </div>
-
-    <div id="view-history" hidden>
-      <div class="listhead">Reading history<span class="n" id="historyCount"></span></div>
-      <div class="feed" id="historyList"></div>
+    <div id="view-search" hidden>
+      <div class="listhead">Search</div>
+      <p style="color:var(--ink-dim);font-size:.82rem;margin:0 0 .8rem;line-height:1.5">
+        Station ID, a temperature (e.g. <code>18</code> or <code>18°C</code>), or a place name.
+      </p>
+      <div style="display:flex;gap:.5rem;margin-bottom:.6rem">
+        <input id="searchInput" class="nicknameinput" type="text" placeholder="e.g. Berlin, or 18°C, or a station ID" style="flex:1">
+        <button id="searchBtn" class="refresh" style="flex:0 0 auto">Go</button>
+      </div>
+      <select id="searchRange" class="rangepicker" style="margin-bottom:.7rem;width:100%">
+        <option value="7" selected>Only last 7 days</option>
+        <option value="30">Only last 30 days</option>
+        <option value="90">Only last 90 days</option>
+        <option value="0">All time (full archive)</option>
+      </select>
+      <div id="searchStatus" style="font-size:.78rem;color:var(--ink-faint);margin-bottom:.7rem"></div>
+      <div id="searchMapBox" style="height:220px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-bottom:.9rem"></div>
+      <div class="feed" id="searchResults"></div>
     </div>
 
     <div id="view-map" hidden>
-      <div class="listhead">Station map<span class="n" id="mapCount"></span></div>
+      <div class="listhead">Map<span class="n" id="mapCount"></span></div>
+      <div class="maptoggle">
+        <button class="maptogglebtn" data-mapmode="stations">Dots</button>
+        <button class="maptogglebtn active" data-mapmode="heat">Temperature</button>
+      </div>
       <select id="mapRange" class="rangepicker">
         <option value="7" selected>Last 7 days</option>
         <option value="30">Last 30 days</option>
@@ -691,13 +939,44 @@ footer{
         <option value="day">This day</option>
       </select>
       <input type="date" id="mapDay" class="rangepicker" hidden>
-      <div id="mapbox"></div>
-      <div class="maplegend">
+      <div id="mapbox">
+        <div class="heatoverlay" id="heatLegend" hidden>
+          <div class="title">Temperature</div>
+          <div class="scale">
+            <span class="bar"></span>
+            <span class="ticks">
+              <span>35&deg;</span><span>20&deg;</span><span>10&deg;</span><span>0&deg;</span><span>-10&deg;</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="maplegend" id="stationsLegend">
         <span><i style="background:#3b82c4"></i>&lt;3&deg;</span>
         <span><i style="background:#2f9e6f"></i>3&ndash;7&deg;</span>
         <span><i style="background:#c99a2e"></i>7&ndash;11&deg;</span>
         <span><i style="background:#c05a3c"></i>&gt;11&deg;</span>
       </div>
+    </div>
+
+    <div id="view-credits" hidden>
+      <div class="listhead">Credits</div>
+      <div class="listhead">Weather data</div>
+      <div class="qa"><div class="q">sonde.mine.nu / zeesen.mine.nu</div><div class="a">Live radiosonde telemetry from a public tracking network run by volunteers with their own receivers. <a href="https://sonde.mine.nu" target="_blank" rel="noopener noreferrer">sonde.mine.nu</a></div></div>
+      <div class="qa"><div class="q">SondeHub</div><div class="a">An open, worldwide database of radiosonde telemetry, fed by hundreds of volunteer receivers. It gives Groundcheck readings from North and South America, Asia, Australia and more. <a href="https://sondehub.org" target="_blank" rel="noopener noreferrer">sondehub.org</a></div></div>
+      <div class="qa"><div class="q">NOAA IGRA</div><div class="a">The Integrated Global Radiosonde Archive of NOAA's National Centers for Environmental Information: the official soundings of about 650 weather-service stations in more than 100 countries (public domain). <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" target="_blank" rel="noopener noreferrer">NOAA NCEI</a></div></div>
+      <div class="listhead">Maps &amp; places</div>
+      <div class="qa"><div class="q">Esri</div><div class="a">Map imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS user community. <a href="https://www.esri.com" target="_blank" rel="noopener noreferrer">esri.com</a></div></div>
+      <div class="qa"><div class="q">OpenStreetMap</div><div class="a">Place search and place names come from Nominatim, using &copy; OpenStreetMap contributors data. <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">openstreetmap.org/copyright</a></div></div>
+      <div class="qa"><div class="q">Leaflet</div><div class="a">The map is drawn with Leaflet (BSD-2-Clause) and Leaflet.markercluster (MIT). <a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a></div></div>
+      <div class="qa"><div class="q">DB-IP</div><div class="a">If you do not share your exact location, an approximate one is looked up from your IP address on our own server with the free IP to City Lite database. Your IP is not stored. <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer">IP Geolocation by DB-IP</a></div></div>
+      <div class="listhead">Design &amp; code</div>
+      <div class="qa"><div class="q">Fonts</div><div class="a">Sora and Inter, from Google Fonts, under the SIL Open Font License.</div></div>
+      <div class="qa"><div class="q">Open source</div><div class="a">Groundcheck is free software under the AGPL-3.0 licence. The source code is on <a href="https://github.com/Luishae07/groundcheck" target="_blank" rel="noopener noreferrer">GitHub</a>.</div></div>
+      <div class="listhead">Projects we make</div>
+      <div class="qa"><div class="q">Flowsearch</div><div class="a">A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com" target="_blank" rel="noopener noreferrer">Open Flowsearch</a> &middot; <a href="https://github.com/Luishae07/flowsearch" target="_blank" rel="noopener noreferrer">Source on GitHub</a></div></div>
+      <div class="listhead">Good to know</div>
+      <div class="qa"><div class="q">Forecasts can be wrong</div><div class="a">Measurements come straight from weather balloon sensors. The Next days forecast is an estimate that Groundcheck calculates from collected readings, with no weather model, and it can be wrong. Its typical error is shown next to it.</div></div>
+      <div class="qa"><div class="q">Thank you</div><div class="a">To everyone who builds, launches, hosts and runs radiosondes and receivers. Without them there would be nothing to show.</div></div>
     </div>
 
     <div id="view-faq" hidden>
@@ -709,7 +988,7 @@ footer{
         </div>
         <div class="qa">
           <div class="q">Where does this data come from?</div>
-          <div class="a">Live radiosonde (weather balloon) telemetry from <b>sonde.mine.nu</b>, specifically its <code>sondes.php</code> feed — real sensor readings from balloons currently or recently in flight, not a forecast model.</div>
+          <div class="a">Live radiosonde (weather balloon) telemetry from <b>sonde.mine.nu</b> (its <code>sondes.php</code> feed) from <b>SondeHub</b> (sondehub.org, an open worldwide database of radiosonde telemetry) and from NOAA's <b>Integrated Global Radiosonde Archive</b> (IGRA), the official soundings of about 650 weather-service stations in more than 100 countries — real sensor readings from balloons currently or recently in flight, not a forecast model.</div>
         </div>
         <div class="qa">
           <div class="q">Why are some temperatures missing from the list?</div>
@@ -758,9 +1037,19 @@ footer{
       </div>
     </div>
 
+    <section class="about" aria-labelledby="about-h">
+      <h1 id="about-h">Live weather from radiosonde balloons</h1>
+      <p>Groundcheck shows the temperature, air pressure and humidity measured at ground level by weather balloons (radiosondes) around the world, as a map and as a weather app. Radiosondes are launched from stations every day, and the first reading each one sends from the ground is a real measurement taken at that spot.</p>
+      <h2>Where the data comes from</h2>
+      <p>The live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a>, amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a>, and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches. Readings come from several hundred stations across Europe, North and South America, Asia, Africa, Australia and the Pacific islands.</p>
+      <h2>The forecast</h2>
+      <p>Groundcheck's own forecast for the next hours and days is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong; the <a href="https://luishae07.github.io/accuracy.html">accuracy page</a> shows how the big weather models scored against what balloons measured.</p>
+      <h2>Free to use</h2>
+      <p>The web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="apidocs/">public data API</a>, and a <a href="https://luishae07.github.io/selfhost.html">self-host package</a> to run your own copy. We also make <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com">Flowsearch</a>, a search engine with its own crawler and index. See also the <a href="https://luishae07.github.io/coolthing.html">3D globe of every reading</a>.</p>
+    </section>
     <footer>
-      Source: sonde.mine.nu ground telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
-      <br><button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
+      Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="/apidocs" style="color:inherit">API docs</a> &middot; <a href="/desktop" style="color:inherit">Desktop view</a> &middot; <!-- Self-hosting a modified copy? AGPL-3.0 requires this link to point at YOUR source, not the upstream repo. --><a href="https://github.com/Luishae07/groundcheck" style="color:inherit">Source code (AGPL-3.0)</a>
+      <br><span id="visitCount"></span> &middot; <button id="clearCacheBtn" class="clearcachebtn">Clear cache &amp; reload</button>
     </footer>
   </div>
 
@@ -773,13 +1062,13 @@ footer{
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 5v16l6-2 6 2 6-2V3l-6 2-6-2Z"/><path d="M9 3v16M15 5v16"/></svg>
       Map
     </button>
-    <button class="tab" data-view="stations">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-      Stations
+    <button class="tab" data-view="credits">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      Credits
     </button>
-    <button class="tab" data-view="history">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      History
+    <button class="tab" data-view="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Search
     </button>
     <button class="tab" data-view="faq">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
@@ -824,6 +1113,123 @@ function condFor(temp, hum, pressure){
   return "Cool, cloudy";
 }
 
+
+// ---- condition tiles with small rings and dials ---------------------------------------------------
+function ringSvg(pct){
+  const c = 2 * Math.PI * 26, p = Math.max(0, Math.min(100, pct));
+  return `<svg width="76" height="76" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="6"/>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#4aa3e8" stroke-width="6" stroke-linecap="round" stroke-dasharray="${(c * p / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="37" text-anchor="middle" font-size="15" font-weight="700" fill="currentColor">${Math.round(p)}%</text></svg>`;
+}
+function dialSvg(hpa){
+  const p = Math.max(960, Math.min(1050, hpa)), ang = (p - 960) / 90 * 180 - 90;
+  return `<svg width="86" height="58" viewBox="0 0 64 44"><defs><linearGradient id="gcdial" x1="0" x2="1"><stop offset="0" stop-color="#4aa3e8"/><stop offset=".5" stop-color="#3ec28f"/><stop offset="1" stop-color="#f0a030"/></linearGradient></defs>
+    <path d="M8 38 A24 24 0 0 1 56 38" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="6" stroke-linecap="round"/>
+    <path d="M8 38 A24 24 0 0 1 56 38" fill="none" stroke="url(#gcdial)" stroke-width="6" stroke-linecap="round" stroke-dasharray="75.4" stroke-dashoffset="0"/>
+    <line x1="32" y1="38" x2="32" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" transform="rotate(${ang.toFixed(1)} 32 38)"/><circle cx="32" cy="38" r="3.2" fill="currentColor"/></svg>`;
+}
+function comfortWord(dp){
+  return dp < 5 ? 'Dry' : dp < 12 ? 'Comfortable' : dp < 16 ? 'A bit humid' : dp < 20 ? 'Humid' : 'Muggy';
+}
+function dewBar(dp){
+  const pos = Math.max(0, Math.min(100, (dp + 5) / 30 * 100));
+  return `<div style="position:relative;width:86px;height:8px;border-radius:99px;background:linear-gradient(90deg,#8fd3f4,#3ec28f 45%,#f0a030 80%,#e0533c)"><i style="position:absolute;top:-3px;left:calc(${pos}% - 7px);width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid currentColor;box-sizing:border-box"></i></div>`;
+}
+function humWord(h){ return h < 30 ? 'Very dry air' : h < 60 ? 'Comfortable' : h < 85 ? 'Humid' : 'Very humid'; }
+function presWord(p){ return p < 1000 ? 'Low pressure' : p < 1020 ? 'Steady' : 'High pressure'; }
+
+function statTiles(p, dp){
+  const hum = p.humidity != null ? `<div class="g">${ringSvg(p.humidity)}</div><div class="d">${humWord(p.humidity)}</div>` : `<div class="v">—</div>`;
+  const pres = p.pressure != null ? `<div class="g">${dialSvg(p.pressure)}</div><div class="d"><b>${Math.round(p.pressure)} hPa</b> · ${presWord(p.pressure)}</div>` : `<div class="v">—</div>`;
+  const dew = dp != null ? `<div class="g">${dewBar(dp)}</div><div class="d"><b>${dp.toFixed(0)}°</b> · ${comfortWord(dp)}</div>` : `<div class="v">—</div>`;
+  const upd = `<div class="g"><svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9" stroke-opacity=".35"/><path d="M12 7v5l3 2"/></svg></div><div class="d"><b>${timeAgo(p.time)}</b> · by a weather balloon</div>`;
+  return `<div class="stat"><span class="k">Humidity</span>${hum}</div>
+    <div class="stat"><span class="k">Pressure</span>${pres}</div>
+    <div class="stat"><span class="k">Dew point</span>${dew}</div>
+    <div class="stat"><span class="k">Measured</span>${upd}</div>`;
+}
+
+function timeAgo(iso){
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 2) return 'just now';
+  if (m < 90) return m + ' min ago';
+  const h = Math.round(m / 60);
+  return h < 36 ? h + ' h ago' : Math.round(h / 24) + ' days ago';
+}
+function dewPoint(t, h){
+  if (h == null || h <= 0) return null;
+  const g = Math.log(h / 100) + 17.625 * t / (243.04 + t);
+  return 243.04 * g / (17.625 - g);
+}
+const placeCache = {};
+function lookupPlaceName(lat, lon){
+  const key = lat.toFixed(1) + ',' + lon.toFixed(1);
+  if (placeCache[key]) return Promise.resolve(placeCache[key]);
+  return fetch('https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&lat=' + lat + '&lon=' + lon)
+    .then(r => r.json())
+    .then(d => {
+      const a = d.address || {};
+      const name = a.city || a.town || a.village || a.municipality || a.county || a.state || null;
+      if (name) placeCache[key] = name;
+      return name;
+    }).catch(() => null);
+}
+function setPlaceName(name){
+  const el = document.getElementById('placeName');
+  if (el && name) el.textContent = name;
+}
+
+
+// ---- a sky that follows the weather and the sun --------------------------------------------------
+function solarElevation(lat, lon, d){
+  const rad = Math.PI / 180, day = (d - Date.UTC(d.getUTCFullYear(), 0, 0)) / 86400000;
+  const decl = 23.44 * rad * Math.sin(2 * Math.PI * (284 + day) / 365);
+  const solarH = (d.getUTCHours() + d.getUTCMinutes() / 60 + lon / 15 + 24) % 24;
+  const H = (solarH - 12) * 15 * rad;
+  return Math.asin(Math.sin(lat * rad) * Math.sin(decl) + Math.cos(lat * rad) * Math.cos(decl) * Math.cos(H)) / rad;
+}
+function hexMix(a, b, t){
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const x = p(a), y = p(b);
+  return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function applySky(lat, lon, temp, hum, pres){
+  const stormy = hum != null && hum > 90 && pres != null && pres < 985;
+  const rainy = hum != null && hum > 92, showery = hum != null && hum > 85;
+  let c, wx;
+  if (stormy){ c = ['#232a35', '#363f4d', '#4d5766']; wx = 'storm'; }
+  else if (rainy){ c = ['#3c4856', '#546270', '#6b7b8a']; wx = 'rain'; }
+  else if (showery){ c = ['#4a5d70', '#65798d', '#8093a6']; wx = 'cloud'; }
+  else if (temp >= 11){ c = ['#1f64b5', '#3f88d4', '#6aa8e0']; wx = 'clear'; }
+  else if (temp >= 4){ c = ['#3b6fa3', '#5a8fbf', '#7fa9cc']; wx = 'mild'; }
+  else { c = ['#566f87', '#7088a0', '#8aa0b5']; wx = 'cool'; }
+  const night = ['#050a14', '#0b1730', '#16294a'];
+  const elev = solarElevation(lat, lon, new Date());
+  let t = elev >= 6 ? 0 : elev <= -6 ? 1 : (6 - elev) / 12;
+  const th = document.documentElement.dataset.theme;
+  const dark = th === 'dark' || (th !== 'light' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+  if (dark) t = Math.max(t, 0.75);
+  const out = c.map((x, i) => hexMix(x, night[i], t * 0.94));
+  const r = document.documentElement;
+  r.style.setProperty('--sky-top', out[0]); r.style.setProperty('--sky-mid', out[1]); r.style.setProperty('--sky-bot', out[2]);
+  r.dataset.sky = t > 0.55 ? 'night' : 'day';
+  r.dataset.wx = wx;
+}
+function sparkSvg(vals){
+  if (!vals || vals.length < 3) return '';
+  const W = 300, H = 64, pad = 6, lo = Math.min(...vals), hi = Math.max(...vals), span = Math.max(1, hi - lo);
+  const X = i => pad + i * (W - 2 * pad) / (vals.length - 1), Y = v => H - 14 - (v - lo) / span * (H - 28);
+  let d = 'M' + X(0) + ' ' + Y(vals[0]);
+  for (let i = 1; i < vals.length; i++){
+    const mx = (X(i - 1) + X(i)) / 2;
+    d += ' C' + mx + ' ' + Y(vals[i - 1]) + ' ' + mx + ' ' + Y(vals[i]) + ' ' + X(i) + ' ' + Y(vals[i]);
+  }
+  const hiI = vals.indexOf(hi), loI = vals.indexOf(lo);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="gcsp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e08a2c" stop-opacity=".35"/><stop offset="1" stop-color="#e08a2c" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L${X(vals.length - 1)} ${H} L${X(0)} ${H} Z" fill="url(#gcsp)"/><path d="${d}" fill="none" stroke="#e08a2c" stroke-width="2.5" stroke-linecap="round"/>
+    <text class="lab" x="${X(hiI)}" y="${Y(hi) - 5}" text-anchor="middle">${Math.round(hi)}\u00b0</text><text class="lab" x="${X(loI)}" y="${Y(lo) + 12}" text-anchor="middle">${Math.round(lo)}\u00b0</text></svg>`;
+}
+
 function fmtTime(iso){
   return new Date(iso).toLocaleString(undefined, {
     month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
@@ -844,43 +1250,81 @@ const svgAlt = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 const svgPin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>`;
 
 function render(p, distanceKm){
+  applySky(p.lat, p.lon, p.temp, p.humidity, p.pressure);
   document.getElementById('bigicon').innerHTML = iconFor(p.temp, p.humidity, p.pressure);
   document.getElementById('cond').textContent = condFor(p.temp, p.humidity, p.pressure);
   document.getElementById('bigtemp').textContent = p.temp.toFixed(1) + '°';
 
-  let label, sub;
+  const where = (lastLoc && (lastLoc.label || placeCache[lastLoc.lat.toFixed(1) + ',' + lastLoc.lon.toFixed(1)])) || (distanceKm != null ? 'Near you' : 'Latest measurement');
+  let sub = 'Measured ' + timeAgo(p.time) + ' by a weather balloon';
   if (distanceKm != null){
-    label = 'Nearest station: ' + p.id;
-    sub = distanceKm < 60
-      ? distanceKm.toFixed(0) + ' km from you'
-      : '⚠ ' + distanceKm.toFixed(0) + ' km away — nothing closer reported in the last 7 days';
-  } else {
-    label = 'Station ' + p.id;
-    sub = p.lat.toFixed(2) + ', ' + p.lon.toFixed(2);
+    sub += distanceKm < 60 ? ', ' + distanceKm.toFixed(0) + ' km from you'
+                           : ' \u2014 ' + distanceKm.toFixed(0) + ' km away, nothing closer in the last 7 days';
   }
-  document.getElementById('place').innerHTML =
-    label + '<span class="sub">' + sub + '</span>';
+  document.getElementById('place').innerHTML = '<span id="placeName">' + where + '</span><span class="sub">' + sub + '</span>';
+  if (lastLoc && !lastLoc.label && !placeCache[lastLoc.lat.toFixed(1) + ',' + lastLoc.lon.toFixed(1)]){
+    lookupPlaceName(lastLoc.lat, lastLoc.lon).then(setPlaceName);
+  }
   document.getElementById('stamp').textContent = fmtTime(p.time);
 
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><span class="k">${svgHumidity} Humidity</span><span class="v">${p.humidity != null ? p.humidity + '%' : '—'}</span></div>
-    <div class="stat"><span class="k">${svgPressure} Pressure</span><span class="v">${p.pressure != null ? p.pressure + ' hPa' : '—'}</span></div>
-  `;
+  const dp = dewPoint(p.temp, p.humidity);
+  document.getElementById('stats').innerHTML = statTiles(p, dp);
 
   document.getElementById('details').innerHTML = `
-    <div class="detailrow"><span class="k">${svgAlt} Sensor altitude</span><span class="v">${Math.round(p.alt)} m</span></div>
-    <div class="detailrow"><span class="k">${svgPin} Coordinates</span><span class="v">${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</span></div>
-    <div class="detailrow"><span class="k">Station ID</span><span class="v">${p.id}</span></div>
+    <div class="detailrow"><span class="k">${svgAlt} Balloon height at measurement</span><span class="v">${Math.round(p.alt)} m</span></div>
+    <div class="detailrow"><span class="k">${svgPin} Position</span><span class="v">${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</span></div>
+    <div class="detailrow"><span class="k">Balloon / station ID</span><span class="v">${p.id}</span></div>
+    <div class="detailrow"><span class="k">Measured</span><span class="v">${fmtTime(p.time)}</span></div>
   `;
 
   renderPrediction(p);
 }
 
-const PREDICTOR_URL = 'http://' + window.location.hostname + ':8768/predict'; // requires predictor-go run separately (not bundled in backend/)
-let predictorCache = null;
+const PREDICTOR_URL = '/predict';
+let predictorCache = {};
 
 function renderPrediction(anchor){
   const fetchAndRender = (data) => {
+    if (data && data.forecast && data.forecast.days && data.forecast.days.length){
+      // Groundcheck's own forecast: every day has its own value, learned from this app's balloon history (no weather model).
+      const fc = data.forecast;
+      const days = fc.days.filter(d => !d.partial).slice(0, 5);
+      const hd = document.getElementById('predictHead'), pn = document.getElementById('predictPanel'), st = document.getElementById('predictStrip');
+      if (days.length && st){
+        const err1 = (fc.accuracy && fc.accuracy[0]) ? fc.accuracy[0].mae : null;
+        const sub = (hd || pn).querySelector('.n');
+        if (sub) sub.textContent = 'from our own balloon history' + (err1 != null ? ' \u00b7 tomorrow typically \u00b1' + err1.toFixed(1) + '\u00b0' : '');
+        if (hd) hd.hidden = false;
+        if (pn) pn.hidden = false;
+        const today = fc.days[0];
+        const hl = document.getElementById('hilo');
+        if (hl && today) hl.textContent = 'H:' + Math.round(today.high) + '\u00b0   L:' + Math.round(today.low) + '\u00b0';
+        const hs = document.getElementById('hourlyStrip'), hh = document.getElementById('hourlyHead');
+        if (hs && hh && fc.hourly && fc.hourly.length){
+          hs.innerHTML = fc.hourly.filter((h, i) => i % 2 === 0).slice(0, 13).map((h, i) => `
+            <div class="predictchip"><span class="h">${i === 0 ? 'Now' : new Date(h.t).toLocaleTimeString([], {hour: '2-digit'})}</span>${iconFor(h.temp, h.humidity, h.pressure)}<span class="t">${Math.round(h.temp)}&deg;</span></div>`).join('');
+          let sp = document.getElementById('hourlySpark');
+          if (!sp){ sp = document.createElement('div'); sp.id = 'hourlySpark'; hs.parentNode.insertBefore(sp, hs); }
+          sp.innerHTML = sparkSvg(fc.hourly.slice(0, 25).map(h => h.temp));
+          hs.hidden = false; hh.hidden = false;
+        }
+        st.hidden = false;
+        const lowAll = Math.min(...days.map(d => d.low)), highAll = Math.max(...days.map(d => d.high)), spanAll = Math.max(1, highAll - lowAll);
+        st.className = 'daylist';
+        st.innerHTML = days.map(d => {
+          const l = (d.low - lowAll) / spanAll * 100, w = Math.max(6, (d.high - d.low) / spanAll * 100);
+          return `
+          <div class="dayrow" title="Likely ${Math.round(d.high_lo)}\u2013${Math.round(d.high_hi)}\u00b0 by day, ${Math.round(d.low_lo)}\u2013${Math.round(d.low_hi)}\u00b0 at night \u00b7 typical error \u00b1${d.typical_error}\u00b0">
+            <span class="dn">${d.label}</span>
+            <span class="di">${iconFor(d.high, d.humidity, d.pressure)}</span>
+            <span class="lo">${Math.round(d.low)}\u00b0</span>
+            <span class="bar"><i style="left:${l}%;width:${w}%;background:linear-gradient(90deg,${tempColor(d.low)},${tempColor(d.high)})"></i></span>
+            <span class="hi">${Math.round(d.high)}\u00b0</span>
+          </div>`;
+        }).join('');
+        return;
+      }
+    }
     if (!data || !data.hourly_avg || !data.hourly_avg.length) {
       document.getElementById('predictHead').hidden = true;
       document.getElementById('predictStrip').hidden = true;
@@ -912,15 +1356,25 @@ function renderPrediction(anchor){
     const presOffset = (anchorBucket && anchorBucket.avg_pressure != null && anchor.pressure != null)
       ? anchor.pressure - anchorBucket.avg_pressure : 0;
 
+    // Same diurnal shape applied to each of the next 5 days (there's no
+    // real day-to-day trend data — this is one "typical day" pattern
+    // repeated), so a day chip shows the high/low across all 24 hourly
+    // buckets rather than pretending each day is a distinct forecast.
+    const dayTemps = data.hourly_avg.map(b => b.avg_temp + tempOffset);
+    const dayHigh = Math.max(...dayTemps);
+    const dayLow = Math.min(...dayTemps);
+    const middayBucket = nearestBucket(13);
+    const middayTemp = middayBucket ? middayBucket.avg_temp + tempOffset : dayHigh;
+    const middayHumidity = middayBucket && middayBucket.avg_humidity != null ? middayBucket.avg_humidity + humOffset : null;
+    const middayPressure = middayBucket && middayBucket.avg_pressure != null ? middayBucket.avg_pressure + presOffset : null;
+
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const anchorDate = new Date(anchor.time);
     const chips = [];
     for (let i = 1; i <= 5; i++){
-      const h = (anchorHour + i) % 24;
-      const b = nearestBucket(h);
-      if (!b) continue;
-      const temp = b.avg_temp + tempOffset;
-      const humidity = b.avg_humidity != null ? b.avg_humidity + humOffset : null;
-      const pressure = b.avg_pressure != null ? b.avg_pressure + presOffset : null;
-      chips.push({ hour: h, temp, humidity, pressure });
+      const d = new Date(anchorDate);
+      d.setUTCDate(d.getUTCDate() + i);
+      chips.push({ label: dayNames[d.getUTCDay()], high: dayHigh, low: dayLow, temp: middayTemp, humidity: middayHumidity, pressure: middayPressure });
     }
 
     const head = document.getElementById('predictHead');
@@ -934,20 +1388,22 @@ function renderPrediction(anchor){
     strip.hidden = false;
     strip.innerHTML = chips.map(c => `
       <div class="predictchip">
-        <span class="h">${String(c.hour).padStart(2,'0')}:00</span>
+        <span class="h">${c.label}</span>
         ${iconFor(c.temp, c.humidity, c.pressure)}
-        <span class="t">${c.temp.toFixed(0)}&deg;</span>
+        <span class="t">${c.high.toFixed(0)}&deg;<span style="opacity:.6">/${c.low.toFixed(0)}&deg;</span></span>
       </div>
     `).join('');
   };
 
-  if (predictorCache){
-    fetchAndRender(predictorCache);
+  const pkey = anchor.lat.toFixed(1) + ',' + anchor.lon.toFixed(1);
+  const hit = predictorCache[pkey];
+  if (hit && Date.now() - hit.at < 600000){
+    fetchAndRender(hit.data);
     return;
   }
-  fetch(PREDICTOR_URL)
+  fetch(PREDICTOR_URL + '?lat=' + anchor.lat + '&lon=' + anchor.lon + '&alt=' + Math.round(anchor.alt || 0))
     .then(r => r.json())
-    .then(data => { predictorCache = data; fetchAndRender(data); })
+    .then(data => { predictorCache[pkey] = { at: Date.now(), data: data }; fetchAndRender(data); })
     .catch(() => {
       document.getElementById('predictHead').hidden = true;
       document.getElementById('predictStrip').hidden = true;
@@ -959,7 +1415,7 @@ let selected = null;
 let lastLoc = null; // {lat, lon, label} — remembered so refreshes keep picking nearest-by-distance
 
 function locateByIP(){
-  return fetch('https://ipwho.is/')
+  return fetch(DATA_BASE.split('/apiinternel')[0] + '/api/whereami')
     .then(r => r.json())
     .then(d => {
       if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
@@ -967,18 +1423,33 @@ function locateByIP(){
     });
 }
 
+function renderNoFreshData(label){
+  document.getElementById('bigicon').innerHTML = '';
+  document.getElementById('cond').textContent = 'No recent data';
+  document.getElementById('bigtemp').textContent = '—';
+  document.getElementById('place').innerHTML =
+    'No station within 19h' + '<span class="sub">nothing reported nearby recently</span>';
+  document.getElementById('stamp').textContent = '';
+  document.getElementById('stats').innerHTML = '';
+  document.getElementById('details').innerHTML = '';
+  selected = null;
+}
+
 function selectNearest(lat, lon, label){
-  // Prefer readings from the last 48h — a geographically closer but stale
-  // (days-old) reading is a worse match for "right now" than a slightly
-  // farther one from today.
-  const FRESH_HOURS = 24;
+  // Only ever show readings from the last 19h — a stale reading (even if
+  // geographically closer) is not an acceptable stand-in for "right now".
+  const FRESH_HOURS = 19;
   const cutoff = Date.now() - FRESH_HOURS * 3600 * 1000;
   const fresh = points.filter(p => new Date(p.time).getTime() >= cutoff);
-  const pool = fresh.length ? fresh : points;
 
-  let nearest = pool[0];
+  if (!fresh.length){
+    renderNoFreshData(label);
+    return;
+  }
+
+  let nearest = fresh[0];
   let best = Infinity;
-  for (const p of pool){
+  for (const p of fresh){
     const d = haversine(lat, lon, p.lat, p.lon);
     if (d < best){ best = d; nearest = p; }
   }
@@ -1079,27 +1550,20 @@ function renderLists(){
     if (!cur || p.temp > cur.temp) byDay.set(day, p); // warmest reading represents the day
   }
   const days = [...byDay.values()].sort((a, b) => b.tsunix - a.tsunix).slice(0, 7);
-  document.getElementById('weekCount').textContent = days.length + ' days';
-  renderFeed(document.getElementById('weekList'), days, { byDay: true });
 
-  freshViews.clear(); // new data means stations/history/map need rebuilding next time they're opened
+  freshViews.clear(); // new data means history/map need rebuilding next time they're opened
 }
 
 function renderHeavyViewsIfNeeded(view){
   if (freshViews.has(view)) return;
   freshViews.add(view);
 
-  if (view === 'stations'){
-    const byStation = new Map();
-    for (const p of points){
-      if (!byStation.has(p.id)) byStation.set(p.id, p);
-    }
-    const stations = [...byStation.values()];
-    document.getElementById('stationCount').textContent = stations.length + ' stations';
-    renderFeed(document.getElementById('stationList'), stations);
-  } else if (view === 'history'){
-    document.getElementById('historyCount').textContent = points.length + ' readings';
-    renderFeed(document.getElementById('historyList'), points);
+  if (view === 'history'){
+    const showHistory = () => {
+      document.getElementById('historyCount').textContent = points.length + ' readings';
+      renderFeed(document.getElementById('historyList'), points);
+    };
+    if (rangeLoaded(30)) showHistory(); else ensureDays(30).then(showHistory).catch(showHistory);
   } else if (view === 'map'){
     applyMapRange();
   }
@@ -1123,17 +1587,17 @@ function pointsOnDay(dateStr){
 function applyMapRange(){
   const val = document.getElementById('mapRange').value;
   const dayInput = document.getElementById('mapDay');
+  let need;
   if (val === 'day'){
     dayInput.hidden = false;
-    if (!dayInput.value){
-      const now = new Date();
-      dayInput.value = now.toISOString().slice(0,10);
-    }
-    renderMap(pointsOnDay(dayInput.value));
+    if (!dayInput.value){ dayInput.value = new Date().toISOString().slice(0,10); }
+    need = daysSince(dayInput.value);
   } else {
     dayInput.hidden = true;
-    renderMap(pointsWithinDays(parseInt(val, 10)));
+    need = parseInt(val, 10);
   }
+  const draw = () => renderMap(val === 'day' ? pointsOnDay(dayInput.value) : pointsWithinDays(need));
+  if (rangeLoaded(need)) draw(); else ensureDays(need).then(draw).catch(draw);
 }
 
 function tempColor(t){
@@ -1145,6 +1609,8 @@ function tempColor(t){
 
 let leafletMap = null;
 let leafletMarkerLayer = null;
+let mapMode = 'heat';
+let lastMapList = [];
 let youAreHereMarker = null;
 
 function updateYouAreHereMarker(){
@@ -1163,6 +1629,7 @@ function updateYouAreHereMarker(){
 }
 
 function renderMap(list){
+  lastMapList = list;
   document.getElementById('mapCount').textContent = list.length + ' stations';
 
   if (!leafletMap){
@@ -1174,23 +1641,42 @@ function renderMap(list){
       minZoom: 2
     }).setView([51.5, 10.5], 5);
 
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 18,
+      maxNativeZoom: 18,
       noWrap: true,
-      attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics'
-    }).addTo(leafletMap);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 18,
-      noWrap: true,
-      opacity: 0.85
+      attribution: 'Imagery: Esri, Maxar, Earthstar Geographics'
     }).addTo(leafletMap);
 
     L.control.attribution({ prefix: false, position: 'bottomright' })
-      .addAttribution('Tiles &copy; Esri &middot; Data: sonde.mine.nu')
+      .addAttribution('Tiles &copy; Esri &middot; Data: sonde.mine.nu, SondeHub, NOAA IGRA')
       .addTo(leafletMap);
   }
 
-  if (leafletMarkerLayer) leafletMap.removeLayer(leafletMarkerLayer);
+  applyMapMode();
+
+  if (list.length){
+    leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding: [24, 24] });
+  }
+}
+
+function applyMapMode(){
+  if (!leafletMap) return;
+  const list = lastMapList;
+
+  if (leafletMarkerLayer){ leafletMap.removeLayer(leafletMarkerLayer); leafletMarkerLayer = null; }
+
+  document.getElementById('stationsLegend').hidden = mapMode !== 'stations';
+  document.getElementById('heatLegend').hidden = mapMode !== 'heat';
+
+  if (mapMode === 'heat'){
+    ensureHeatCanvas();
+    heatCanvasEl.style.display = 'block';
+    drawInterpolatedHeat(list);
+    return;
+  } else if (heatCanvasEl){
+    heatCanvasEl.style.display = 'none';
+  }
 
   // Clustering keeps hundreds of stations fast: at low zoom, nearby points
   // collapse into one bubble (far cheaper to draw and hit-test than
@@ -1235,10 +1721,129 @@ function renderMap(list){
 
   leafletMap.addLayer(leafletMarkerLayer);
   updateYouAreHereMarker();
+}
 
-  if (list.length){
-    leafletMap.fitBounds(L.latLngBounds(list.map(p => [p.lat, p.lon])), { padding: [24, 24] });
+// --- Interpolated temperature surface (Apple Weather-style full coverage) ---
+// leaflet.heat only draws blurred blobs around each point, leaving visible
+// gaps between sparse stations. This instead computes a smooth inverse-
+// distance-weighted color field across the whole visible map — every pixel
+// gets an estimated temperature, not just areas near a real reading.
+let heatCanvasEl = null;
+const HEAT_MIN_T = -10, HEAT_MAX_T = 35;
+
+function heatColorForT(t){
+  const stops = [
+    [0.00, 30, 41, 59],    // deep cold — slate/navy
+    [0.20, 59, 130, 196],  // cold blue
+    [0.45, 47, 158, 111],  // green
+    [0.70, 201, 154, 46],  // orange
+    [0.88, 192, 90, 60],   // hot red
+    [1.00, 140, 30, 30]    // deep hot
+  ];
+  t = Math.max(0, Math.min(1, t));
+  let a = stops[0], b = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++){
+    if (t >= stops[i][0] && t <= stops[i + 1][0]){ a = stops[i]; b = stops[i + 1]; break; }
   }
+  const span = (b[0] - a[0]) || 1;
+  const f = (t - a[0]) / span;
+  const r = Math.round(a[1] + (b[1] - a[1]) * f);
+  const g = Math.round(a[2] + (b[2] - a[2]) * f);
+  const bl = Math.round(a[3] + (b[3] - a[3]) * f);
+  return [r, g, bl];
+}
+
+function ensureHeatCanvas(){
+  if (heatCanvasEl) return;
+  heatCanvasEl = document.createElement('canvas');
+  heatCanvasEl.style.position = 'absolute';
+  heatCanvasEl.style.inset = '0';
+  // Leaflet's whole .leaflet-map-pane wrapper (tiles + everything) carries
+  // the generic .leaflet-pane class, which is z-index:400 — a value BELOW
+  // that renders invisibly underneath the entire map, not just the tiles.
+  heatCanvasEl.style.zIndex = 410;
+  heatCanvasEl.style.pointerEvents = 'none';
+  document.getElementById('mapbox').insertBefore(heatCanvasEl, document.getElementById('mapbox').firstChild);
+
+  let redrawTimer = null;
+  const scheduleRedraw = () => {
+    if (mapMode !== 'heat') return;
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(() => drawInterpolatedHeat(lastMapList), 60);
+  };
+  leafletMap.on('move zoom resize', scheduleRedraw);
+}
+
+function drawInterpolatedHeat(list){
+  if (!leafletMap || !heatCanvasEl) return;
+  const size = leafletMap.getSize();
+  const W = size.x, H = size.y;
+  if (!W || !H) return;
+  heatCanvasEl.width = W;
+  heatCanvasEl.height = H;
+
+  const valid = list.filter(p => p.temp != null);
+  const ctx = heatCanvasEl.getContext('2d');
+  if (!valid.length){ ctx.clearRect(0, 0, W, H); return; }
+
+  // Interpolate on a coarse low-res grid, then upscale with smoothing —
+  // this is what actually produces the soft, blended, full-bleed look
+  // instead of hard-edged blobs, and keeps IDW cheap (a few thousand
+  // cell computations instead of one per screen pixel).
+  const GRID_W = 72, GRID_H = Math.max(1, Math.round(GRID_W * (H / W)));
+  const off = document.createElement('canvas');
+  off.width = GRID_W; off.height = GRID_H;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(GRID_W, GRID_H);
+
+  // Cap the number of stations used per cell for performance on dense views.
+  const pts = valid.length > 700 ? valid.filter((_, i) => i % Math.ceil(valid.length / 700) === 0) : valid;
+  const llPts = pts.map(p => {
+    const cp = leafletMap.latLngToContainerPoint([p.lat, p.lon]);
+    return { x: cp.x, y: cp.y, temp: p.temp };
+  });
+
+  // Coverage falloff: a cell close to real stations shows full color; one
+  // far from any of them (e.g. a whole other continent, or empty ocean)
+  // fades to transparent instead of inheriting a distant cluster's average
+  // color, which is what made huge no-data regions look uniformly colored.
+  const COVER_PX = 140, FADE_PX = 320;
+
+  for (let gy = 0; gy < GRID_H; gy++){
+    const py = (gy + 0.5) * (H / GRID_H);
+    for (let gx = 0; gx < GRID_W; gx++){
+      const px = (gx + 0.5) * (W / GRID_W);
+      let wSum = 0, tSum = 0, minD2 = Infinity;
+      for (let i = 0; i < llPts.length; i++){
+        const dx = llPts[i].x - px, dy = llPts[i].y - py;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < minD2) minD2 = d2;
+        // Sharp falloff so nearby stations dominate a cell's color instead
+        // of every point (near or far) blending toward one flat average.
+        const w = 1 / Math.pow(d2 + 100, 2);
+        wSum += w;
+        tSum += w * llPts[i].temp;
+      }
+      const temp = tSum / wSum;
+      const t = (temp - HEAT_MIN_T) / (HEAT_MAX_T - HEAT_MIN_T);
+      const [r, g, b] = heatColorForT(t);
+
+      const dist = Math.sqrt(minD2);
+      let alpha;
+      if (dist <= COVER_PX) alpha = 200;
+      else if (dist >= FADE_PX) alpha = 0;
+      else alpha = Math.round(200 * (1 - (dist - COVER_PX) / (FADE_PX - COVER_PX)));
+
+      const idx = (gy * GRID_W + gx) * 4;
+      img.data[idx] = r; img.data[idx + 1] = g; img.data[idx + 2] = b; img.data[idx + 3] = alpha;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(off, 0, 0, GRID_W, GRID_H, 0, 0, W, H);
 }
 
 function showError(msg){
@@ -1249,12 +1854,20 @@ function showError(msg){
     '<div class="errbanner">Data feed unreachable. Retrying automatically&hellip;</div>';
 }
 
+const DATA_BASE = '/apiinternel/dont/json/microsftwindowssucks';
+let loadedDays = 7; // the page starts with the last 7 days only (the lean endpoint); older ranges load when they are asked for
+function fetchPoints(days){
+  return fetch(DATA_BASE + '/lite?days=' + days).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+function rangeLoaded(days){ return loadedDays === 0 || (days !== 0 && days <= loadedDays); }
+function ensureDays(days){
+  if (rangeLoaded(days)) return Promise.resolve();
+  return fetchPoints(days).then(d => { points = d; loadedDays = days; if (typeof freshViews !== 'undefined') freshViews.clear(); });
+}
+function daysSince(dateStr){ return Math.max(1, Math.ceil((Date.now() - new Date(dateStr + 'T00:00:00Z').getTime()) / 86400000) + 1); }
+
 function loadData(){
-  return fetch('/apiinternel/dont/json/microsftwindowssucks/data')
-    .then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
+  return fetchPoints(loadedDays)
     .then(data => {
       points = data;
       if (!points.length){
@@ -1282,12 +1895,141 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (tab.dataset.view === 'map' && leafletMap){
       setTimeout(() => leafletMap.invalidateSize(), 50);
     }
+    if (tab.dataset.view === 'search' && searchMap){
+      setTimeout(() => searchMap.invalidateSize(), 50);
+    }
   });
 });
 
 document.getElementById('refreshBtn').addEventListener('click', () => { selected = null; locate(); });
 document.getElementById('mapRange').addEventListener('change', applyMapRange);
 document.getElementById('mapDay').addEventListener('change', applyMapRange);
+
+document.querySelectorAll('.maptogglebtn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.maptogglebtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mapMode = btn.dataset.mapmode;
+    applyMapMode();
+  });
+});
+
+let searchMap = null;
+let searchMapMarkers = [];
+let searchPlaceMarker = null;
+
+function ensureSearchMap(){
+  if (searchMap) return searchMap;
+  searchMap = L.map('searchMapBox', { zoomControl: true, attributionControl: false, preferCanvas: true }).setView([51.5, 10.5], 5);
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 18, maxNativeZoom: 18, noWrap: true
+  }).addTo(searchMap);
+  L.control.attribution({ prefix: false, position: 'bottomright' }).addAttribution('Imagery: Esri, Maxar, Earthstar Geographics').addTo(searchMap);
+  return searchMap;
+}
+
+function renderSearchMap(list, placeLatLon){
+  const map = ensureSearchMap();
+  searchMapMarkers.forEach(m => map.removeLayer(m));
+  searchMapMarkers = [];
+  if (searchPlaceMarker){ map.removeLayer(searchPlaceMarker); searchPlaceMarker = null; }
+
+  list.forEach(p => {
+    const color = tempColor(p.temp);
+    const marker = L.circleMarker([p.lat, p.lon], { radius: 8, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.95 }).addTo(map);
+    marker.bindPopup(`<b>${p.temp.toFixed(1)}&deg;C</b><br>${p.id}`);
+    searchMapMarkers.push(marker);
+  });
+
+  if (placeLatLon){
+    searchPlaceMarker = L.marker(placeLatLon, {
+      icon: L.divIcon({ className: '', html: '<div class="youarehere"><span class="pulse"></span><span class="dot"></span></div>', iconSize: [18, 18], iconAnchor: [9, 9] })
+    }).addTo(map);
+  }
+
+  const boundsPoints = list.map(p => [p.lat, p.lon]).concat(placeLatLon ? [placeLatLon] : []);
+  if (boundsPoints.length){
+    map.invalidateSize();
+    map.fitBounds(L.latLngBounds(boundsPoints), { padding: [30, 30] });
+  }
+}
+
+function searchPool(){
+  const days = parseInt(document.getElementById('searchRange').value, 10);
+  return pointsWithinDays(days);
+}
+
+function runSearch(query){
+  const status = document.getElementById('searchStatus');
+  const results = document.getElementById('searchResults');
+  query = query.trim();
+  if (!query){ status.textContent = ''; results.innerHTML = ''; return; }
+
+  const needDays = parseInt(document.getElementById('searchRange').value, 10);
+  if (!rangeLoaded(needDays)){
+    document.getElementById('searchStatus').textContent = 'Loading older readings\u2026';
+    ensureDays(needDays).then(() => runSearch(query)).catch(() => { document.getElementById('searchStatus').textContent = 'Could not load older readings.'; });
+    return;
+  }
+  const pool = searchPool();
+  const rangeLabel = document.getElementById('searchRange').selectedOptions[0].textContent.toLowerCase();
+
+  const idMatches = pool.filter(p => p.id.toLowerCase().includes(query.toLowerCase()));
+  if (idMatches.length){
+    status.textContent = `${idMatches.length} station${idMatches.length === 1 ? '' : 's'} matching ID "${query}" (${rangeLabel})`;
+    renderFeed(results, idMatches);
+    renderSearchMap(idMatches, null);
+    return;
+  }
+
+  const tempMatch = query.match(/^-?\d+(\.\d+)?\s*°?\s*c?$/i);
+  if (tempMatch){
+    const target = parseFloat(query);
+    const ranked = [...pool].sort((a, b) => Math.abs(a.temp - target) - Math.abs(b.temp - target)).slice(0, 12);
+    status.textContent = `Closest readings to ${target}°C (${rangeLabel})`;
+    renderFeed(results, ranked);
+    renderSearchMap(ranked, null);
+    return;
+  }
+
+  if (!pool.length){
+    status.textContent = `No readings in the selected range (${rangeLabel}) — try widening it or "All time".`;
+    results.innerHTML = '';
+    renderSearchMap([], null);
+    return;
+  }
+
+  status.textContent = 'Looking up "' + query + '"…';
+  results.innerHTML = '';
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query))
+    .then(r => r.json())
+    .then(hits => {
+      if (!hits.length){
+        status.textContent = `No place found for "${query}", and no station ID or temperature matched either.`;
+        return;
+      }
+      const place = hits[0];
+      const lat = parseFloat(place.lat), lon = parseFloat(place.lon);
+      const ranked = [...pool]
+        .map(p => ({ p, d: haversine(lat, lon, p.lat, p.lon) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 12);
+      status.textContent = `Nearest stations to "${place.display_name}" (${rangeLabel})`;
+      renderFeed(results, ranked.map(r => r.p));
+      renderSearchMap(ranked.map(r => r.p), [lat, lon]);
+    })
+    .catch(() => { status.textContent = 'Search failed — try again.'; });
+}
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  runSearch(document.getElementById('searchInput').value);
+});
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runSearch(e.target.value);
+});
+document.getElementById('searchRange').addEventListener('change', () => {
+  runSearch(document.getElementById('searchInput').value);
+});
 
 document.getElementById('clearCacheBtn').addEventListener('click', async () => {
   try {
@@ -1362,7 +2104,7 @@ setInterval(loadData, 5 * 60 * 1000);
 // currently in flight IS the same station already shown as this app's
 // main weather reading — otherwise it's an unrelated flight and showing
 // it would be misleading, not "your" station's live data.
-const LIVE_WS_URL = 'ws://' + window.location.hostname + ':8766';
+const LIVE_WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8766';
 
 function connectLiveFeed(){
   let ws;
@@ -1404,3 +2146,26 @@ function connectLiveFeed(){
 
 connectLiveFeed();
 </script>
+<script>
+// all-time visit counter: tell the live-feed server once per page load, and show the total
+(function(){
+  try{
+    var u = (typeof LIVE_WS_URL !== 'undefined') ? LIVE_WS_URL : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8766';
+    var w = new WebSocket(u);
+    w.onopen = function(){ try{ w.send('visit'); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 800); };
+  }catch(e){}
+  try{
+    var base = DATA_BASE.split('/apiinternel')[0];
+    fetch(base + '/api/visits').then(function(r){return r.json()}).then(function(d){
+      var el = document.getElementById('visitCount');
+      if (el && typeof d.visits === 'number') el.textContent = d.visits.toLocaleString() + ' visits since counting started';
+    }).catch(function(){});
+  }catch(e){}
+})();
+</script>
+<script>
+// the Flowsearch site runs on a tunnel whose address changes now and then; the current one is kept in a file in the Flowsearch repo
+(function(){try{fetch('https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt').then(function(r){return r.text()}).then(function(t){t=(t||'').trim();if(!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(t))return;document.querySelectorAll('a.fs-link').forEach(function(a){a.href=t})}).catch(function(){})}catch(e){}})();
+</script>
+</body>
+</html>
