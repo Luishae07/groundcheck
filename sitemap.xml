@@ -27,7 +27,7 @@
     The data comes from volunteers with antennas on their roofs. They deserve a medal. Several medals.
     The server lives in a home, on Wi-Fi, between a shelf and a window. It is doing its best.
 
-  Last updated: 2026-10-15, give or take a balloon.
+  Last updated: 2026-10-18, give or take a balloon.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
@@ -39,7 +39,7 @@
   -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-10-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -63,7 +63,7 @@
   -->
   <url>
     <loc>https://luishae07.github.io/groundcheck/desktop/</loc>
-    <lastmod>2026-10-15</lastmod>
+    <lastmod>2026-10-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
