@@ -3,7 +3,7 @@
 This file says what AI systems may do with Groundcheck. It matches robots.txt. If the two ever disagree, robots.txt wins for crawling, and this file explains the reasons.
 
 Site: https://luishae07.github.io/
-Last updated: 2026-10-15
+Last updated: 2026-10-18
 
 ## Yes, please
 
