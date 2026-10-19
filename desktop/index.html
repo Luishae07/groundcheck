@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <title>Groundcheck for desktop: live weather from radiosonde balloons</title>
-<meta name="description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<meta name="description" content="Groundcheck is a weather app built on real measurements from weather balloons (radiosondes): temperature, pressure and humidity near the ground, refreshed every minute, with a forecast built only from balloon data. Free app and API.">
 <link rel="alternate" type="application/atom+xml" title="Groundcheck changes" href="../feed.xml">
 <link rel="canonical" href="https://luishae07.github.io/desktop/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Groundcheck for desktop: live weather from radiosonde balloons">
-<meta property="og:description" content="Live temperature, pressure and humidity from weather balloons (radiosondes) worldwide, with a forecast built only from balloon data. Free app and API.">
+<meta property="og:description" content="Groundcheck is a weather app built on real measurements from weather balloons (radiosondes): temperature, pressure and humidity near the ground, refreshed every minute, with a forecast built only from balloon data. Free app and API.">
 <meta property="og:url" content="https://luishae07.github.io/desktop/">
 <meta property="og:image" content="https://luishae07.github.io/groundcheck/dl_screenshot_today.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -807,14 +807,20 @@ main{grid-area:main!important;padding:5.2rem 2.4rem 3rem!important}
     </div>
 
     <section class="about" aria-labelledby="about-h">
-      <h1 id="about-h">Live weather from radiosonde balloons</h1>
-      <p>Groundcheck shows the temperature, air pressure and humidity measured at ground level by weather balloons (radiosondes) around the world, as a map and as a weather app. Radiosondes are launched from stations every day, and the first reading each one sends from the ground is a real measurement taken at that spot.</p>
+      <h1 id="about-h">Groundcheck: live weather measured by weather balloons</h1>
+      <p>Groundcheck is a weather app whose numbers are measurements, not model output. It shows the temperature, air pressure and humidity that weather balloons (radiosondes) recorded close to the ground, around the world, as a map, a list and a weather screen for your location.</p>
+      <h2>Use it every day</h2>
+      <p>Open it to see the real temperature near you right now. The Today screen shows the nearest recent balloon reading, how far away it was taken and how old it is, so you always know how much to trust it. The server fetches the live feed every minute, and the app checks for new data every five minutes. New readings arrive all day, several hundred per day worldwide, because balloons come down and land continuously. They are not tied to the two big launch times of 00:00 and 12:00 UTC.</p>
+      <h2>What counts as a ground-level reading</h2>
+      <p>Only readings taken at or below 980 m above sea level, and at or above 0 &deg;C, are kept. They come from balloons that are close to the ground: just after launch, on the way down, or after landing. The freezing readings from high in the atmosphere (often &minus;40 &deg;C and colder) are left out because they say nothing about the weather where you are.</p>
       <h2>Where the data comes from</h2>
-      <p>The live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a>, amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a>, and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches. Readings come from several hundred stations across Europe, North and South America, Asia, Africa, Australia and the Pacific islands.</p>
+      <p>The live radiosonde feed of <a href="https://sonde.mine.nu">sonde.mine.nu</a> (fetched every minute), amateur balloon tracking from <a href="https://sondehub.org">SondeHub</a> (about every five hours), and the <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a> archive of official weather-service launches (daily). Together they cover several hundred stations across Europe, North and South America, Asia, Australia and more.</p>
       <h2>The forecast</h2>
-      <p>Groundcheck's own forecast for the next hours and days is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong; the <a href="../accuracy.html">accuracy page</a> shows how the big weather models scored against what balloons measured.</p>
+      <p>Groundcheck's own forecast for the next hours and days, called "Next days", is built only from these balloon readings (seasonal normals, how today differs from normal, and the pressure trend). It does not use a weather model and it can be wrong. The <a href="accuracy.html">accuracy page</a> shows how the big weather models scored against what balloons measured.</p>
+      <h2>How it differs from a normal weather app</h2>
+      <p>A normal weather app gives radar, hourly rain chances and warnings from computer models. Groundcheck gives measured values and an honest distance to the nearest reading, and it has no radar or alerts. Many people use it next to a regular weather app, to check what was really measured.</p>
       <h2>Free to use</h2>
-      <p>The web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="../apidocs/">public data API</a>, and a <a href="../selfhost.html">self-host package</a> to run your own copy. We also make <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com">Flowsearch</a>, a search engine with its own crawler and index. See also the <a href="../coolthing.html">3D globe of every reading</a>.</p>
+      <p>The web app, the <a href="https://addons.mozilla.org/en-GB/firefox/addon/flowsearch-groundcheck/">Firefox add-on</a>, a <a href="apidocs/">public data API</a>, and a <a href="selfhost.html">self-host package</a> to run your own copy. We also make <a class="fs-link" href="https://nav-declared-technical-organic.trycloudflare.com">Flowsearch</a>, a search engine with its own crawler and index. See also the <a href="../coolthing.html">3D globe of every reading</a>.</p>
     </section>
     <footer>
       Sources: sonde.mine.nu, <a href="https://sondehub.org" style="color:inherit">SondeHub</a> and NOAA <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive" style="color:inherit">IGRA</a> ground-level telemetry &middot; sub-zero (high-altitude) readings excluded &middot; <a href="../apidocs">API docs</a>
