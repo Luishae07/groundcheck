@@ -88,6 +88,37 @@ def _lite_body(days):
             _lite["built"][days] = hit
         return hit
 
+# ---- the full data, ready to send (rebuilt only when data.json changes)
+_full = {"key": None, "body": None, "gz": None}
+_full_lock = threading.Lock()
+
+
+def _full_cached():
+    path = os.path.join(BASE, "data.json")
+    try:
+        st = os.stat(path)
+    except OSError:
+        return None
+    key = (st.st_mtime_ns, st.st_size)
+    with _full_lock:
+        if _full["key"] == key and _full["body"] is not None:
+            return _full
+        for _ in range(4):  # a writer may be replacing the file right now
+            try:
+                with open(path, "rb") as f:
+                    raw = f.read()
+                json.loads(raw)  # once per change: make sure the file is complete
+                break
+            except (json.JSONDecodeError, OSError):
+                time.sleep(0.5)
+        else:
+            return _full if _full["body"] is not None else None  # keep serving the last good copy
+        _full["body"], _full["gz"], _full["key"] = raw, gzip.compress(raw, 4), key
+        return _full
+
+
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE, **kwargs)
@@ -114,15 +145,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _serve_data_json(self):
-        path = os.path.join(BASE, "data.json")
-        try:
-            with open(path, "rb") as f:
-                body = f.read()
-        except FileNotFoundError:
+        # The data is sent from a copy that is made once when data.json changes, not read again for every request.
+        hit = _full_cached()
+        if hit is None:
             self.send_error(404, "data.json not found")
             return
+        gz = "gzip" in (self.headers.get("Accept-Encoding") or "")
+        body = hit["gz"] if gz else hit["body"]
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
+        if gz:
+            self.send_header("Content-Encoding", "gzip")
+        self.send_header("Vary", "Accept-Encoding")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
