@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session, Menu } = require('electron');
+const { app, BrowserWindow, session, Menu, ipcMain, net } = require('electron');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -6,6 +6,7 @@ function createWindow() {
     height: 800,
     title: 'Groundcheck',
     icon: __dirname + '/icon.png',
+    webPreferences: { preload: __dirname + '/preload.js' },
   });
   win.loadURL('https://luishae07.github.io/groundcheck/desktop/');
 
@@ -33,6 +34,18 @@ function createWindow() {
 // one means navigator.geolocation.getCurrentPosition() silently fails and the page just
 // falls through to its IP-based fallback, which looks like "location doesn't work" with
 // no visible error unless DevTools is open.
+// Linux only: city-level position from the IP address (the preload asks for it)
+let lastLoc = null;
+ipcMain.handle('gc-location', async () => {
+  if (lastLoc) return lastLoc;
+  try {
+    const r = await net.fetch('https://ipwho.is/');
+    const j = await r.json();
+    if (j && j.success !== false && typeof j.latitude === 'number') lastLoc = { lat: j.latitude, lon: j.longitude };
+  } catch (e) {}
+  return lastLoc;
+});
+
 app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
     return permission === 'geolocation';
