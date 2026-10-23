@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Get a Groundcheck API key</title>
+<meta name="description" content="Press one button to get a free Groundcheck API key, and see how to use it.">
+<link rel="canonical" href="https://luishae07.github.io/apikey.html">
+<meta name="robots" content="index, follow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="https://luishae07.github.io/logo.svg">
+<style>
+:root{--top:#4a7fb5;--mid:#6ea0c8;--bot:#a9cbe3;--ink:#132433;--dim:#34506b;--card:rgba(255,255,255,.74);--line:rgba(255,255,255,.7);--accent:#e08a2c;--code:#0c1a2b}
+@media (prefers-color-scheme: dark){:root{--top:#0b1626;--mid:#12263b;--bot:#1f3a52;--ink:#eaf2fa;--dim:#a9bdd0;--card:rgba(255,255,255,.08);--line:rgba(255,255,255,.16);--code:#06101c}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,var(--top),var(--mid) 45%,var(--bot)) fixed;line-height:1.6}
+main{max-width:42rem;margin:0 auto;padding:2rem 1.2rem 3.5rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:600;color:#fff;text-decoration:none;margin-bottom:1.6rem}
+.brand img{width:28px;height:28px;border-radius:8px}
+h1{font-size:clamp(1.9rem,6vw,2.8rem);font-weight:300;letter-spacing:-.02em;line-height:1.1;margin:0 0 .8rem;color:#fff}
+.lead{font-size:1.1rem;color:#fff;opacity:.95;margin:0 0 1.2rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.2rem 1.3rem;margin:1.1rem 0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+h2{font-size:1.1rem;margin:0 0 .6rem}
+button{border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:700;padding:.8rem 1.4rem;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+button:active{transform:scale(.98)}
+.row{display:flex;gap:.5rem;align-items:stretch;margin:.6rem 0}
+.row code{flex:1;min-width:0;background:var(--code);color:#9fe0b4;border-radius:12px;padding:.8rem 1rem;font-size:.92rem;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,Consolas,monospace}
+.note{font-size:.88rem;color:var(--dim)}
+#err{color:#b3261e;font-weight:600}
+#result{display:none}
+a{color:inherit}
+footer{margin-top:2rem;color:#fff;opacity:.85;font-size:.85rem;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <a class="brand" href="https://luishae07.github.io/"><img src="https://luishae07.github.io/logo.svg" alt="Groundcheck logo">Groundcheck</a>
+  <h1>Get an API key</h1>
+  <p class="lead">A free key for the Groundcheck data API. Press the button, copy the key, and use it in your requests.</p>
+
+  <section class="card">
+    <h2>1. Create your key</h2>
+    <button id="make" type="button">Create my key</button>
+    <p class="note" id="status">Without a key the API allows 30 requests per minute. A key allows far more, and it does not expire.</p>
+    <p id="err"></p>
+  </section>
+
+  <section class="card" id="result">
+    <h2>2. Copy it and keep it</h2>
+    <div class="row"><code id="key"></code><button id="copy" type="button">Copy</button></div>
+    <p class="note">This page does not save the key and cannot show it again. Anyone who has it uses your limit, so do not share it.</p>
+    <h2 style="margin-top:1.1rem">3. Use it</h2>
+    <p class="note">Put it at the end of the data address:</p>
+    <div class="row"><code id="url"></code></div>
+    <p class="note">Or send it in a header named <b>X-API-Key</b>. To see how much a key is used, open the <a href="keys.html">key page</a>. The full list of requests is in the <a href="apidocs/">API docs</a>.</p>
+  </section>
+
+  <footer>
+    <a href="https://luishae07.github.io/">Groundcheck</a> &middot;
+    <a href="https://luishae07.github.io/apidocs/">API</a> &middot;
+    <a href="https://luishae07.github.io/mcp.html">ChatGPT</a>
+  </footer>
+</main>
+<script>
+// The server runs behind a temporary tunnel whose address changes, so the current one is read from a file in the repository.
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var base = '';
+  function fail(text) { $('err').textContent = text; $('make').disabled = false; }
+
+  $('make').addEventListener('click', function () {
+    $('err').textContent = '';
+    $('make').disabled = true;
+    $('status').textContent = 'Looking up the server…';
+    fetch('https://raw.githubusercontent.com/Luishae07/groundcheck/main/tunnel-url.txt', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('lookup'); return r.text(); })
+      .then(function (t) {
+        base = (t || '').trim().replace(/\/$/, '');
+        if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(base)) throw new Error('lookup');
+        $('status').textContent = 'Creating your key…';
+        return fetch(base + '/api/keys/new', { method: 'POST' });
+      })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        if (!d || !d.api_key) throw new Error('no key');
+        $('key').textContent = d.api_key;
+        $('url').textContent = base + '/api/data?key=' + d.api_key;
+        $('status').textContent = d.limit ? 'Done. Your key allows ' + d.limit + '.' : 'Done.';
+        $('result').style.display = 'block';
+        $('make').textContent = 'Create another key';
+        $('make').disabled = false;
+      })
+      .catch(function (e) {
+        $('status').textContent = '';
+        fail('Could not create a key right now (' + (e && e.message ? e.message : 'error') + '). Try again in a minute.');
+      });
+  });
+
+  $('copy').addEventListener('click', function () {
+    var text = $('key').textContent;
+    var done = function () { $('copy').textContent = 'Copied'; setTimeout(function () { $('copy').textContent = 'Copy'; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { window.getSelection().selectAllChildren($('key')); });
+    } else {
+      window.getSelection().selectAllChildren($('key'));
+    }
+  });
+})();
+</script>
+</body>
+</html>
