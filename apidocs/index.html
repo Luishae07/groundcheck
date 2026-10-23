@@ -75,6 +75,8 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <h2>Endpoints</h2>
   <div class="ep"><span class="m">GET</span><span class="path">/api/data</span></div>
   <p>All current ground-level readings, newest first. Only temperatures at or above 0 °C and sensor heights up to about 980 m are included. With a key, your key's <a href="#settings">settings</a> filter and reshape the answer.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">QUERY</span><span class="path">/api/weather</span></div>
+  <p>The temperature at any coordinates, from the nearest radiosonde that measured near the ground in the last 19 hours. Send the coordinates in the body. <a href="#weather">Details</a>. <code>GET /api/weather?lat=…&amp;lon=…</code> gives the same answer.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/new</span></div>
   <p>Makes a free key on the spot: <code>{"api_key": "…", "limit": "13000 requests / 10s"}</code>.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/KEY/stats</span></div>
@@ -86,7 +88,40 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/settings/schema</span></div>
   <p>The list of all 30 settings with their types and defaults.</p>
   <h3>Limits and errors</h3>
-  <p>Over the limit you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code> or <code>POST</code> JSON, and any website may call it (CORS is open).</p>
+  <p>Over the limit you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code>, <code>POST</code> or (for the weather call) <code>QUERY</code> JSON, and any website may call it (CORS is open).</p>
+</div>
+
+<div class="card" id="weather">
+  <h2>Weather at a point</h2>
+  <p>Ask for the weather at any coordinates. The answer comes from the nearest radiosonde that reported a reading under 1,500 m in the last <b>19 hours</b>.</p>
+  <pre>curl -X QUERY {BASE}/api/weather -d '{"lat": 52.184, "lon": 13.432}'</pre>
+  <p><code>QUERY</code> is a read-only request that carries a body, so the coordinates stay out of the address. It works with <code>fetch</code> too, from any website:</p>
+<pre>const r = await fetch('{BASE}/api/weather', {
+  method: 'QUERY',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ lat: 52.184, lon: 13.432 })
+});
+console.log(await r.json());</pre>
+  <p>The coordinates can also be <code>{"coordinates": "52.184 13.432"}</code> or plain text <code>52.184 13.432</code>. Latitude is -90 to 90 and longitude -180 to 180. Without a tool that can send <code>QUERY</code>, use <code>GET {BASE}/api/weather?lat=52.184&amp;lon=13.432</code>.</p>
+<pre>{
+  "temp": "9.3C",                          // the temperature as text
+  "temp_c": 9.3,                           // the same as a number
+  "radiosonde_used": "X3722285",           // the sonde (or station) the reading came from
+  "coordinates_picked": "52.184 13.432",   // what you asked for
+  "country_coordinates": "Germany",        // the country at those coordinates
+  "distance_km": 47.0,                     // how far the radiosonde was from your point
+  "humidity": 74.1,                        // percent, or null
+  "pressure": 955.95,                      // hPa, or null
+  "measured_at": "2026-10-23T11:48:01Z"    // UTC
+}</pre>
+  <table>
+    <tr><th>Status</th><th>When</th></tr>
+    <tr><td><code>200</code></td><td>The answer above.</td></tr>
+    <tr><td><code>400</code></td><td>The coordinates are missing or out of range.</td></tr>
+    <tr><td><code>404</code></td><td>No near-ground reading from the last 19 hours exists.</td></tr>
+    <tr><td><code>429</code></td><td>Over the limit: 30 requests per 60 seconds without a key, 13,000 per 10 seconds with a key (<code>X-API-Key</code>). The weather call has its own count, separate from <code>/api/data</code>.</td></tr>
+  </table>
+  <p>Over open sea, <code>country_coordinates</code> says <code>none (open sea or no country)</code>. Check <code>distance_km</code>: the nearest radiosonde can be far away.</p>
 </div>
 
 <div class="card">
