@@ -1,0 +1,41 @@
+name: Linux app (.deb)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: linux-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+      - name: Build the .deb
+        working-directory: electron
+        run: |
+          npm ci
+          npx electron-builder --linux deb --x64 --publish never
+          ls -la dist
+      - name: Check the package
+        run: |
+          mkdir -p out
+          cp electron/dist/*.deb out/Groundcheck.deb
+          dpkg-deb --info out/Groundcheck.deb
+          dpkg-deb --contents out/Groundcheck.deb | head -20
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Groundcheck-deb
+          path: out/Groundcheck.deb
+      - name: Publish to the "desktop-linux" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view desktop-linux >/dev/null 2>&1 || gh release create desktop-linux \
+            --title "Groundcheck for Debian, Ubuntu and Pop!_OS" --notes "Install with: sudo apt install ./Groundcheck.deb"
+          gh release upload desktop-linux out/Groundcheck.deb --clobber
