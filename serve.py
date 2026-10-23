@@ -9,6 +9,10 @@ import os
 import secrets
 import hashlib
 import ipaddress
+import bisect
+import math
+import datetime
+import urllib.parse
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PORT = 8765
@@ -348,6 +352,142 @@ def _settings_cached(settings):
 
 
 
+# ---- /api/weather: the temperature at any coordinates, from the nearest radiosonde that reported near the ground
+WEATHER_PATH = "/api/weather"
+WEATHER_HOURS = 19  # only readings from the last 19 hours are used
+_countries = {"list": None}
+
+
+def _country_of(lat, lon):
+    """Name of the country that contains the point (Natural Earth borders, point-in-polygon), or None over sea."""
+    if _countries["list"] is None:
+        try:
+            with open(os.path.join(BASE, "geo", "countries.json")) as f:
+                _countries["list"] = json.load(f)
+        except (OSError, ValueError):
+            _countries["list"] = []
+    for c in _countries["list"]:
+        b = c["b"]
+        if lon < b[0] or lon > b[2] or lat < b[1] or lat > b[3]:
+            continue
+        inside = False  # even-odd over every ring, so holes (lakes, enclaves) count out
+        for ring in c["r"]:
+            j = len(ring) - 1
+            for i in range(len(ring)):
+                xi, yi, xj, yj = ring[i][0], ring[i][1], ring[j][0], ring[j][1]
+                if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+                    inside = not inside
+                j = i
+        if inside:
+            return c["n"]
+    # the borders are simplified, so a coast city can fall just outside: take a country whose border is within about 30 km
+    best, best_d = None, 0.3
+    cl = max(math.cos(math.radians(lat)), 0.2)
+    for c in _countries["list"]:
+        b = c["b"]
+        if lon < b[0] - 0.5 or lon > b[2] + 0.5 or lat < b[1] - 0.5 or lat > b[3] + 0.5:
+            continue
+        for ring in c["r"]:
+            for x, y in ring:
+                d = math.hypot((x - lon) * cl, y - lat)
+                if d < best_d:
+                    best, best_d = c["n"], d
+    return best
+
+
+def _km(lat1, lon1, lat2, lon2):
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    a = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2
+    return 6371.0 * 2 * math.asin(math.sqrt(a))
+
+
+_wdata = {"key": None, "records": [], "ts": []}
+_wlock = threading.Lock()
+
+
+def _weather_records():
+    """Near-ground readings of data.json sorted by time, rebuilt only when the file changes."""
+    path = os.path.join(BASE, "data.json")
+    try:
+        st = os.stat(path)
+    except OSError:
+        return _wdata["records"], _wdata["ts"]
+    key = (st.st_mtime_ns, st.st_size)
+    with _wlock:
+        if _wdata["key"] != key:
+            try:
+                with open(path) as f:
+                    rows = json.load(f)
+            except (OSError, ValueError):
+                return _wdata["records"], _wdata["ts"]  # a half-written file: keep the last good data
+            rows = [r for r in rows if r.get("temp") is not None and r.get("alt") is not None and r["alt"] <= 1500 and r.get("lat") is not None and r.get("lon") is not None]
+            rows.sort(key=lambda r: r.get("tsunix", 0))
+            _wdata["records"], _wdata["ts"], _wdata["key"] = rows, [r.get("tsunix", 0) for r in rows], key
+        return _wdata["records"], _wdata["ts"]
+
+
+def _nearest_sonde(lat, lon):
+    """The closest reading taken near the ground (under 1500 m) in the last 19 hours."""
+    recs, ts = _weather_records()
+    cl = math.cos(math.radians(lat))
+    best, best_d2 = None, 1e18
+    lo = bisect.bisect_left(ts, time.time() - WEATHER_HOURS * 3600)
+    for i in range(lo, len(recs)):
+        r = recs[i]
+        if r.get("temp") is None or r.get("alt") is None or r["alt"] > 1500 or r.get("lat") is None or r.get("lon") is None:
+            continue
+        dlon = abs(r["lon"] - lon)
+        dlon = min(dlon, 360 - dlon)
+        d2 = (r["lat"] - lat) ** 2 + (dlon * cl) ** 2
+        if d2 < best_d2:
+            best, best_d2 = r, d2
+    return best
+
+
+def weather_answer(lat, lon):
+    r = _nearest_sonde(lat, lon)
+    if r is None:
+        return 404, {"error": "no_data", "message": f"No near-ground reading from the last {WEATHER_HOURS} hours is available."}
+    t = round(float(r["temp"]), 1)
+    return 200, {
+        "temp": f"{t}C",
+        "temp_c": t,
+        "radiosonde_used": r.get("id"),
+        "coordinates_picked": f"{lat:g} {lon:g}",
+        "country_coordinates": _country_of(lat, lon) or "none (open sea or no country)",
+        "distance_km": round(_km(lat, lon, r["lat"], r["lon"]), 1),
+        "humidity": r.get("humidity"),
+        "pressure": r.get("pressure"),
+        "measured_at": datetime.datetime.fromtimestamp(r.get("tsunix", 0), datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+
+
+def parse_coordinates(text):
+    """Accepts {"lat":52.18,"lon":13.43}, {"coordinates":"52.18 13.43"}, {"coordinates":[52.18,13.43]} or just: 52.18 13.43"""
+    text = (text or "").strip()
+    try:
+        obj = json.loads(text)
+    except ValueError:
+        obj = text
+    if isinstance(obj, dict):
+        if "lat" in obj and ("lon" in obj or "lng" in obj):
+            obj = [obj["lat"], obj.get("lon", obj.get("lng"))]
+        else:
+            obj = obj.get("coordinates", obj.get("coordinates_picked"))
+    if isinstance(obj, str):
+        obj = obj.replace(",", " ").split()
+    if not isinstance(obj, (list, tuple)) or len(obj) != 2:
+        return None
+    try:
+        lat, lon = float(obj[0]), float(obj[1])
+    except (TypeError, ValueError):
+        return None
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180) or lat != lat or lon != lon:
+        return None
+    return lat, lon
+
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE, **kwargs)
@@ -539,6 +679,54 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         self.send_error(404)
 
+    def _weather_request(self, coords_text):
+        client_ip = self._real_client_ip()
+        if is_blocked(client_ip):
+            self._json(403, {"error": "blocked"})
+            return
+        api_key = self._get_api_key()
+        if api_key and api_key in _valid_keys and _valid_keys[api_key].get("paused"):
+            self._json(403, {"error": "key_paused", "message": "This API key is paused. Resume it via POST /api/keys/<key>/settings."})
+            return
+        if api_key and api_key in _valid_keys:
+            bucket, max_reqs, window = f"weather-key:{api_key}", KEY_MAX, KEY_WINDOW
+        else:
+            bucket, max_reqs, window = f"weather-ip:{client_ip}", DEFAULT_MAX, DEFAULT_WINDOW
+        if is_rate_limited(bucket, max_reqs, window):
+            self._json(429, {
+                "error": "rate_limited",
+                "message": f"Max {max_reqs} requests per {window}s for this tier. Try again shortly.",
+                "get_a_higher_limit": f"POST {KEYGEN_PATH} for a free API key ({KEY_MAX}/{KEY_WINDOW}s)."
+            }, {"Retry-After": str(window)})
+            return
+        coords = parse_coordinates(coords_text)
+        if coords is None:
+            self._json(400, {"error": "bad_coordinates", "message": "Send the coordinates as JSON, for example {\"lat\": 52.184, \"lon\": 13.432} (latitude -90 to 90, longitude -180 to 180)."})
+            return
+        status, obj = weather_answer(*coords)
+        self._json(status, obj)
+
+    def do_QUERY(self):
+        # QUERY is a safe GET that carries a body: the coordinates travel in the body, not the address
+        if self.path.split("?", 1)[0] != WEATHER_PATH:
+            self.send_error(404, "Not found")
+            return
+        try:
+            n = min(int(self.headers.get("Content-Length") or 0), 2048)
+        except ValueError:
+            n = 0
+        self._weather_request(self.rfile.read(n).decode("utf-8", "replace") if n else "")
+
+    def do_OPTIONS(self):
+        # Browser preflight: pages on other sites send QUERY or POST JSON here, which needs this answer first.
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, QUERY, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-API-Key")
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_GET(self):
         base_path = self.path.split("?", 1)[0]
 
@@ -556,6 +744,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if base_path == KEY_SETTINGS_SCHEMA_PATH:
             self._json(200, {"count": len(SETTINGS_SCHEMA), "schema": SETTINGS_SCHEMA})
+            return
+
+        if base_path == WEATHER_PATH:  # the same answer for a plain GET, e.g. /api/weather?lat=52.184&lon=13.432
+            q = urllib.parse.parse_qs(self.path.split("?", 1)[1]) if "?" in self.path else {}
+            self._weather_request(json.dumps({"lat": (q.get("lat") or [""])[0], "lon": (q.get("lon") or [""])[0]}))
             return
 
         if base_path == PUBLIC_PATH:
