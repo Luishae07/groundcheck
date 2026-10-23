@@ -11,19 +11,54 @@
     "appId": "com.luishae07.groundcheck",
     "productName": "Groundcheck",
     "icon": "icon.png",
-    "files": ["main.js", "icon.png"],
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png"
+    ],
     "mac": {
-      "target": ["dmg", "pkg"],
+      "target": [
+        "dmg",
+        "pkg"
+      ],
       "category": "public.app-category.weather",
       "extendInfo": {
         "NSLocationWhenInUseUsageDescription": "Groundcheck uses your location to center the map and find the nearest weather station."
       }
     },
-    "win": { "target": "nsis" },
-    "linux": { "target": "AppImage", "category": "Utility" }
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "category": "Utility",
+      "maintainer": "Luishae07 <noreply@users.noreply.github.com>",
+      "synopsis": "Live radiosonde ground-temperature weather",
+      "description": "Groundcheck desktop client: live ground-level weather measured by radiosondes."
+    },
+    "deb": {
+      "depends": [
+        "libgtk-3-0",
+        "libnotify4",
+        "libnss3",
+        "libxss1",
+        "libxtst6",
+        "xdg-utils",
+        "libatspi2.0-0",
+        "libuuid1",
+        "libsecret-1-0"
+      ]
+    }
   },
   "devDependencies": {
     "electron": "^44.7.0",
     "electron-builder": "^26.15.3"
-  }
+  },
+  "author": {
+    "name": "Luishae07",
+    "email": "noreply@users.noreply.github.com"
+  },
+  "homepage": "https://luishae07.github.io/download"
 }
