@@ -1,127 +1,208 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
-<title>Groundcheck API Docs</title>
-<link rel="icon" href="/favicon.ico" sizes="any">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Groundcheck API</title>
+<meta name="description" content="Free API for real weather-balloon (radiosonde) ground readings from around the world.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#f2f6f9; --panel:#ffffff; --ink:#132433; --ink-dim:#5b7185;
-  --line:#dbe4ec; --accent:#1f6f4a; --code-bg:#0d1b2e; --code-ink:#d8e6f2;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0c1620; --panel:#111c28; --ink:#e8eef4; --ink-dim:#8fa3b8;
-    --line:#22323f; --accent:#5fcf95; --code-bg:#080f18; --code-ink:#c9dcec;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0c1620; --panel:#111c28; --ink:#e8eef4; --ink-dim:#8fa3b8;
-  --line:#22323f; --accent:#5fcf95; --code-bg:#080f18; --code-ink:#c9dcec;
-}
-*{box-sizing:border-box}
-body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font-family:"Inter",system-ui,sans-serif;
-  padding:2.5rem 1.5rem 4rem;
-}
-main{max-width:720px; margin:0 auto}
-h1{font-family:"Sora",sans-serif; font-weight:800; font-size:1.9rem; margin:0 0 .3rem; text-wrap:balance}
-.sub{color:var(--ink-dim); font-size:.95rem; margin:0 0 2.2rem}
-h2{font-family:"Sora",sans-serif; font-weight:700; font-size:1.2rem; margin:2.2rem 0 .7rem}
-p{line-height:1.6; color:var(--ink-dim)}
-a{color:var(--accent)}
-.endpoint{
-  background:var(--panel); border:1px solid var(--line); border-radius:12px;
-  padding:.9rem 1.1rem; margin-bottom:1rem; display:flex; align-items:baseline; gap:.7rem; flex-wrap:wrap;
-}
-.method{
-  font-family:"Sora",sans-serif; font-weight:700; font-size:.72rem;
-  color:var(--accent); border:1px solid var(--accent); border-radius:6px; padding:.1rem .5rem;
-}
-.path{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.9rem}
-.desc{color:var(--ink-dim); font-size:.85rem; width:100%}
-table{width:100%; border-collapse:collapse; margin:1rem 0; font-size:.85rem}
-th,td{text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--line)}
-th{color:var(--ink-dim); font-weight:600; font-size:.75rem; text-transform:uppercase; letter-spacing:.04em}
-td code{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.82rem}
-pre{
-  background:var(--code-bg); color:var(--code-ink); border-radius:12px;
-  padding:1rem 1.1rem; overflow-x:auto; font-size:.82rem; line-height:1.55;
-  font-family:"JetBrains Mono",ui-monospace,monospace;
-}
-footer{margin-top:3rem; font-size:.8rem; color:var(--ink-dim)}
+:root{--sky1:#3b6fa3;--sky2:#5a8fbf;--sky3:#7fa9cc;--card:rgba(255,255,255,.92);--ink:#132433;--dim:#566b7f;--line:rgba(19,36,51,.12);--acc:#d9771c;--code:#0d1b2a;--codeink:#cfe0f0;--chip:rgba(19,36,51,.06)}
+@media (prefers-color-scheme:dark){:root{--sky1:#070d1a;--sky2:#0e1b30;--sky3:#16294a;--card:rgba(15,26,44,.9);--ink:#e8f0f8;--dim:#a3b5c7;--line:rgba(255,255,255,.12);--acc:#ffa24a;--code:#08111d;--chip:rgba(255,255,255,.08)}}
+*{box-sizing:border-box}html{background:var(--sky3)}
+body{margin:0;min-height:100vh;color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 55%,var(--sky3) 100%) fixed;padding:2.2rem 1.1rem 4rem}
+main{max-width:860px;margin:0 auto}
+header{color:#fff;padding:.4rem .2rem 1.4rem;text-shadow:0 2px 14px rgba(0,0,0,.25)}
+header .brand{font:700 .9rem Sora,sans-serif;letter-spacing:.04em;opacity:.9}
+header h1{font:300 clamp(2.4rem,7vw,4rem) Sora,sans-serif;letter-spacing:-.03em;margin:.2rem 0 .3rem}
+header p{margin:0;max-width:40rem;font-size:1.05rem;opacity:.95}
+header a{color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:1.2rem 1.4rem;margin:1rem 0;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+h2{font:700 1.15rem Sora,sans-serif;margin:0 0 .5rem}
+h3{font:600 .8rem Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:1.2rem 0 .4rem}
+p{margin:.45rem 0;color:var(--dim)}a{color:var(--acc)}b{color:var(--ink)}
+code,pre{font-family:"JetBrains Mono",ui-monospace,monospace}
+code{background:var(--chip);border-radius:6px;padding:.08em .35em;font-size:.86em;color:var(--ink)}
+pre{background:var(--code);color:var(--codeink);border-radius:14px;padding:.9rem 1rem;overflow:auto;font-size:.82rem;line-height:1.55;margin:.6rem 0;white-space:pre-wrap;word-break:break-word}
+.ep{display:flex;gap:.7rem;align-items:baseline;flex-wrap:wrap}
+.m{font:700 .7rem Sora,sans-serif;border:1.5px solid var(--acc);color:var(--acc);border-radius:7px;padding:.05rem .5rem}
+.path{font:600 .92rem "JetBrains Mono",monospace;color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin:.4rem 0}
+th,td{text-align:left;padding:.5rem .55rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin:.8rem 0}
+.stat{background:var(--chip);border-radius:16px;padding:.8rem 1rem}.stat b{display:block;font:700 1.5rem Sora,sans-serif}.stat span{font-size:.78rem;color:var(--dim)}
+button{font:600 .85rem Inter,sans-serif;border:0;border-radius:12px;padding:.55rem 1rem;background:var(--acc);color:#fff;cursor:pointer}
+.src{display:grid;gap:.7rem}.src>div{border:1px solid var(--line);border-radius:16px;padding:.8rem 1rem}.src b{font-family:Sora,sans-serif}
+footer{color:#fff;font-size:.82rem;text-shadow:0 1px 8px rgba(0,0,0,.25);padding:1rem .3rem}footer a{color:#fff}
 </style>
-
+</head>
+<body>
 <main>
-  <h1>Groundcheck API</h1>
-  <p class="sub">Read-only endpoints backing the <a href="/">Groundcheck</a> weather app — real radiosonde ground-temperature readings, with a free optional API key for a much higher rate limit.</p>
+<header>
+  <div class="brand">GROUNDCHECK</div>
+  <h1>API</h1>
+  <p>Real weather-balloon measurements from around the world, free and read-only. No sign-up needed. An optional free key raises the limit a lot. Back to the <a href="../">weather app</a>.</p>
+</header>
 
+<div class="card">
+  <h2>Quick start</h2>
+  <pre>curl {BASE}/api/data</pre>
+  <p>That returns every recent ground-level reading as JSON, newest first. Without a key you get <b>30 requests per 60 seconds</b> per address.</p>
+  <h3>Get a free key (13,000 requests per 10 seconds)</h3>
+  <pre>curl -X POST {BASE}/api/keys/new</pre>
+  <p>Prefer a button to a command? <a href="../apikey.html">Get a key on this page</a>.</p>
+  <pre>curl {BASE}/api/data -H "X-API-Key: YOUR_KEY"
+curl "{BASE}/api/data?key=YOUR_KEY"</pre>
+</div>
+
+<div class="card">
+  <h2>Right now</h2>
+  <p>Load the live numbers from the API. It counts as one request.</p>
+  <button id="live">Load live numbers</button>
+  <div class="stats" id="stats" hidden>
+    <div class="stat"><b id="n-all">–</b><span>readings</span></div>
+    <div class="stat"><b id="n-24">–</b><span>in the last 24 hours</span></div>
+    <div class="stat"><b id="n-live">–</b><span>from live balloon feeds</span></div>
+    <div class="stat"><b id="n-sh">–</b><span>from SondeHub</span></div>
+    <div class="stat"><b id="n-igra">–</b><span>from NOAA IGRA</span></div>
+    <div class="stat"><b id="n-new">–</b><span>newest reading</span></div>
+  </div>
+</div>
+
+<div class="card">
   <h2>Endpoints</h2>
+  <div class="ep"><span class="m">GET</span><span class="path">/api/data</span></div>
+  <p>All current ground-level readings, newest first. Only temperatures at or above 0 °C and sensor heights up to about 980 m are included. With a key, your key's <a href="#settings">settings</a> filter and reshape the answer.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">QUERY</span><span class="path">/api/weather</span></div>
+  <p>The temperature at any coordinates, from the nearest radiosonde that measured near the ground in the last 19 hours. Send the coordinates in the body. <a href="#weather">Details</a>. <code>GET /api/weather?lat=…&amp;lon=…</code> gives the same answer.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/new</span></div>
+  <p>Makes a free key on the spot: <code>{"api_key": "…", "limit": "13000 requests / 10s"}</code>.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/KEY/stats</span></div>
+  <p>What your key has used. The key itself is the password.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/KEY/settings</span></div>
+  <p>Changes the settings of your key, for example <code>{"label":"mine","min_lat":47,"max_lat":55.1,"max_age_hours":48}</code>. Also pauses or resumes it with <code>{"paused": true}</code>.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/KEY/revoke</span></div>
+  <p>Deletes your key for good.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/settings/schema</span></div>
+  <p>The list of all 30 settings with their types and defaults.</p>
+  <h3>Limits and errors</h3>
+  <p>Over the limit you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code>, <code>POST</code> or (for the weather call) <code>QUERY</code> JSON, and any website may call it (CORS is open).</p>
+</div>
 
-  <div class="endpoint">
-    <span class="method">GET</span><span class="path">/api/data</span>
-    <div class="desc">All current non-negative-temperature radiosonde readings, sorted newest first. Without an API key, limited to 30 requests per 60 seconds per IP. With a key, 13000 requests per 10 seconds. Exceeding your limit returns <code>429</code> with a <code>Retry-After</code> header.</div>
-  </div>
-
-  <div class="endpoint">
-    <span class="method">POST</span><span class="path">/api/keys/new</span>
-    <div class="desc">Generates a free API key on the spot &mdash; no signup. Returns <code>{"api_key": "...", "limit": "13000 requests / 10s"}</code>.</div>
-  </div>
-
-  <div class="endpoint">
-    <span class="method">GET</span><span class="path">/weather_data_nonneg.txt</span>
-    <div class="desc">The same readings as a plain-text line list, one reading per line.</div>
-  </div>
-
-  <h2>Using an API key</h2>
-  <p>Get one:</p>
-  <pre>curl -X POST http://localhost:8765/api/keys/new</pre>
-  <p>Then pass it on every request, either as a header or a query parameter:</p>
-  <pre>curl http://localhost:8765/api/data -H "X-API-Key: &lt;your key&gt;"
-
-curl "http://localhost:8765/api/data?key=&lt;your key&gt;"</pre>
-
-  <h2>Response shape (/api/data)</h2>
-  <p>An array of reading objects:</p>
-  <pre>[
-  {
-    "id": "Y0943402",           // radiosonde serial number
-    "time": "2026-09-05T04:57:35Z",
-    "tsunix": 1788584255,
-    "temp": 12.7,               // °C, ground-level (negatives filtered out)
-    "alt": 474.91,              // metres
-    "pressure": 959.8,          // hPa, or null if unavailable
-    "humidity": 90,             // %, or null if unavailable
-    "lat": 51.772308,
-    "lon": 9.25355,
-    "source": ["RS41"]          // sonde model / receiver tag
-  },
-  ...
-]</pre>
-
-  <h2>Fields</h2>
+<div class="card" id="weather">
+  <h2>Weather at a point</h2>
+  <p>Ask for the weather at any coordinates. The answer comes from the nearest radiosonde that reported a reading under 1,500 m in the last <b>19 hours</b>.</p>
+  <pre>curl -X QUERY {BASE}/api/weather -d '{"lat": 52.184, "lon": 13.432}'</pre>
+  <p><code>QUERY</code> is a read-only request that carries a body, so the coordinates stay out of the address. It works with <code>fetch</code> too, from any website:</p>
+<pre>const r = await fetch('{BASE}/api/weather', {
+  method: 'QUERY',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ lat: 52.184, lon: 13.432 })
+});
+console.log(await r.json());</pre>
+  <p>The coordinates can also be <code>{"coordinates": "52.184 13.432"}</code> or plain text <code>52.184 13.432</code>. Latitude is -90 to 90 and longitude -180 to 180. Without a tool that can send <code>QUERY</code>, use <code>GET {BASE}/api/weather?lat=52.184&amp;lon=13.432</code>.</p>
+<pre>{
+  "temp": "9.3C",                          // the temperature as text
+  "temp_c": 9.3,                           // the same as a number
+  "radiosonde_used": "X3722285",           // the sonde (or station) the reading came from
+  "coordinates_picked": "52.184 13.432",   // what you asked for
+  "country_coordinates": "Germany",        // the country at those coordinates
+  "distance_km": 47.0,                     // how far the radiosonde was from your point
+  "humidity": 74.1,                        // percent, or null
+  "pressure": 955.95,                      // hPa, or null
+  "measured_at": "2026-10-23T11:48:01Z"    // UTC
+}</pre>
   <table>
-    <tr><th>Field</th><th>Type</th><th>Notes</th></tr>
-    <tr><td><code>id</code></td><td>string</td><td>Unique sonde serial number</td></tr>
-    <tr><td><code>time</code></td><td>string (ISO 8601, UTC)</td><td>When the reading was taken</td></tr>
-    <tr><td><code>tsunix</code></td><td>number</td><td>Same timestamp, Unix seconds</td></tr>
-    <tr><td><code>temp</code></td><td>number</td><td>Ground temperature in &deg;C — always &ge; 0 in this feed</td></tr>
-    <tr><td><code>alt</code></td><td>number</td><td>Altitude in metres</td></tr>
-    <tr><td><code>pressure</code></td><td>number | null</td><td>Barometric pressure in hPa</td></tr>
-    <tr><td><code>humidity</code></td><td>number | null</td><td>Relative humidity, %</td></tr>
-    <tr><td><code>lat</code> / <code>lon</code></td><td>number</td><td>WGS84 coordinates</td></tr>
-    <tr><td><code>source</code></td><td>string[] | null</td><td>Receiving station / sonde model tags</td></tr>
+    <tr><th>Status</th><th>When</th></tr>
+    <tr><td><code>200</code></td><td>The answer above.</td></tr>
+    <tr><td><code>400</code></td><td>The coordinates are missing or out of range.</td></tr>
+    <tr><td><code>404</code></td><td>No near-ground reading from the last 19 hours exists.</td></tr>
+    <tr><td><code>429</code></td><td>Over the limit: 30 requests per 60 seconds without a key, 13,000 per 10 seconds with a key (<code>X-API-Key</code>). The weather call has its own count, separate from <code>/api/data</code>.</td></tr>
   </table>
+  <p>Over open sea, <code>country_coordinates</code> says <code>none (open sea or no country)</code>. Check <code>distance_km</code>: the nearest radiosonde can be far away.</p>
+</div>
 
-  <h2>Notes</h2>
-  <p>
-    Data originates from <a href="https://sonde.mine.nu">sonde.mine.nu</a>'s live radiosonde telemetry feed.
-    Readings with sub-zero temperatures (typical at flight altitude) are excluded, since they aren't representative
-    of ground weather. The underlying data refreshes on a schedule — see the app's <a href="/#faq">FAQ</a> for details.
-  </p>
-  <p>An API key is optional, not required &mdash; without one you get the default rate limit; with one, the much higher limit described above.</p>
+<div class="card">
+  <h2>What a reading looks like</h2>
+<pre>{
+  "id": "Y0943402",                 // sonde serial, or the weather station for NOAA readings
+  "time": "2026-10-12T14:08:28Z",   // UTC
+  "tsunix": 1791814108,             // the same time in Unix seconds
+  "temp": 12.7,                     // degrees C, never below 0
+  "alt": 474.9,                     // metres above sea level
+  "pressure": 959.8,                // hPa, or null
+  "humidity": 90,                   // percent, or null
+  "lat": 51.772308,
+  "lon": 9.25355,
+  "source": ["RS41", "SondeHub"]    // see "Where the readings come from"
+}</pre>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Meaning</th></tr>
+    <tr><td><code>id</code></td><td>string</td><td>The sonde's serial number. For NOAA readings, the weather station's id (for example <code>GMM00010393</code>).</td></tr>
+    <tr><td><code>time</code>, <code>tsunix</code></td><td>string, number</td><td>When it was measured, in UTC.</td></tr>
+    <tr><td><code>temp</code></td><td>number</td><td>Air temperature in °C. Readings below 0 °C are left out.</td></tr>
+    <tr><td><code>alt</code></td><td>number</td><td>Height in metres. For a balloon, where the sensor was. For NOAA, the station's height.</td></tr>
+    <tr><td><code>pressure</code>, <code>humidity</code></td><td>number or null</td><td>hPa and percent. Some sources do not report them.</td></tr>
+    <tr><td><code>lat</code>, <code>lon</code></td><td>number</td><td>Position in degrees.</td></tr>
+    <tr><td><code>source</code></td><td>array</td><td>The instrument or the archive it came from. The last entry names the network: <code>SondeHub</code> or <code>IGRA</code>. Readings with only an instrument name come from the live sonde.mine.nu feed.</td></tr>
+  </table>
+</div>
 
-  <footer>&larr; <a href="/">Back to Groundcheck</a></footer>
+<div class="card" id="sources">
+  <h2>Where the readings come from</h2>
+  <div class="src">
+    <div><b>sonde.mine.nu / zeesen.mine.nu</b><p>Live radiosonde telemetry from a volunteer receiver network, mostly in central Europe. Updated every minute. <code>source</code> is the sonde type, such as <code>["RS41"]</code>.</p></div>
+    <div><b>SondeHub</b><p>An open worldwide database of radiosonde telemetry. Groundcheck keeps the ground-level frame of each sonde every 5 hours, so it covers many more countries, with a delay of about 5 hours. <code>source</code> ends with <code>"SondeHub"</code>. Thank you to the volunteers who run the receivers. <a href="https://sondehub.org">sondehub.org</a></p></div>
+    <div><b>NOAA IGRA</b><p>The Integrated Global Radiosonde Archive: the official soundings of about 650 weather-service stations in more than 100 countries, one reading per station per day (the sounding nearest 12:00 UTC). Public domain, from NOAA NCEI. Each station is refreshed about once a week, so readings can be up to a week late. <code>source</code> is <code>["IGRA"]</code>. <a href="https://www.ncei.noaa.gov/products/weather-balloon/integrated-global-radiosonde-archive">NOAA IGRA</a></p></div>
+  </div>
+  <p>If you use the data, please credit sonde.mine.nu, SondeHub and NOAA NCEI.</p>
+</div>
+
+<div class="card" id="settings">
+  <h2>Key settings</h2>
+  <p>These apply only to requests that carry your key. Every setting is optional. <code>GET /api/keys/settings/schema</code> lists them all.</p>
+  <table>
+    <tr><th>Setting</th><th>What it does</th></tr>
+    <tr><td><code>min_lat</code> <code>max_lat</code> <code>min_lon</code> <code>max_lon</code></td><td>Only readings inside this box.</td></tr>
+    <tr><td><code>max_age_hours</code></td><td>Only readings newer than this.</td></tr>
+    <tr><td><code>limit_results</code></td><td>At most this many readings.</td></tr>
+    <tr><td><code>dedupe_by_station</code></td><td>One reading per sonde or station: the newest.</td></tr>
+    <tr><td><code>temp_/humidity_/pressure_/altitude_ min_threshold, max_threshold</code></td><td>Drop readings outside a range.</td></tr>
+    <tr><td><code>…_decimal_places</code>, <code>temp_round_to_integer</code></td><td>Round the numbers.</td></tr>
+    <tr><td><code>temp_convert_units</code></td><td>Temperatures in °F instead of °C.</td></tr>
+    <tr><td><code>…_hide_if_null</code>, <code>strip_null_fields</code></td><td>Skip readings or fields that are missing.</td></tr>
+    <tr><td><code>sort_by_time_desc</code>, <code>pretty_print</code>, <code>include_metadata</code></td><td>Order and layout of the answer.</td></tr>
+  </table>
+  <h3>Example: Europe only, last 24 hours, one reading per station</h3>
+  <pre>curl -X POST {BASE}/api/keys/YOUR_KEY/settings \
+  -d '{"min_lat":35,"max_lat":72,"min_lon":-12,"max_lon":45,"max_age_hours":24,"dedupe_by_station":true}'</pre>
+</div>
+
+<footer>Groundcheck is free software (AGPL-3.0). <a href="https://github.com/Luishae07/groundcheck">Source code</a>. Forecast values shown in the app are estimates and can be wrong. This API only serves measurements.</footer>
 </main>
+<script>
+// examples use the address this page is served from; on GitHub Pages they use the data server's address
+var BASE = /github\.io$/.test(location.hostname) ? "https://grants-governmental-wma-out.trycloudflare.com" : location.origin;
+document.querySelectorAll("pre").forEach(function (p) { p.textContent = p.textContent.split("{BASE}").join(BASE); });
+document.getElementById("live").onclick = async function () {
+  var b = this; b.textContent = "Loading…";
+  try {
+    var d = await (await fetch(BASE + "/api/data")).json(), now = Date.now() / 1000, c = {all: d.length, h24: 0, live: 0, sh: 0, ig: 0, newest: 0};
+    d.forEach(function (r) {
+      if (now - r.tsunix < 86400) c.h24++;
+      var s = r.source || [];
+      if (s.indexOf("IGRA") >= 0) c.ig++; else if (s.indexOf("SondeHub") >= 0) c.sh++; else c.live++;
+      if (r.tsunix > c.newest) c.newest = r.tsunix;
+    });
+    var f = function (n) { return n.toLocaleString(); }, ago = Math.round((now - c.newest) / 60);
+    document.getElementById("n-all").textContent = f(c.all); document.getElementById("n-24").textContent = f(c.h24);
+    document.getElementById("n-live").textContent = f(c.live); document.getElementById("n-sh").textContent = f(c.sh);
+    document.getElementById("n-igra").textContent = f(c.ig); document.getElementById("n-new").textContent = ago < 90 ? ago + " min ago" : Math.round(ago / 60) + " h ago";
+    document.getElementById("stats").hidden = false; b.textContent = "Refresh";
+  } catch (e) { b.textContent = "Could not load, try again"; }
+};
+</script>
+</body>
+</html>
