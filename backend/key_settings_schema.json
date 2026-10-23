@@ -1,0 +1,122 @@
+{
+  "temp_min_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "temp_max_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "temp_decimal_places": {
+    "type": "number",
+    "default": null
+  },
+  "temp_hide_if_null": {
+    "type": "bool",
+    "default": false
+  },
+  "humidity_min_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "humidity_max_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "humidity_decimal_places": {
+    "type": "number",
+    "default": null
+  },
+  "humidity_hide_if_null": {
+    "type": "bool",
+    "default": false
+  },
+  "pressure_min_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "pressure_max_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "pressure_decimal_places": {
+    "type": "number",
+    "default": null
+  },
+  "pressure_hide_if_null": {
+    "type": "bool",
+    "default": false
+  },
+  "altitude_min_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "altitude_max_threshold": {
+    "type": "number",
+    "default": null
+  },
+  "altitude_decimal_places": {
+    "type": "number",
+    "default": null
+  },
+  "altitude_hide_if_null": {
+    "type": "bool",
+    "default": false
+  },
+  "temp_round_to_integer": {
+    "type": "bool",
+    "default": false
+  },
+  "temp_convert_units": {
+    "type": "bool",
+    "default": false
+  },
+  "temp_invert_sign": {
+    "type": "bool",
+    "default": false
+  },
+  "min_lat": {
+    "type": "number",
+    "default": null
+  },
+  "max_lat": {
+    "type": "number",
+    "default": null
+  },
+  "min_lon": {
+    "type": "number",
+    "default": null
+  },
+  "max_lon": {
+    "type": "number",
+    "default": null
+  },
+  "max_age_hours": {
+    "type": "number",
+    "default": null
+  },
+  "limit_results": {
+    "type": "number",
+    "default": null
+  },
+  "strip_null_fields": {
+    "type": "bool",
+    "default": false
+  },
+  "dedupe_by_station": {
+    "type": "bool",
+    "default": false
+  },
+  "sort_by_time_desc": {
+    "type": "bool",
+    "default": false
+  },
+  "pretty_print": {
+    "type": "bool",
+    "default": false
+  },
+  "include_metadata": {
+    "type": "bool",
+    "default": false
+  }
+}
