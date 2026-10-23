@@ -76,9 +76,11 @@ ipcMain.handle('gc-location', async () => {
   if (saved) return saved;
   if (lastLoc) return lastLoc;
   try {
-    const r = await net.fetch('https://ipwho.is/');
-    const j = await r.json();
-    if (j && j.success !== false && typeof j.latitude === 'number') lastLoc = { lat: j.latitude, lon: j.longitude };
+    // same lookup the page itself uses: our own server's /api/whereami, found through the page's DATA_BASE
+    const page = await (await net.fetch('https://luishae07.github.io/groundcheck/desktop/')).text();
+    const base = /const DATA_BASE = '([^']+)'/.exec(page)[1].split('/apiinternel')[0];
+    const j = await (await net.fetch(base + '/api/whereami')).json();
+    if (j && j.success && j.latitude != null && j.longitude != null) lastLoc = { lat: j.latitude, lon: j.longitude };
   } catch (e) {}
   return lastLoc;
 });
