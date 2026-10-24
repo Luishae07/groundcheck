@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Download Groundcheck — macOS &amp; Android</title>
+<title>Download Groundcheck — macOS, Linux &amp; Android</title>
 <meta name="description" content="Groundcheck desktop app for macOS — live radiosonde ground-temperature weather in its own window.">
 <link rel="icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -401,6 +401,9 @@ p.section-sub {
       <a class="btn" href="https://github.com/Luishae07/groundcheck/releases/download/desktop-mac/Groundcheck.app.zip">
         <span class="arrow">&#11015;</span> Download for macOS
       </a>
+      <a class="btn" href="https://github.com/Luishae07/groundcheck/releases/download/desktop-linux/Groundcheck.deb">
+        <span class="arrow">&#11015;</span> Download for Debian / Ubuntu
+      </a>
       <a class="btn" href="https://github.com/Luishae07/groundcheck/releases/download/desktop-android/Groundcheck.apk">
         <span class="arrow">&#11015;</span> Download for Android
       </a>
@@ -408,7 +411,7 @@ p.section-sub {
     <div class="btnrow" style="margin-top:12px">
       <a class="btn secondary" href="https://github.com/Luishae07/groundcheck">View source (AGPL-3.0)</a>
     </div>
-    <div class="filemeta">macOS: Groundcheck.app.zip &middot; <b>~870 MB</b> &middot; macOS 11+ &nbsp;|&nbsp; Android: Groundcheck.apk &middot; <b>~5 MB</b> &middot; Android 7+</div>
+    <div class="filemeta">macOS: Groundcheck.app.zip &middot; <b>~870 MB</b> &middot; macOS 11+ &nbsp;|&nbsp; Linux: Groundcheck.deb &middot; Debian 12+, Ubuntu 22.04+, Pop!_OS &nbsp;|&nbsp; Android: Groundcheck.apk &middot; <b>~5 MB</b> &middot; Android 7+</div>
   </div>
 
   <div class="statstrip">
@@ -608,6 +611,14 @@ p.section-sub {
         <li>Unzip the download and drag <b>Groundcheck.app</b> into Applications.</li>
         <li>Since it isn't code-signed, macOS will block the first launch as "unidentified developer."</li>
         <li><b>Right-click (or Control-click)</b> the app &rarr; <b>Open</b> &rarr; confirm. After that it opens normally, every time.</li>
+      </ol>
+    </div>
+    <div class="note" style="margin-bottom:16px">
+      <h3>Debian, Ubuntu, Pop!_OS</h3>
+      <ol>
+        <li>Download <b>Groundcheck.deb</b>.</li>
+        <li>Open a terminal in the download folder and run <code>sudo apt install ./Groundcheck.deb</code>.</li>
+        <li>Start <b>Groundcheck</b> from your app menu. Location is worked out from your internet connection (city-level) unless you set it yourself: press <b>Ctrl+L</b> and paste your coordinates or a Google Maps link.</li>
       </ol>
     </div>
     <div class="note">
