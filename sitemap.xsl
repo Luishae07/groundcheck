@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:sm="http://www.sitemaps.org/schemas/sitemap/0.9"
-  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-  exclude-result-prefixes="sm image">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:output method="html" encoding="UTF-8" indent="no" doctype-system="about:legacy-compat"/>
 
 <xsl:template match="/">
@@ -11,93 +8,107 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="robots" content="noindex"/>
-<title>Groundcheck sitemap</title>
+<title>sitemap.xml</title>
 <style>
-:root{--bg:#f4f7fb;--card:#ffffff;--ink:#16202c;--dim:#667587;--line:#e1e8f0;--acc:#1f6fd6;--acc2:#15a8a0;--bar:#e6edf5;--code:#eef3f9}
-@media (prefers-color-scheme: dark){:root{--bg:#0d1218;--card:#151c25;--ink:#e4ebf3;--dim:#8a98a8;--line:#243040;--acc:#6fb0ff;--acc2:#4fd8cf;--bar:#222d3a;--code:#1b2530}}
+:root{--bg:#ffffff;--bar:#f3f6fa;--ink:#1d2733;--tag:#1f5fa8;--attr:#a0521c;--val:#1a7a45;--note:#7a8794;--pun:#8895a3;--guide:#e3e9f0;--hover:#eef4fb;--link:#0d6b55;--acc:#1f6fd6}
+@media (prefers-color-scheme: dark){:root{--bg:#10151c;--bar:#171e27;--ink:#d8e1ea;--tag:#7fb4ee;--attr:#e0a36a;--val:#7fd39a;--note:#7f8c99;--pun:#7f8c99;--guide:#243040;--hover:#18222e;--link:#7fe0bd;--acc:#6fb0ff}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:1000px;margin:0 auto;padding:34px 16px 60px}
-h1{font-size:30px;margin:0 0 6px;letter-spacing:-.4px}
-h1:before{content:"";display:inline-block;width:26px;height:26px;border-radius:8px;margin-right:12px;vertical-align:-3px;background:linear-gradient(135deg,var(--acc),var(--acc2))}
-.lead{color:var(--dim);margin:0 0 22px}
-.stats{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 20px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 18px;min-width:130px}
-.stat b{display:block;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
-.stat small{color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:600}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-table{border-collapse:collapse;width:100%}
-th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--dim);padding:12px 16px;border-bottom:1px solid var(--line);background:var(--code)}
-td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
-tr:last-child td{border-bottom:0}
-tr:hover td{background:var(--code)}
-a{color:var(--acc);text-decoration:none;font-weight:600;overflow-wrap:anywhere}
-a:hover{text-decoration:underline}
-.note{display:block;color:var(--dim);font-size:13px;font-weight:400;margin-top:4px;max-width:60ch}
-.mono{font-variant-numeric:tabular-nums;white-space:nowrap}
-.pill{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--code);font-size:12px;color:var(--dim)}
-.bar{display:inline-block;width:70px;height:7px;border-radius:9px;background:var(--bar);vertical-align:middle;margin-right:8px;overflow:hidden}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:9px}
-details{margin:22px 0 0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 18px}
-summary{cursor:pointer;font-weight:600}
-pre{margin:12px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;color:var(--dim)}
-.foot{color:var(--dim);font-size:13px;margin-top:22px}
-@media (max-width:700px){
-  thead{display:none}
-  table,tbody,tr,td{display:block;width:100%}
-  tr{padding:12px 14px;border-bottom:1px solid var(--line)}
-  tr:last-child{border-bottom:0}
-  td{padding:3px 0;border:0}
-  td:before{content:attr(data-l);display:inline-block;min-width:76px;color:var(--dim);font-size:12px}
-  td.u:before{display:none}
-  tr:hover td{background:none}
-}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--bar);border-bottom:1px solid var(--guide)}
+.top b{font-size:14px}
+.top span.m{color:var(--note);flex:1}
+.top button{font:inherit;color:var(--acc);background:none;border:1px solid var(--guide);border-radius:7px;padding:3px 10px;cursor:pointer}
+.top button:hover{background:var(--hover)}
+main{padding:14px 12px 50px}
+.l{white-space:pre-wrap;overflow-wrap:anywhere;padding:0 4px;border-radius:4px}
+.l:hover{background:var(--hover)}
+.in{margin-left:7px;padding-left:15px;border-left:1px solid var(--guide)}
+details{margin:0}
+summary{list-style:none;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 4px;border-radius:4px}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:var(--hover)}
+summary:before{content:"\25BE";display:inline-block;width:14px;margin-left:-14px;color:var(--pun);font-size:11px}
+details:not([open])>summary:before{content:"\25B8"}
+details:not([open])>summary:after{content:" \2026 &lt;/" attr(data-n) "&gt;";color:var(--pun)}
+details[data-n="--"]:not([open])>summary:after{content:" \2026 --&gt;"}
+.e{margin-left:14px}
+.root{margin-left:0}
+.t{color:var(--tag)}.a{color:var(--attr)}.v{color:var(--val)}.p{color:var(--pun)}.c{color:var(--note);font-style:italic}
+a{color:var(--link);text-decoration:underline;text-decoration-color:var(--guide);text-underline-offset:3px}
+a:hover{text-decoration-color:currentColor}
 </style>
 </head>
 <body>
+<div class="top">
+  <b>sitemap.xml</b>
+  <span class="m"><xsl:value-of select="count(//*[local-name()='url'])"/> pages · click a tag to fold it</span>
+  <button type="button" onclick="document.querySelectorAll('details').forEach(function(d){{d.open=true}})">Expand all</button>
+  <button type="button" onclick="document.querySelectorAll('details').forEach(function(d){{d.open=false}});document.querySelector('details[data-n=urlset]').open=true">Collapse all</button>
+</div>
 <main>
-  <h1>Groundcheck sitemap</h1>
-  <p class="lead">Every page of the site, as search engines see it. This is the human view of <code>sitemap.xml</code>.</p>
-  <div class="stats">
-    <div class="stat"><b><xsl:value-of select="count(sm:urlset/sm:url)"/></b><small>pages</small></div>
-    <div class="stat"><b><xsl:value-of select="count(sm:urlset/sm:url/image:image)"/></b><small>images</small></div>
-    <div class="stat"><b>
-      <xsl:for-each select="sm:urlset/sm:url/sm:lastmod">
-        <xsl:sort select="." order="descending"/>
-        <xsl:if test="position()=1"><xsl:value-of select="."/></xsl:if>
-      </xsl:for-each>
-    </b><small>last change</small></div>
-  </div>
-  <div class="card">
-    <table>
-      <thead><tr><th>Page</th><th>Updated</th><th>Changes</th><th>Priority</th><th>Images</th></tr></thead>
-      <tbody>
-        <xsl:for-each select="sm:urlset/sm:url">
-          <xsl:variable name="note" select="preceding-sibling::node()[not(self::text())][1][self::comment()]"/>
-          <tr>
-            <td class="u">
-              <a href="{sm:loc}"><xsl:value-of select="substring-after(sm:loc,'://')"/></a>
-              <xsl:if test="$note"><span class="note"><xsl:value-of select="normalize-space($note)"/></span></xsl:if>
-            </td>
-            <td class="mono" data-l="Updated"><xsl:value-of select="sm:lastmod"/></td>
-            <td data-l="Changes"><xsl:if test="sm:changefreq"><span class="pill"><xsl:value-of select="sm:changefreq"/></span></xsl:if></td>
-            <td class="mono" data-l="Priority"><xsl:if test="sm:priority"><span class="bar"><i style="width:{sm:priority * 100}%"></i></span><xsl:value-of select="sm:priority"/></xsl:if></td>
-            <td class="mono" data-l="Images"><xsl:value-of select="count(image:image)"/></td>
-          </tr>
-        </xsl:for-each>
-      </tbody>
-    </table>
-  </div>
-  <xsl:if test="/comment()">
-    <details>
-      <summary>About this file</summary>
-      <pre><xsl:value-of select="/comment()[1]"/></pre>
-    </details>
-  </xsl:if>
-  <p class="foot">Looking for the raw XML? Use your browser's “view source” (Ctrl+U).</p>
+<div class="l"><span class="p">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></div>
+<xsl:apply-templates select="node()"/>
 </main>
 </body>
 </html>
 </xsl:template>
+
+<xsl:template match="processing-instruction()">
+  <div class="l"><span class="p">&lt;?</span><span class="t"><xsl:value-of select="name()"/></span><xsl:text> </xsl:text><span class="v"><xsl:value-of select="."/></span><span class="p">?&gt;</span></div>
+</xsl:template>
+
+<xsl:template match="comment()">
+  <xsl:choose>
+    <xsl:when test="contains(., '&#10;')">
+      <details class="e"><xsl:attribute name="data-n">--</xsl:attribute>
+        <xsl:if test="not(parent::*)"><xsl:attribute name="class">e root</xsl:attribute></xsl:if>
+        <xsl:if test="parent::*"><xsl:attribute name="open">open</xsl:attribute></xsl:if>
+        <summary class="c"><xsl:text>&lt;!-- comment · </xsl:text><xsl:value-of select="string-length(.) - string-length(translate(., '&#10;', '')) + 1"/><xsl:text> lines</xsl:text></summary>
+        <div class="l c"><xsl:value-of select="."/></div>
+        <div class="l c">--&gt;</div>
+      </details>
+    </xsl:when>
+    <xsl:otherwise>
+      <div class="l c">&lt;!-- <xsl:value-of select="normalize-space(.)"/> --&gt;</div>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<xsl:template name="open">
+  <span class="p">&lt;</span><span class="t"><xsl:value-of select="name()"/></span>
+  <xsl:if test="not(parent::*)">
+    <xsl:for-each select="namespace::*[name()!='xml']">
+      <xsl:text> </xsl:text><span class="a">xmlns<xsl:if test="name()!=''">:<xsl:value-of select="name()"/></xsl:if></span><span class="p">=</span><span class="v">"<xsl:value-of select="."/>"</span>
+    </xsl:for-each>
+  </xsl:if>
+  <xsl:for-each select="@*">
+    <xsl:text> </xsl:text><span class="a"><xsl:value-of select="name()"/></span><span class="p">=</span><span class="v">"<xsl:value-of select="."/>"</span>
+  </xsl:for-each>
+</xsl:template>
+
+<xsl:template match="*">
+  <xsl:choose>
+    <xsl:when test="*">
+      <details open="open" class="e">
+        <xsl:attribute name="data-n"><xsl:value-of select="name()"/></xsl:attribute>
+        <xsl:if test="not(parent::*)"><xsl:attribute name="class">e root</xsl:attribute></xsl:if>
+        <summary><xsl:call-template name="open"/><span class="p">&gt;</span></summary>
+        <div class="in"><xsl:apply-templates select="*|comment()"/></div>
+        <div class="l"><span class="p">&lt;/</span><span class="t"><xsl:value-of select="name()"/></span><span class="p">&gt;</span></div>
+      </details>
+    </xsl:when>
+    <xsl:otherwise>
+      <div class="l">
+        <xsl:call-template name="open"/><span class="p">&gt;</span>
+        <xsl:choose>
+          <xsl:when test="local-name()='loc' and (starts-with(., 'http://') or starts-with(., 'https://'))"><a href="{.}"><xsl:value-of select="."/></a></xsl:when>
+          <xsl:otherwise><xsl:value-of select="."/></xsl:otherwise>
+        </xsl:choose>
+        <span class="p">&lt;/</span><span class="t"><xsl:value-of select="name()"/></span><span class="p">&gt;</span>
+      </div>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
 </xsl:stylesheet>
