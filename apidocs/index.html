@@ -77,6 +77,8 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <p>All current ground-level readings, newest first. Only temperatures at or above 0 °C and sensor heights up to about 980 m are included. With a key, your key's <a href="#settings">settings</a> filter and reshape the answer.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">QUERY</span><span class="path">/api/weather</span></div>
   <p>The temperature at any coordinates, from the nearest radiosonde that measured near the ground in the last 19 hours. Send the coordinates in the body. <a href="#weather">Details</a>. <code>GET /api/weather?lat=…&amp;lon=…</code> gives the same answer.</p>
+  <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/quota</span></div>
+  <p>Your <a href="#coins">coins</a> left today. Send your key; without one you see the balance of your address.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/new</span></div>
   <p>Makes a free key on the spot: <code>{"api_key": "…", "limit": "13000 requests / 10s"}</code>.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/KEY/stats</span></div>
@@ -88,7 +90,31 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/settings/schema</span></div>
   <p>The list of all 30 settings with their types and defaults.</p>
   <h3>Limits and errors</h3>
-  <p>Over the limit you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code>, <code>POST</code> or (for the weather call) <code>QUERY</code> JSON, and any website may call it (CORS is open).</p>
+  <p>Over the rate limit, or out of <a href="#coins">coins</a>, you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code>, <code>POST</code> or (for the weather call) <code>QUERY</code> JSON, and any website may call it (CORS is open).</p>
+</div>
+
+<div class="card" id="coins">
+  <h2>Coins</h2>
+  <p>Every answer from <code>/api/data</code> and <code>/api/weather</code> costs coins, a little like an AI API: the more you ask and the longer the answer, the more you pay. <b>1 coin pays for 250 MB of answers.</b></p>
+  <table>
+    <tr><th>You get</th><th>Coins</th></tr>
+    <tr><td>A new key</td><td>10</td></tr>
+    <tr><td>Every day (up to 30 stored)</td><td>+10</td></tr>
+    <tr><td>Without a key</td><td>1 per address and day</td></tr>
+    <tr><td>An app with 100 users (see below)</td><td>+100, once</td></tr>
+  </table>
+  <p><b>Price:</b> every byte you get back costs 4 units and every byte you send costs 1 unit (1 coin = 1,000,000,000 units). A request costs at least 1,000 units. Errors cost nothing.</p>
+  <table>
+    <tr><th>Request</th><th>About</th><th>Per coin</th></tr>
+    <tr><td><code>/api/weather</code></td><td>0.000001 coin</td><td>1,000,000 requests</td></tr>
+    <tr><td><code>/api/data</code> (gzip, about 5 MB)</td><td>0.02 coin</td><td>about 46 downloads</td></tr>
+    <tr><td><code>/api/data</code> (no gzip, about 42 MB)</td><td>0.17 coin</td><td>about 6 downloads</td></tr>
+  </table>
+  <p>Ask for gzip (<code>Accept-Encoding: gzip</code>) and the same data costs a fraction. Each answer carries <code>X-Quota-Cost</code> and <code>X-Quota-Remaining</code> (in coins). When the balance is too low you get <code>429 out_of_coins</code>.</p>
+  <h3>100 users = 100 coins</h3>
+  <p>If you build an app with Groundcheck data, send an anonymous id of each of your users with every request, for example a hash. Never a name or an email:</p>
+  <pre>curl {BASE}/api/weather?lat=52.184&amp;lon=13.432 -H "X-API-Key: YOUR_KEY" -H "X-Groundcheck-User: 9f2c41aa"</pre>
+  <p>When your key has seen <b>100 different ids in one calendar month</b>, it gets 100 coins, once. Only a short hash of each id is kept. <code>/api/quota</code> shows the count.</p>
 </div>
 
 <div class="card" id="weather">
