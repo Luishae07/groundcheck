@@ -49,8 +49,8 @@ footer{color:#fff;font-size:.82rem;text-shadow:0 1px 8px rgba(0,0,0,.25);padding
 <div class="card">
   <h2>Quick start</h2>
   <pre>curl {BASE}/api/data</pre>
-  <p>That returns every recent ground-level reading as JSON, newest first. Without a key you get <b>30 requests per 60 seconds</b> per address.</p>
-  <h3>Get a free key (13,000 requests per 10 seconds)</h3>
+  <p>That returns every recent ground-level reading as JSON, newest first. Without a key you get <b>1 coin per day</b> per address. There is no rate limit, only <a href="#coins">coins</a>.</p>
+  <h3>Get a free key (10 coins to start, +10 every day)</h3>
   <pre>curl -X POST {BASE}/api/keys/new</pre>
   <p>Prefer a button to a command? <a href="../apikey.html">Get a key on this page</a>.</p>
   <pre>curl {BASE}/api/data -H "X-API-Key: YOUR_KEY"
@@ -80,7 +80,7 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/quota</span></div>
   <p>Your <a href="#coins">coins</a> left today. Send your key; without one you see the balance of your address.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/new</span></div>
-  <p>Makes a free key on the spot: <code>{"api_key": "…", "limit": "13000 requests / 10s"}</code>.</p>
+  <p>Makes a free key on the spot: <code>{"api_key": "…", "limit": "no rate limit, only coins"}</code>.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/KEY/stats</span></div>
   <p>What your key has used. The key itself is the password.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/KEY/settings</span></div>
@@ -90,7 +90,7 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/keys/settings/schema</span></div>
   <p>The list of all 30 settings with their types and defaults.</p>
   <h3>Limits and errors</h3>
-  <p>Over the rate limit, or out of <a href="#coins">coins</a>, you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code>, <code>POST</code> or (for the weather call) <code>QUERY</code> JSON, and any website may call it (CORS is open).</p>
+  <p>Out of <a href="#coins">coins</a> you get <code>429</code> with a <code>Retry-After</code> header. A paused key gets <code>403</code>. A key that does not exist is treated like no key at all, so you get the lower limit. Everything is <code>GET</code>, <code>POST</code> or (for the weather call) <code>QUERY</code> JSON, and any website may call it (CORS is open).</p>
 </div>
 
 <div class="card" id="coins">
@@ -145,7 +145,7 @@ console.log(await r.json());</pre>
     <tr><td><code>200</code></td><td>The answer above.</td></tr>
     <tr><td><code>400</code></td><td>The coordinates are missing or out of range.</td></tr>
     <tr><td><code>404</code></td><td>No near-ground reading from the last 19 hours exists.</td></tr>
-    <tr><td><code>429</code></td><td>Over the limit: 30 requests per 60 seconds without a key, 13,000 per 10 seconds with a key (<code>X-API-Key</code>). The weather call has its own count, separate from <code>/api/data</code>.</td></tr>
+    <tr><td><code>429</code></td><td>Out of coins (<code>out_of_coins</code>). There is no rate limit; the answer carries <code>Retry-After</code>.</td></tr>
   </table>
   <p>Over open sea, <code>country_coordinates</code> says <code>none (open sea or no country)</code>. Check <code>distance_km</code>: the nearest radiosonde can be far away.</p>
 </div>
