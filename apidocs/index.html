@@ -76,7 +76,7 @@ curl "{BASE}/api/data?key=YOUR_KEY"</pre>
   <div class="ep"><span class="m">GET</span><span class="path">/api/data</span></div>
   <p>All current ground-level readings, newest first. Only temperatures at or above 0 °C and sensor heights up to about 980 m are included. With a key, your key's <a href="#settings">settings</a> filter and reshape the answer.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">QUERY</span><span class="path">/api/weather</span></div>
-  <p>The temperature at any coordinates, from the nearest radiosonde that measured near the ground in the last 19 hours. Send the coordinates in the body. <a href="#weather">Details</a>. <code>GET /api/weather?lat=…&amp;lon=…</code> gives the same answer.</p>
+  <p>The temperature at any coordinates, from the nearest radiosonde that measured near the ground in the last 19 hours. Send the coordinates in the body. <a href="#weather">Details</a> · <a href="examples/">examples in 80+ languages</a>. <code>GET /api/weather?lat=…&amp;lon=…</code> gives the same answer.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">GET</span><span class="path">/api/quota</span></div>
   <p>Your <a href="#coins">coins</a> left today. Send your key; without one you see the balance of your address.</p>
   <div class="ep" style="margin-top:1rem"><span class="m">POST</span><span class="path">/api/keys/new</span></div>
