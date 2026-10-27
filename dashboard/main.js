@@ -61,8 +61,25 @@ const coinText = (c) => (c >= 1 ? num(c, 2) : c >= 0.001 ? num(c, 4) : num(c, 9)
 function when(ts) {
     return new Date(ts * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
+// The server's own page talks to its own address. On GitHub Pages the API is behind a tunnel whose address changes, so it
+// is read from tunnel-url.txt in the repository (the same way the key page does it). ?api=https://... sets it by hand.
+let base = "";
+async function resolveBase() {
+    const manual = new URLSearchParams(location.search).get("api");
+    if (manual && /^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(manual)) {
+        base = manual;
+        return;
+    }
+    if (!location.hostname.endsWith("github.io"))
+        return;
+    const res = await fetch("https://raw.githubusercontent.com/Luishae07/groundcheck/main/tunnel-url.txt", { cache: "no-store" });
+    const text = (await res.text()).trim();
+    if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(text))
+        throw new Error("Could not find the API address");
+    base = text;
+}
 async function api(path, key, init = {}) {
-    const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), "X-API-Key": key } });
+    const res = await fetch(base + path, { ...init, headers: { ...(init.headers ?? {}), "X-API-Key": key } });
     const body = await res.json().catch(() => ({}));
     if (!res.ok)
         throw new Error(body.message ?? body.error ?? `HTTP ${res.status}`);
@@ -99,7 +116,7 @@ function signIn() {
         onclick: async () => {
             make.disabled = true;
             try {
-                const res = await fetch("/api/keys/new", { method: "POST" });
+                const res = await fetch(base + "/api/keys/new", { method: "POST" });
                 const body = (await res.json());
                 if (!body.api_key)
                     throw new Error("No key came back");
@@ -204,7 +221,7 @@ async function render() {
         document.title = `${coinText(quota.coins)} coins · Groundcheck dashboard`;
         const coinTone = quota.coins < 1 ? "bad" : quota.coins < 5 ? "warn" : "good";
         const usersLeft = Math.max(0, APP_USERS - quota.users_this_month);
-        put(h("h1", {}, stats.label ? `${stats.label}` : "Your API key"), notice ? h("div", { class: `msg${notice.err ? " err" : ""}` }, notice.text) : null, h("div", { class: "grid" }, statCard("Coins left", coinText(quota.coins), h("div", { class: "muted" }, `+${DAILY_COINS} a day, up to ${CAP_COINS} stored`), bar(quota.coins / CAP_COINS, coinTone)), statCard("Requests", num(stats.total_requests), h("div", { class: "muted" }, `from ${num(stats.distinct_ips)} address${stats.distinct_ips === 1 ? "" : "es"}`)), statCard("App users this month", `${num(quota.users_this_month)} / ${APP_USERS}`, h("div", { class: "muted" }, quota.app_reward_paid ? "The 100 coin reward was paid." : usersLeft ? `${usersLeft} more unique users for +100 coins` : "Reward on the next request"), bar(quota.app_reward_paid ? 1 : quota.users_this_month / APP_USERS, quota.app_reward_paid ? "good" : ""))), calculator(quota.coins), recentCard(stats), settingsCard(key, stats), h("p", { class: "muted" }, "Refreshes every 15 seconds. Send ", h("code", {}, "X-Groundcheck-User"), " with an anonymous id of each of your app's users to count toward the 100-user reward."));
+        put(h("h1", {}, stats.label ? `${stats.label}` : "Your API key"), notice ? h("div", { class: `msg${notice.err ? " err" : ""}` }, notice.text) : null, h("div", { class: "grid" }, statCard("Coins left", coinText(quota.coins), h("div", { class: "muted" }, `+${DAILY_COINS} a day, up to ${CAP_COINS} stored`), bar(quota.coins / CAP_COINS, coinTone)), statCard("Requests", num(stats.total_requests), h("div", { class: "muted" }, `from ${num(stats.distinct_ips)} address${stats.distinct_ips === 1 ? "" : "es"}`)), statCard("App users this month", `${num(quota.users_this_month)} / ${APP_USERS}`, h("div", { class: "muted" }, quota.app_reward_paid ? "The 100 coin reward was paid." : usersLeft ? `${usersLeft} more unique users for +100 coins` : "Reward on the next request"), bar(quota.app_reward_paid ? 1 : quota.users_this_month / APP_USERS, quota.app_reward_paid ? "good" : ""))), calculator(quota.coins), recentCard(stats), settingsCard(key, stats), h("p", { class: "muted" }, `API: ${base || location.origin}. Refreshes every 15 seconds. Send `, h("code", {}, "X-Groundcheck-User"), " with an anonymous id of each of your app's users to count toward the 100-user reward."));
         notice = null;
         timer = window.setTimeout(() => void render(), 15000);
     }
@@ -219,4 +236,7 @@ signOut.addEventListener("click", () => {
     saveKey("");
     void render();
 });
-void render();
+resolveBase().then(() => void render(), (e) => {
+    setNotice(`Cannot reach the API: ${e instanceof Error ? e.message : String(e)}`, true);
+    signIn();
+});
