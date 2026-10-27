@@ -91,8 +91,24 @@ function when(ts: number): string {
   return new Date(ts * 1000).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }
 
+// The server's own page talks to its own address. On GitHub Pages the API is behind a tunnel whose address changes, so it
+// is read from tunnel-url.txt in the repository (the same way the key page does it). ?api=https://... sets it by hand.
+let base = "";
+async function resolveBase(): Promise<void> {
+  const manual = new URLSearchParams(location.search).get("api");
+  if (manual && /^https:\/\/[a-z0-9.-]+(:\d+)?$/i.test(manual)) {
+    base = manual;
+    return;
+  }
+  if (!location.hostname.endsWith("github.io")) return;
+  const res = await fetch("https://raw.githubusercontent.com/Luishae07/groundcheck/main/tunnel-url.txt", { cache: "no-store" });
+  const text = (await res.text()).trim();
+  if (!/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(text)) throw new Error("Could not find the API address");
+  base = text;
+}
+
 async function api<T>(path: string, key: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(path, { ...init, headers: { ...(init.headers ?? {}), "X-API-Key": key } });
+  const res = await fetch(base + path, { ...init, headers: { ...(init.headers ?? {}), "X-API-Key": key } });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error((body as { message?: string; error?: string }).message ?? (body as { error?: string }).error ?? `HTTP ${res.status}`);
   return body as T;
@@ -130,7 +146,7 @@ function signIn(): void {
     onclick: async () => {
       make.disabled = true;
       try {
-        const res = await fetch("/api/keys/new", { method: "POST" });
+        const res = await fetch(base + "/api/keys/new", { method: "POST" });
         const body = (await res.json()) as { api_key?: string };
         if (!body.api_key) throw new Error("No key came back");
         saveKey(body.api_key);
@@ -282,7 +298,7 @@ async function render(): Promise<void> {
       calculator(quota.coins),
       recentCard(stats),
       settingsCard(key, stats),
-      h("p", { class: "muted" }, "Refreshes every 15 seconds. Send ", h("code", {}, "X-Groundcheck-User"), " with an anonymous id of each of your app's users to count toward the 100-user reward."),
+      h("p", { class: "muted" }, `API: ${base || location.origin}. Refreshes every 15 seconds. Send `, h("code", {}, "X-Groundcheck-User"), " with an anonymous id of each of your app's users to count toward the 100-user reward."),
     );
     notice = null;
     timer = window.setTimeout(() => void render(), 15000);
@@ -298,4 +314,10 @@ signOut.addEventListener("click", () => {
   saveKey("");
   void render();
 });
-void render();
+resolveBase().then(
+  () => void render(),
+  (e: unknown) => {
+    setNotice(`Cannot reach the API: ${e instanceof Error ? e.message : String(e)}`, true);
+    signIn();
+  },
+);
