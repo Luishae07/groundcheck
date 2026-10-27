@@ -5,7 +5,6 @@ const COIN = 1_000_000_000;
 const OUT_UNITS = 4;
 const MIN_UNITS = 1000;
 const DAILY_COINS = 10;
-const CAP_COINS = 30;
 const APP_USERS = 100;
 const ENDPOINTS = [
     { name: "/api/weather (232 bytes)", inBytes: 280, outBytes: 232 },
@@ -221,7 +220,7 @@ async function render() {
         document.title = `${coinText(quota.coins)} coins · Groundcheck dashboard`;
         const coinTone = quota.coins < 1 ? "bad" : quota.coins < 5 ? "warn" : "good";
         const usersLeft = Math.max(0, APP_USERS - quota.users_this_month);
-        put(h("h1", {}, stats.label ? `${stats.label}` : "Your API key"), notice ? h("div", { class: `msg${notice.err ? " err" : ""}` }, notice.text) : null, h("div", { class: "grid" }, statCard("Coins left", coinText(quota.coins), h("div", { class: "muted" }, `+${DAILY_COINS} a day, up to ${CAP_COINS} stored`), bar(quota.coins / CAP_COINS, coinTone)), statCard("Requests", num(stats.total_requests), h("div", { class: "muted" }, `from ${num(stats.distinct_ips)} address${stats.distinct_ips === 1 ? "" : "es"}`)), statCard("App users this month", `${num(quota.users_this_month)} / ${APP_USERS}`, h("div", { class: "muted" }, quota.app_reward_paid ? "The 100 coin reward was paid." : usersLeft ? `${usersLeft} more unique users for +100 coins` : "Reward on the next request"), bar(quota.app_reward_paid ? 1 : quota.users_this_month / APP_USERS, quota.app_reward_paid ? "good" : ""))), calculator(quota.coins), recentCard(stats), settingsCard(key, stats), h("p", { class: "muted" }, `API: ${base || location.origin}. Refreshes every 15 seconds. Send `, h("code", {}, "X-Groundcheck-User"), " with an anonymous id of each of your app's users to count toward the 100-user reward."));
+        put(h("h1", {}, stats.label ? `${stats.label}` : "Your API key"), notice ? h("div", { class: `msg${notice.err ? " err" : ""}` }, notice.text) : null, h("div", { class: "grid" }, statCard("Coins left", coinText(quota.coins), h("div", { class: "muted" }, `+${DAILY_COINS} a day, unused coins pile up`), bar(quota.coins / (DAILY_COINS * 3), coinTone)), statCard("Requests", num(stats.total_requests), h("div", { class: "muted" }, `from ${num(stats.distinct_ips)} address${stats.distinct_ips === 1 ? "" : "es"}`)), statCard("App users this month", `${num(quota.users_this_month)} / ${APP_USERS}`, h("div", { class: "muted" }, quota.app_reward_paid ? "The 100 coin reward was paid." : usersLeft ? `${usersLeft} more unique users for +100 coins` : "Reward on the next request"), bar(quota.app_reward_paid ? 1 : quota.users_this_month / APP_USERS, quota.app_reward_paid ? "good" : ""))), calculator(quota.coins), recentCard(stats), settingsCard(key, stats), h("p", { class: "muted" }, `API: ${base || location.origin}. Refreshes every 15 seconds. Send `, h("code", {}, "X-Groundcheck-User"), " with an anonymous id of each of your app's users to count toward the 100-user reward."));
         notice = null;
         timer = window.setTimeout(() => void render(), 15000);
     }
