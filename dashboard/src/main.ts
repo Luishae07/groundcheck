@@ -244,7 +244,7 @@ function settingsCard(key: string, stats: Stats): HTMLElement {
         await render();
       } }, "Delete key"),
     ),
-    stats.created ? h("p", { class: "muted" }, `Created ${when(stats.created)}. Rate limit: ${stats.limit}.`) : null,
+    stats.created ? h("p", { class: "muted" }, `Created ${when(stats.created)}. Limit: ${stats.limit}.`) : null,
   );
 }
 
