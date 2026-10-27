@@ -192,7 +192,7 @@ function settingsCard(key, stats) {
                 setNotice(String(e instanceof Error ? e.message : e), true);
             }
             await render();
-        } }, "Delete key")), stats.created ? h("p", { class: "muted" }, `Created ${when(stats.created)}. Rate limit: ${stats.limit}.`) : null);
+        } }, "Delete key")), stats.created ? h("p", { class: "muted" }, `Created ${when(stats.created)}. Limit: ${stats.limit}.`) : null);
 }
 function recentCard(stats) {
     const rows = stats.ips
