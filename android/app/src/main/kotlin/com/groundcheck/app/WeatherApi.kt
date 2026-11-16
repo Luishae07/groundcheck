@@ -43,8 +43,8 @@ fun haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double 
 }
 
 object WeatherApi {
-    private const val BASE = "https://grants-governmental-wma-out.trycloudflare.com"
-    private const val PREDICTOR_BASE = "https://constraint-approval-corrected-kept.trycloudflare.com"
+    private const val BASE = "https://genres-sean-sao-defend.trycloudflare.com"
+    private const val PREDICTOR_BASE = "https://above-convergence-lifestyle-makers.trycloudflare.com"
 
     private fun get(url: String): String {
         val conn = URL(url).openConnection() as HttpURLConnection
