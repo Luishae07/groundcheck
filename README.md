@@ -44,7 +44,7 @@ cd groundcheck/backend
 ## API
 
 ```bash
-curl https://genres-sean-sao-defend.trycloudflare.com/api/data
+curl https://groundcheck.flowsearch.org/api/data
 ```
 
 Rate-limited (30 req/60s by default); `POST /api/keys/new` gets you a free key raising that to 13000 req/10s. Full docs in `apidocs/`.

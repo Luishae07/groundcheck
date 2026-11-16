@@ -101,7 +101,7 @@ html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script>
-const PREDICTOR_URL = 'https://above-convergence-lifestyle-makers.trycloudflare.com/predict';
+const PREDICTOR_URL = 'https://groundcheck.flowsearch.org/predict';
 let points = [];
 let leafletMap = null, markerLayer = null;
 
@@ -214,7 +214,7 @@ function haversine(lat1, lon1, lat2, lon2){
 }
 
 function locateByIP(){
-  return fetch('https://genres-sean-sao-defend.trycloudflare.com/api/whereami')
+  return fetch('https://groundcheck.flowsearch.org/api/whereami')
     .then(r => r.json())
     .then(d => {
       if (!d.success || d.latitude == null || d.longitude == null) throw new Error('no ip location');
@@ -259,7 +259,7 @@ function resolveLocationOnce(){
 }
 
 function loadData(){
-  fetch('https://genres-sean-sao-defend.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks/lite?days=2')
+  fetch('https://groundcheck.flowsearch.org/apiinternel/dont/json/microsftwindowssucks/lite?days=2')
     .then(r => r.json())
     .then(d => {
       points = d;

@@ -1059,7 +1059,7 @@ function renderHero(p, distanceKm, label){
   renderPrediction(p);
 }
 
-const PREDICTOR_URL = 'https://above-convergence-lifestyle-makers.trycloudflare.com/predict';
+const PREDICTOR_URL = 'https://groundcheck.flowsearch.org/predict';
 let predictorCache = {};
 
 function renderPrediction(anchor){
@@ -1555,7 +1555,7 @@ document.querySelectorAll('.navbtn').forEach(btn => {
   });
 });
 
-const DATA_BASE = 'https://genres-sean-sao-defend.trycloudflare.com/apiinternel/dont/json/microsftwindowssucks';
+const DATA_BASE = 'https://groundcheck.flowsearch.org/apiinternel/dont/json/microsftwindowssucks';
 let loadedDays = 7; // the page starts with the last 7 days only (the lean endpoint); older ranges load when they are asked for
 function fetchPoints(days){
   return fetch(DATA_BASE + '/lite?days=' + days).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
@@ -1781,7 +1781,7 @@ document.getElementById('searchRange').addEventListener('change', () => {
 // all-time visit counter: tell the live-feed server once per page load, and show the total
 (function(){
   try{
-    var u = (typeof LIVE_WS_URL !== 'undefined') ? LIVE_WS_URL : 'wss://soccer-ton-cognitive-moment.trycloudflare.com';
+    var u = (typeof LIVE_WS_URL !== 'undefined') ? LIVE_WS_URL : 'wss://groundcheck.flowsearch.org/live';
     var w = new WebSocket(u);
     w.onopen = function(){ try{ w.send('visit'); }catch(e){} setTimeout(function(){ try{ w.close(); }catch(e){} }, 800); };
   }catch(e){}
