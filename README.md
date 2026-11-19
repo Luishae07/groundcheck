@@ -18,6 +18,83 @@ Ground-level readings only (balloons spend most of a flight at altitude, where i
 
 See the in-app FAQ (desktop view) for the full rundown — 45 questions covering data, accuracy, the API, self-hosting, and the Android app.
 
+## How it works
+
+```
+ weather balloons in flight
+        │
+        ├──► sonde.mine.nu / zeesen.mine.nu   live telemetry, fetched every minute
+        ├──► SondeHub                          open worldwide database, asked every few hours
+        └──► NOAA IGRA                         official soundings, one pass a day
+                      │
+                      ▼
+        merge + filter (ground level only)  ──►  station_store.json   every reading ever kept
+                      │
+                      ▼
+        data.json  (rebuilt from the whole store, never destructively)
+                      │
+        ┌─────────────┼───────────────┬──────────────────┐
+        ▼             ▼               ▼                  ▼
+   web app and     public API     MCP server        predictor ──► "Next days" panel
+   desktop view   (/api/data)   (Claude Code etc.)  (hour-of-day averages)
+```
+
+Three small programs do the work: an **updater** (fetches each source on its own schedule and merges new readings into the store), a **server** (serves `data.json`, the rate-limited public API and the web pages) and a **live proxy** (forwards the balloons' live WebSocket stream to the browser). Nothing needs a database, a cloud account or a build step; the whole thing is Python's standard library plus one small Go service for the predictor.
+
+## The data
+
+As of 19 November 2026, the store holds **about 188,000 ground-level readings** from roughly 18,000 different balloons and stations, spread over more than 1,200 days between March 2023 and today.
+
+| Source | How often it is read | What it adds | Share of stored readings |
+|---|---|---|---|
+| **IGRA** (NOAA, public domain) | once a day | The surface level of each official sounding, one reading per station per day, nearest 12:00 UTC. Covers stations in nearly every country. | about 84 % |
+| **sonde.mine.nu / zeesen.mine.nu** | every minute | Live telemetry from balloons currently in flight or just landed. | most of the rest |
+| **SondeHub** | every few hours | An open, worldwide, community-run radiosonde database. | a few thousand readings |
+
+Each reading is one small record: a sonde or station ID, a time, temperature (°C), altitude (m), pressure (hPa), relative humidity (%), latitude, longitude and the source it came from. Pressure and humidity are present on almost every reading.
+
+**Where the data is dense.** Central Europe has the most readings, followed by East Asia and North America. Balloons are mostly launched at 00:00 and 12:00 UTC, so the live feed has two peaks a day, and there are gaps wherever no one runs a receiver.
+
+## Filters, and what they cost you
+
+Radiosondes spend most of a flight high above the weather you live in, so Groundcheck keeps only the part of the flight that is near the ground.
+
+- **Altitude: at or below 980 m** (set with `GROUNDCHECK_MAX_ALT_M`, or in the self-host setup). This keeps the minutes just after launch, the descent, and the landing.
+- **Temperature: from 0 °C to 60 °C.** This was meant to throw out the −40 °C readings from high in the atmosphere. The altitude limit already does that job, so the floor also removes genuine ground readings in freezing weather. **That means winter cold is missing from the data**: the lowest value in the store is exactly 0.0 °C. It is a known limitation, and a below-zero range is being considered.
+- **Position sanity:** readings at latitude 0, longitude 0 are dropped.
+- **Duplicates:** a SondeHub reading is skipped if the same balloon was already seen within about two minutes. IGRA readings that duplicate another feed within about 30 km and 3 hours are skipped.
+
+## What Groundcheck is not
+
+- **Not a forecast model.** "Next days" is a local pattern: the average for each hour of the day over the last seven days, repeated for every day, labelled that way on purpose. It has no real day-to-day trend.
+- **Not an upper-air tool.** There is no Skew-T diagram, no wind barbs and no dew-point plot; those were never built.
+- **Not complete.** Where no balloon has flown recently, the map shows nothing, and the colour fades out far from a real station instead of guessing.
+
+## The map
+
+The temperature layer is drawn with **inverse-distance weighting** across a coarse grid, then upscaled smoothly. A heat-blur library was tried first and left gaps between sparse stations. The colour fades to transparent about 320 pixels from the nearest real station, so it only shows colour where data really exists.
+
+## Apps and other ways in
+
+| Where | What it is |
+|---|---|
+| Web app | The mobile site, the desktop view, and the 3D globe of every reading |
+| Android | A WebView wrapper, as a sideloadable APK on GitHub Releases |
+| iOS | A small Objective-C WebView wrapper, built by GitHub Actions as an `.ipa` for sideloading |
+| Mac | The Electron app on GitHub Releases |
+| Apple Watch | A tiny black high-contrast page for very small screens, with a list of cities to pick from |
+| API and MCP | Free data access; the MCP server lets AI tools ask for readings |
+| Self-host | Run the whole thing on your own computer from `backend/` |
+
+## Words used here
+
+- **Radiosonde:** a small sensor package carried by a weather balloon, which measures temperature, pressure and humidity on the way up and sends them down by radio.
+- **Sounding:** one balloon flight's full record from launch to burst.
+- **IGRA:** NOAA's Integrated Global Radiosonde Archive, the official long-term record of soundings.
+- **Ground level:** here, below 980 m above sea level.
+- **Diurnal pattern:** how a value changes over the hours of a day; the "Next days" panel repeats it.
+- **IDW:** inverse-distance weighting, the method behind the map colours.
+
 ## Repo layout
 
 | Path | What it is |
