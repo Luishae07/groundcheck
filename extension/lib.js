@@ -1,8 +1,8 @@
-// Shared by the popup and the background script: where Flowsearch and Groundcheck currently live, and
-// the nearest-reading maths. Both services run on quick tunnels whose address changes, so the addresses
-// are looked up (and cached for 10 minutes) instead of being built in.
+// Shared by the popup and the background script: where Flowsearch and Groundcheck live, and
+// the nearest-reading maths.
 const API = globalThis.browser || globalThis.chrome;
-const FLOW_POINTER = "https://raw.githubusercontent.com/Luishae07/flowsearch/main/web-tunnel-url.txt";
+const FLOW_BASE = "https://flowsearch.org";
+const GC_DATA = "https://groundcheck.flowsearch.org/api/data";
 const GC_PAGE = "https://luishae07.github.io/groundcheck/";
 const FRESH_HOURS = 19; // only readings from the last 19 hours count, the same rule as the Groundcheck website
 
@@ -19,19 +19,9 @@ async function cached(key, ttlMs, load) {
   }
 }
 
-const flowBase = () => cached("flowBase", 10 * 60e3, async () => {
-  const r = await fetch(FLOW_POINTER, { cache: "no-store" });
-  if (!r.ok) throw new Error("Flowsearch address unavailable");
-  return (await r.text()).trim().replace(/\/$/, "");
-});
-
-// Groundcheck's page names the data server it talks to; use that server's public /api/data
-const dataUrl = () => cached("dataUrl", 10 * 60e3, async () => {
-  const html = await (await fetch(GC_PAGE, { cache: "no-store" })).text();
-  const m = html.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com(?=\/apiinternel)/);
-  if (!m) throw new Error("Groundcheck data address not found");
-  return m[0] + "/api/data";
-});
+// Both services have permanent addresses now, so there is nothing to look up
+const flowBase = async () => FLOW_BASE;
+const dataUrl = async () => GC_DATA;   // Groundcheck's public, rate-limited /api/data
 
 async function loadReadings() {
   const r = await fetch(await dataUrl(), { cache: "no-store" });
