@@ -51,7 +51,7 @@ Groundcheck is free software under the AGPL-3.0 licence. The source code is on G
 
 ### Flowsearch
 
-A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. Open Flowsearch (https://nav-declared-technical-organic.trycloudflare.com) · Source on GitHub (https://github.com/Luishae07/flowsearch)
+A search engine we made ourselves: its own crawler, its own index and its own ranking, with a German and an English version. Open Flowsearch (https://flowsearch.org) · Source on GitHub (https://github.com/Luishae07/flowsearch)
 
 ## Good to know
 
