@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Flowsearch + Groundcheck",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Search with Flowsearch and see the weather measured near you by Groundcheck, using your location.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -33,9 +33,8 @@
     "alarms"
   ],
   "host_permissions": [
-    "https://luishae07.github.io/*",
-    "https://raw.githubusercontent.com/*",
-    "https://*.trycloudflare.com/*"
+    "https://flowsearch.org/*",
+    "https://groundcheck.flowsearch.org/*"
   ],
   "browser_specific_settings": {
     "gecko": {
